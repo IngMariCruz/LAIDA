@@ -1,0 +1,132 @@
+====================================
+Fecha: 2026-02-08 14:48:39
+User ID: 1578862237
+Estado: UNKNOWN
+Usuario: Hola
+Bot: Escribe /start para comenzar 😊
+
+====================================
+Fecha: 2026-02-08 14:48:40
+User ID: 1578862237
+Estado: START
+Usuario: /start
+Bot: Hola 👋
+Antes de continuar, ¿cómo te llamas?
+
+====================================
+Fecha: 2026-02-08 14:48:49
+User ID: 1578862237
+Nombre: Mari
+Estado: WAIT_NAME
+Usuario: Mari
+Bot: Encantada, Mari 😊
+Cuéntame, ¿en qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-02-08 14:48:53
+User ID: 1578862237
+Nombre: Mari
+Estado: WAIT_INTEREST
+Usuario: Capas
+Bot: Perfecto 👍
+Ahora dime tu correo electrónico.
+
+====================================
+Fecha: 2026-02-08 14:49:11
+User ID: 1578862237
+Nombre: Mari
+Estado: WAIT_EMAIL
+Usuario: Ing.mari@g.com
+Bot: ¡Gracias! 📧
+Por último, ¿cuál es tu número de teléfono?
+
+====================================
+Fecha: 2026-02-08 14:49:18
+User ID: 1578862237
+Nombre: Mari
+Estado: WAIT_PHONE
+Usuario: 12345567788
+Bot: No pude identificar un número válido 😕
+Por favor escríbelo nuevamente.
+
+====================================
+Fecha: 2026-02-08 14:49:24
+User ID: 1578862237
+Nombre: Mari
+Estado: DONE
+Usuario: 1234567890
+Bot: ¡Gracias! 🎉
+Hemos registrado tu información:
+
+👤 Nombre: Mari
+⭐ Interés: Capas
+📧 Correo: Ing.mari@g.com
+📞 Teléfono: 1234567890
+
+En breve alguien del equipo se pondrá en contacto contigo.
+
+====================================
+Fecha: 2026-02-08 14:49:32
+User ID: 1578862237
+Estado: UNKNOWN
+Usuario: Gracias
+Bot: Escribe /start para comenzar 😊
+
+====================================
+Fecha: 2026-02-08 15:16:25
+User ID: 1578862237
+Estado: START
+Usuario: /start
+Bot: Hola 👋
+Antes de continuar, ¿cómo te llamas?
+
+====================================
+Fecha: 2026-02-08 15:16:28
+User ID: 1578862237
+Nombre: Hola
+Estado: WAIT_NAME
+Usuario: Hola
+Bot: Encantada, Hola 😊
+Cuéntame, ¿en qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-02-08 15:16:30
+User ID: 1578862237
+Nombre: Hola
+Estado: WAIT_INTEREST
+Usuario: Ja
+Bot: Perfecto 👍
+Ahora dime tu correo electrónico.
+
+====================================
+Fecha: 2026-02-08 15:16:38
+User ID: 1578862237
+Nombre: Hola
+Estado: WAIT_EMAIL
+Usuario: Ing.m@g.com
+Bot: ¡Gracias! 📧
+Por último, ¿cuál es tu número de teléfono?
+
+====================================
+Fecha: 2026-02-08 15:16:45
+User ID: 1578862237
+Nombre: Hola
+Estado: DONE
+Usuario: 1234567890
+Bot: ¡Gracias! 🎉
+Hemos registrado tu información:
+
+👤 Nombre: Hola
+⭐ Interés: Ja
+📧 Correo: Ing.m@g.com
+📞 Teléfono: 1234567890
+
+En breve alguien del equipo se pondrá en contacto contigo.
+
+====================================
+Fecha: 2026-02-08 15:16:56
+User ID: 1578862237
+Estado: UNKNOWN
+Usuario: Gracias
+Bot: Escribe /start para comenzar 😊
+

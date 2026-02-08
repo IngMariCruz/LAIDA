@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* LAIDA Brand: primary #2FB4ED, secondary #E8A6C8, pop #1FBF9B */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 197 84% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 326 56% 78%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 326 40% 95%;
+    --muted-foreground: 200 10% 35%;
+    --accent: 164 72% 44%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 326 30% 88%;
+    --input: 326 30% 88%;
+    --ring: 197 84% 56%;
+    --chart-1: 197 84% 56%;
+    --chart-2: 164 72% 44%;
+    --chart-3: 326 56% 78%;
+    --chart-4: 197 84% 40%;
+    --chart-5: 164 72% 34%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 197 84% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 326 40% 95%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 326 30% 88%;
+    --sidebar-ring: 197 84% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .pink-glow {
+    box-shadow: 0 0 40px rgba(232, 166, 200, 0.3), 0 0 80px rgba(232, 166, 200, 0.1);
+  }
+  .blue-glow {
+    box-shadow: 0 0 40px rgba(47, 180, 237, 0.3), 0 0 80px rgba(47, 180, 237, 0.1);
+  }
+}
