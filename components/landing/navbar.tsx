@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -39,9 +40,16 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" className="text-sm font-medium text-foreground hover:text-primary">
-            Iniciar Sesión
-          </Button>
+          <Link href="/login">
+            <Button variant="ghost" className="text-sm font-medium text-foreground hover:text-primary">
+              Iniciar Sesión
+            </Button>
+          </Link>
+          <Link href="/registro">
+            <Button variant="outline" className="text-sm font-medium text-foreground hover:bg-secondary/10">
+              Registrar
+            </Button>
+          </Link>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 font-semibold">
             Probar Gratis
           </Button>
@@ -71,9 +79,16 @@ export function Navbar() {
               </a>
             ))}
             <div className="mt-4 flex flex-col gap-3">
-              <Button variant="ghost" className="w-full justify-center text-foreground">
-                Iniciar Sesión
-              </Button>
+              <Link href="/login" className="w-full">
+                <Button variant="ghost" className="w-full justify-center text-foreground">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+              <Link href="/registro" className="w-full">
+                <Button variant="outline" className="w-full justify-center text-foreground">
+                  Registrar
+                </Button>
+              </Link>
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-semibold">
                 Probar Gratis
               </Button>
