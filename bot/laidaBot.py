@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Carga el .env
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
+CONVERSATIONS_PATH = os.getenv("CONVERSATIONS_PATH", "conversaciones.txt")
 
 if not TOKEN:
     raise ValueError("❌ No se encontró el TELEGRAM_TOKEN") # Reemplaza con tu token real
@@ -28,7 +29,7 @@ def extract_phone(text):
 def guardar_conversacion(user_id, estado, mensaje_usuario, respuesta_bot, nombre=None):
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with open("conversaciones.txt", "a", encoding="utf-8") as f:
+    with open(CONVERSATIONS_PATH, "a", encoding="utf-8") as f:
         f.write("====================================\n")
         f.write(f"Fecha: {fecha}\n")
         f.write(f"User ID: {user_id}\n")

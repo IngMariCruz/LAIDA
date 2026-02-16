@@ -181,3 +181,97 @@ Hemos registrado tu información:
 
 En breve alguien del equipo se pondrá en contacto contigo.
 
+====================================
+Fecha: 2026-02-16 11:35:32
+User ID: 6691816954
+Estado: UNKNOWN
+Usuario: Hi
+Bot: Escribe /start para comenzar 😊
+
+====================================
+Fecha: 2026-02-16 11:35:39
+User ID: 6691816954
+Estado: UNKNOWN
+Usuario: U
+Bot: Escribe /start para comenzar 😊
+
+====================================
+Fecha: 2026-02-16 11:35:44
+User ID: 6691816954
+Estado: START
+Usuario: /start
+Bot: Hola 👋
+Antes de continuar, ¿cómo te llamas?
+
+====================================
+Fecha: 2026-02-16 11:35:51
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_NAME
+Usuario: He
+Bot: Encantada, He 😊
+Cuéntame, ¿en qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-02-16 11:35:53
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_INTEREST
+Usuario: Jjj
+Bot: Perfecto 👍
+Ahora dime tu correo electrónico.
+
+====================================
+Fecha: 2026-02-16 11:35:54
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: Jun
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+
+====================================
+Fecha: 2026-02-16 11:35:55
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: Kk
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+
+====================================
+Fecha: 2026-02-16 11:35:57
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: Mmm
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+
+====================================
+Fecha: 2026-02-16 11:35:58
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: I
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+
+====================================
+Fecha: 2026-02-16 11:35:59
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: Kkk
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+
+====================================
+Fecha: 2026-02-16 11:36:01
+User ID: 6691816954
+Nombre: He
+Estado: WAIT_EMAIL
+Usuario: Kk
+Bot: Ese correo no parece válido 😅
+Intenta de nuevo, por favor.
+

@@ -92,6 +92,13 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">
             Esta es tu área de control de LAIDA
           </p>
+          <div className="mt-4">
+            <Link href="/dashboard/configuracion">
+              <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-4 py-2 font-semibold">
+                Iniciar configuración
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -118,38 +125,6 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">Teléfono</p>
                 <p className="font-medium text-foreground">{usuario.numero}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Acciones rápidas */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones rápidas</CardTitle>
-              <CardDescription>Gestiona tu cuenta</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/dashboard/editar-perfil" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  Editar perfil
-                </Button>
-              </Link>
-              <Link href="/dashboard/cambiar-contraseña" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  Cambiar contraseña
-                </Button>
-              </Link>
-              <Link href="/dashboard/facturacion" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  Facturación
-                </Button>
-              </Link>
-              <Button
-                onClick={handleLogout}
-                variant="destructive"
-                className="w-full justify-start"
-              >
-                Cerrar sesión
-              </Button>
             </CardContent>
           </Card>
         </div>

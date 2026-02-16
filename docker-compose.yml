@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_PATH: /app/data/laida.db
+    volumes:
+      - ./bd:/app/data
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      CONVERSATIONS_PATH: /app/data/conversaciones.txt
+    volumes:
+      - ./bot/conversaciones.txt:/app/data/conversaciones.txt

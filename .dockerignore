@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+Dockerfile
+README.md
+*.log
+
+bd
+bot/__pycache__
+bot/.venv
+bot/.env
+bot/conversaciones.txt
