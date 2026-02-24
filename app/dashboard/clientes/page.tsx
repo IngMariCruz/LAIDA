@@ -29,17 +29,35 @@ export default function ClientesPage() {
   const [error, setError] = useState("")
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const [marcaId, setMarcaId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    const u = localStorage.getItem('usuario')
+    if (!u) {
+      window.location.href = '/login'
+      return
+    }
+
+    let id: number | null = null
+    try { id = JSON.parse(u).id } catch { id = null }
+    if (id === null) {
+      window.location.href = '/login'
+      return
+    }
+    setMarcaId(id)
+  }, [])
+
   const fetchClientes = async () => {
+    if (!marcaId) return
     setLoading(true)
-    const res = await fetch('/api/clientes')
+    const res = await fetch(`/api/clientes?marcaId=${marcaId}`)
     const data = await res.json()
     setClientes(data)
     setLoading(false)
   }
 
-  useEffect(() => { fetchClientes() }, [])
+  useEffect(() => { if (marcaId !== null) fetchClientes() }, [marcaId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -49,7 +67,7 @@ export default function ClientesPage() {
   const handleCreate = async () => {
     setError("")
     try {
-      const res = await fetch('/api/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const res = await fetch('/api/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, marcaId }) })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
       await fetchClientes()
       setForm({})
@@ -60,7 +78,7 @@ export default function ClientesPage() {
     if (!editingId) return
     setError("")
     try {
-      const res = await fetch('/api/clientes', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...form }) })
+      const res = await fetch('/api/clientes', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...form, marcaId }) })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
       setEditingId(null)
       setForm({})
@@ -75,7 +93,7 @@ export default function ClientesPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar cliente?')) return
-    await fetch(`/api/clientes?id=${id}`, { method: 'DELETE' })
+    await fetch(`/api/clientes?id=${id}&marcaId=${marcaId}`, { method: 'DELETE' })
     await fetchClientes()
   }
 
@@ -83,9 +101,13 @@ export default function ClientesPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validar que sea un archivo Excel
     if (!['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       setError('Por favor selecciona un archivo Excel (.xlsx o .xls)')
+      return
+    }
+
+    if (!marcaId) {
+      setError('marca_id no disponible')
       return
     }
 
@@ -105,7 +127,8 @@ export default function ClientesPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               filename: file.name,
-              data: base64
+              data: base64,
+              marcaId: marcaId
             })
           })
 
@@ -122,10 +145,8 @@ export default function ClientesPage() {
             errors: result.errors || []
           })
 
-          // Recargar clientes después de importación exitosa
           await fetchClientes()
 
-          // Limpiar input
           if (fileInputRef.current) {
             fileInputRef.current.value = ''
           }

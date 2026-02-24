@@ -104,10 +104,15 @@ export interface Cliente {
   apellido: string
   correo?: string
   telefono?: string
+  marca_id?: number | null
   fecha_registro: string
 }
 
-export function getAllClientes(): Cliente[] {
+export function getAllClientes(marcaId?: number): Cliente[] {
+  if (marcaId) {
+    const stmt = db.prepare("SELECT * FROM clientes WHERE marca_id = ? ORDER BY fecha_registro DESC")
+    return stmt.all(marcaId) as Cliente[]
+  }
   const stmt = db.prepare("SELECT * FROM clientes ORDER BY fecha_registro DESC")
   return stmt.all() as Cliente[]
 }
@@ -118,8 +123,8 @@ export function getClienteById(id: number): Cliente | undefined {
 }
 
 export function createCliente(data: Omit<Cliente, 'id' | 'fecha_registro'>): Cliente {
-  const stmt = db.prepare(`INSERT INTO clientes (cedula, nombre, apellido, correo, telefono) VALUES (?, ?, ?, ?, ?)`)
-  const result = stmt.run(data.cedula, data.nombre, data.apellido, data.correo || '', data.telefono || '')
+  const stmt = db.prepare(`INSERT INTO clientes (cedula, nombre, apellido, correo, telefono, marca_id) VALUES (?, ?, ?, ?, ?, ?)`)
+  const result = stmt.run(data.cedula, data.nombre, data.apellido, data.correo || '', data.telefono || '', data.marca_id || null)
   return getClienteById(Number(result.lastInsertRowid)) as Cliente
 }
 
@@ -192,6 +197,85 @@ export function updateProducto(id: number, data: Partial<Omit<Producto, 'id' | '
 
 export function deleteProducto(id: number): boolean {
   const stmt = db.prepare("DELETE FROM productos WHERE id = ?")
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
+// -------------------- Esencia --------------------
+export interface Esencia {
+  id: number
+  valores: string
+  diferencia: string
+  historia: string
+  marca_id: number
+  created_at?: string
+  fecha_registro?: string
+  actualizado_en?: string
+}
+
+export function getEsenciaByMarcaId(marcaId: number): Esencia | undefined {
+  const stmt = db.prepare("SELECT * FROM esencia WHERE marca_id = ? ORDER BY id DESC LIMIT 1")
+  return stmt.get(marcaId) as Esencia | undefined
+}
+
+export function getEsenciaById(id: number): Esencia | undefined {
+  const stmt = db.prepare("SELECT * FROM esencia WHERE id = ?")
+  return stmt.get(id) as Esencia | undefined
+}
+
+export function createEsencia(data: Omit<Esencia, 'id' | 'created_at' | 'fecha_registro' | 'actualizado_en'>): Esencia {
+  const stmt = db.prepare(`
+    INSERT INTO esencia (valores, diferencia, historia, marca_id)
+    VALUES (?, ?, ?, ?)
+  `)
+
+  const result = stmt.run(
+    data.valores,
+    data.diferencia,
+    data.historia || '',
+    data.marca_id,
+  )
+
+  const findStmt = db.prepare("SELECT * FROM esencia WHERE id = ?")
+  return findStmt.get(Number(result.lastInsertRowid)) as Esencia
+}
+
+export function updateEsencia(id: number, data: Partial<Omit<Esencia, 'id' | 'marca_id' | 'created_at' | 'fecha_registro' | 'actualizado_en'>>): Esencia {
+  const updates: string[] = []
+  const values: any[] = []
+
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined) {
+      updates.push(`${k} = ?`)
+      values.push(v)
+    }
+  })
+
+  if (updates.length === 0) return getEsenciaById(id) as Esencia
+
+  values.push(id)
+  const stmt = db.prepare(`UPDATE esencia SET ${updates.join(', ')} WHERE id = ?`)
+  stmt.run(...values)
+
+  return getEsenciaById(id) as Esencia
+}
+
+export function saveEsencia(data: Omit<Esencia, 'id' | 'created_at' | 'fecha_registro' | 'actualizado_en'>): Esencia {
+  const existing = getEsenciaByMarcaId(data.marca_id)
+
+  if (!existing) {
+    return createEsencia(data)
+  }
+
+  return updateEsencia(existing.id, {
+    valores: data.valores,
+    diferencia: data.diferencia,
+    historia: data.historia,
+  })
+}
+
+export function deleteEsencia(id: number): boolean {
+  const stmt = db.prepare("DELETE FROM esencia WHERE id = ?")
   const result = stmt.run(id)
   return result.changes > 0
 }

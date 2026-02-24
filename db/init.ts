@@ -47,18 +47,13 @@ const createClientesQuery = `
     apellido TEXT NOT NULL,
     correo TEXT,
     telefono TEXT,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+    marca_id INTEGER,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
   )
 `
 
 db.exec(createClientesQuery)
-
-// Agregar columna 'historia' a marcas si no existe
-try {
-  db.exec("ALTER TABLE marcas ADD COLUMN historia TEXT DEFAULT ''")
-} catch {
-  // ya existe
-}
 
 // Crear tabla de productos si no existe
 const createProductosQuery = `
@@ -73,4 +68,32 @@ const createProductosQuery = `
 `
 
 db.exec(createProductosQuery)
+
+// Crear tabla de esencia de marca si no existe
+const createEsenciaQuery = `
+  CREATE TABLE IF NOT EXISTS esencia (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    valores TEXT NOT NULL,
+    diferencia TEXT NOT NULL,
+    historia TEXT NOT NULL,
+    marca_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+  )
+`
+
+db.exec(createEsenciaQuery)
+
+// Migraciones de esencia para bases existentes
+try {
+  db.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''")
+} catch {
+  // La columna ya existe, no hacer nada
+}
+
+try {
+  db.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
+} catch {
+  // La columna ya existe, no hacer nada
+}
 export default db

@@ -78,11 +78,11 @@ export default function ProductosAdminPage() {
     if (!editingId) return
     setError("")
     try {
-      const res = await fetch('/api/productos', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...form }) })
+      const res = await fetch('/api/productos', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...form, marca_id: marcaId }) })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
       setEditingId(null)
       setForm({})
-      await fetchProductos()
+      await fetchProductos(marcaId)
     } catch (err: any) { setError(err.message || 'Error') }
   }
 
@@ -93,8 +93,8 @@ export default function ProductosAdminPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar producto?')) return
-    await fetch(`/api/productos?id=${id}`, { method: 'DELETE' })
-    await fetchProductos()
+    await fetch(`/api/productos?id=${id}&marcaId=${marcaId}`, { method: 'DELETE' })
+    await fetchProductos(marcaId)
   }
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -5,10 +5,10 @@ import * as XLSX from "xlsx"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { filename, data } = body
+    const { filename, data, marcaId } = body
 
-    if (!data) {
-      return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 })
+    if (!data || !marcaId) {
+      return NextResponse.json({ error: "No se proporcionó archivo o marcaId" }, { status: 400 })
     }
 
     const buffer = Buffer.from(data, "base64")
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     let skipped = 0
     const errors: string[] = []
 
-    const insertStmt = db.prepare(`INSERT OR IGNORE INTO clientes (cedula, nombre, apellido, correo, telefono) VALUES (?, ?, ?, ?, ?)`)
+    const insertStmt = db.prepare(`INSERT INTO clientes (cedula, nombre, apellido, correo, telefono, marca_id) VALUES (?, ?, ?, ?, ?, ?)`)
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
@@ -45,8 +45,7 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const result = insertStmt.run(cedula, nombre, apellido, correo, telefono)
-        // INSERT OR IGNORE doesn't provide changes reliably for some drivers; check existence
+        const result = insertStmt.run(cedula, nombre, apellido, correo, telefono, marcaId)
         if (result.changes && result.changes > 0) inserted++
         else skipped++
       } catch (err: any) {
