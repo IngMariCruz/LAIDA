@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,12 +15,21 @@ interface Cliente {
   telefono?: string
 }
 
+interface ImportResult {
+  inserted: number
+  skipped: number
+  errors: string[]
+}
+
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<Partial<Cliente>>({})
   const [editingId, setEditingId] = useState<number | null>(null)
   const [error, setError] = useState("")
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchClientes = async () => {
     setLoading(true)
@@ -70,12 +79,91 @@ export default function ClientesPage() {
     await fetchClientes()
   }
 
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validar que sea un archivo Excel
+    if (!['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      setError('Por favor selecciona un archivo Excel (.xlsx o .xls)')
+      return
+    }
+
+    setImportLoading(true)
+    setError("")
+    setImportResult(null)
+
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        try {
+          const data = event.target?.result as ArrayBuffer
+          const base64 = Buffer.from(data).toString('base64')
+
+          const res = await fetch('/api/clientes/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              data: base64
+            })
+          })
+
+          const result = await res.json()
+
+          if (!res.ok) {
+            setError(result.error || 'Error al importar')
+            return
+          }
+
+          setImportResult({
+            inserted: result.inserted,
+            skipped: result.skipped,
+            errors: result.errors || []
+          })
+
+          // Recargar clientes después de importación exitosa
+          await fetchClientes()
+
+          // Limpiar input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+        } catch (err: any) {
+          setError(err.message || 'Error procesando archivo')
+        } finally {
+          setImportLoading(false)
+        }
+      }
+
+      reader.onerror = () => {
+        setError('Error al leer el archivo')
+        setImportLoading(false)
+      }
+
+      reader.readAsArrayBuffer(file)
+    } catch (err: any) {
+      setError(err.message || 'Error')
+      setImportLoading(false)
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <h2 className="text-xl font-semibold">Clientes</h2>
-          <Link href="/dashboard"><Button variant="ghost">Volver</Button></Link>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleImportFile}
+            className="hidden"
+          />
         </div>
 
         <div className="mb-6">
@@ -109,11 +197,35 @@ export default function ClientesPage() {
                 <Button variant="ghost" onClick={() => { setEditingId(null); setForm({}) }}>Cancelar</Button>
               </>
             ) : (
-              <Button onClick={handleCreate}>Agregar cliente</Button>
+              <>
+                <Button onClick={handleCreate}>Agregar cliente</Button>
+                <Button onClick={triggerFileInput} disabled={importLoading} variant="outline">
+                  {importLoading ? 'Importando...' : 'Importar desde Excel'}
+                </Button>
+              </>
             )}
           </div>
 
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+
+          {importResult && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+              <h3 className="font-semibold text-blue-900 mb-2">Resumen de importación</h3>
+              <p className="text-sm text-blue-800">✓ Insertados: <span className="font-semibold">{importResult.inserted}</span></p>
+              <p className="text-sm text-blue-800">⊘ Saltados: <span className="font-semibold">{importResult.skipped}</span></p>
+              {importResult.errors.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-orange-700 font-semibold">Errores detectados:</p>
+                  <ul className="text-xs text-orange-700 list-disc list-inside mt-1">
+                    {importResult.errors.slice(0, 5).map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                    {importResult.errors.length > 5 && <li>... y {importResult.errors.length - 5} más</li>}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
