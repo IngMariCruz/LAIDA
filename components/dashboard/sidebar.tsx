@@ -3,16 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LogOut, Users, Package, Settings, FileText } from "lucide-react"
+import { LogOut, Users, Package, Settings, FileText, Star } from "lucide-react"
 
 export default function Sidebar() {
   const pathname = usePathname()
 
   const items = [
     { label: "Dashboard", href: "/dashboard", icon: FileText },
-    { label: "Leads", href: "/leads", icon: FileText, note: "(próximamente)" },
+    { label: "Leads", href: "/dashboard/leads", icon: FileText, note: "(próximamente)" },
     { label: "Clientes", href: "/dashboard/clientes", icon: Users },
     { label: "Productos", href: "/dashboard/productos", icon: Package },
+    { label: "Marca", href: "/dashboard/Marca", icon: Star },
     { label: "Configuración del bot", href: "/bot-config", icon: Settings },
     { label: "Editar perfil", href: "/dashboard/editar-perfil", icon: Settings, note: "(próximamente)" },
   ]
