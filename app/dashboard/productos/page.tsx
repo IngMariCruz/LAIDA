@@ -92,7 +92,6 @@ export default function ProductosAdminPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar producto?')) return
     await fetch(`/api/productos?id=${id}&marcaId=${marcaId}`, { method: 'DELETE' })
     await fetchProductos(marcaId)
   }

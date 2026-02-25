@@ -92,7 +92,6 @@ export default function ClientesPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar cliente?')) return
     await fetch(`/api/clientes?id=${id}&marcaId=${marcaId}`, { method: 'DELETE' })
     await fetchClientes()
   }

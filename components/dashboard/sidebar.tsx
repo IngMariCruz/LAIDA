@@ -14,7 +14,7 @@ export default function Sidebar() {
     { label: "Clientes", href: "/dashboard/clientes", icon: Users },
     { label: "Productos", href: "/dashboard/productos", icon: Package },
     { label: "Marca", href: "/dashboard/marca", icon: Star },
-    { label: "Configuración del bot", href: "/bot-config", icon: Settings },
+    { label: "Configuración del bot", href: "/dashboard/config-bot", icon: Settings },
     { label: "Editar perfil", href: "/dashboard/editar-perfil", icon: Settings, note: "(próximamente)" },
   ]
 

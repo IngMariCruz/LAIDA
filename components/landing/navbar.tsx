@@ -50,9 +50,6 @@ export function Navbar() {
               Registrar
             </Button>
           </Link>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 font-semibold">
-            Probar Gratis
-          </Button>
         </div>
 
         <button
@@ -89,9 +86,6 @@ export function Navbar() {
                   Registrar
                 </Button>
               </Link>
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-semibold">
-                Probar Gratis
-              </Button>
             </div>
           </div>
         </div>

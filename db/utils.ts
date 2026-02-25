@@ -279,3 +279,30 @@ export function deleteEsencia(id: number): boolean {
   const result = stmt.run(id)
   return result.changes > 0
 }
+
+// -------------------- Config Bot --------------------
+export interface ConfigBot {
+  id: number
+  marca_id: number
+  mensaje_bienvenida: string
+  created_at: string
+}
+
+export function getConfigBotByMarcaId(marcaId: number): ConfigBot | undefined {
+  const stmt = db.prepare("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1")
+  return stmt.get(marcaId) as ConfigBot | undefined
+}
+
+export function saveConfigBot(data: { marca_id: number; mensaje_bienvenida: string }): ConfigBot {
+  const stmt = db.prepare(`
+    INSERT INTO config_bot (marca_id, mensaje_bienvenida)
+    VALUES (?, ?)
+    ON CONFLICT(marca_id) DO UPDATE SET
+      mensaje_bienvenida = excluded.mensaje_bienvenida,
+      created_at = CURRENT_TIMESTAMP
+  `)
+
+  stmt.run(data.marca_id, data.mensaje_bienvenida)
+
+  return getConfigBotByMarcaId(data.marca_id) as ConfigBot
+}

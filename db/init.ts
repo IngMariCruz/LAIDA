@@ -84,6 +84,19 @@ const createEsenciaQuery = `
 
 db.exec(createEsenciaQuery)
 
+// Crear tabla de configuración de bot por marca
+const createConfigBotQuery = `
+  CREATE TABLE IF NOT EXISTS config_bot (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    marca_id INTEGER NOT NULL UNIQUE,
+    mensaje_bienvenida TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+  )
+`
+
+db.exec(createConfigBotQuery)
+
 // Migraciones de esencia para bases existentes
 try {
   db.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''")
