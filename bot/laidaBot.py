@@ -229,7 +229,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         lead_data["phone"] = phone
         user_state[user_id] = STATE_CONFIRM
 
-        marca_nombre = lead_data["marca"]["nombre"]
+        # Guardar el lead en la base de datos
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            marca_nombre = lead_data["marca"]["nombre"]
+            
+            cursor.execute("""
+                INSERT INTO leads (bot_id, bot_slug, bot_nombre, interes, email, telefono, telegram_user_id, estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                marca_id,  # bot_id (usando marca_id como referencia)
+                None,      # bot_slug
+                marca_nombre,  # bot_nombre
+                lead_data['interest'],  # interes
+                lead_data['email'],     # email
+                lead_data['phone'],     # telefono
+                user_id,   # telegram_user_id
+                'nuevo'    # estado
+            ))
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"❌ Error al guardar lead en BD: {e}")
+
         respuesta = (
             "¡Gracias! 🎉 Hemos confirmado tus datos:\n\n"
             f"🏢 Marca: {marca_nombre}\n"

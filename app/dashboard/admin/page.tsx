@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Bot, Users, Key, BarChart3 } from "lucide-react"
+import { Bot, Users, Key, BarChart3, Mail } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ interface Stats {
   totalBots: number
   totalUsuarios: number
   botsActivos: number
+  totalLeads?: number
 }
 
 export default function AdminPage() {
@@ -24,6 +25,7 @@ export default function AdminPage() {
     totalBots: 0,
     totalUsuarios: 0,
     botsActivos: 0,
+    totalLeads: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -61,10 +63,17 @@ export default function AdminPage() {
       })
       const usuarios = await usuariosRes.json()
 
+      // Cargar leads
+      const leadsRes = await fetch("/api/leads", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const leads = await leadsRes.json()
+
       setStats({
         totalBots: bots.length,
         totalUsuarios: usuarios.length,
         botsActivos: bots.filter((b: any) => b.estado === "activo").length,
+        totalLeads: leads.length,
       })
     } catch (error) {
       console.error("Error cargando estadísticas:", error)
@@ -94,6 +103,13 @@ export default function AdminPage() {
       icon: Key,
       href: "/dashboard/admin/accesos",
       stat: "Permisos",
+    },
+    {
+      title: "Gestión de Leads",
+      description: "Ve todos los leads capturados por los bots",
+      icon: Mail,
+      href: "/dashboard/leads",
+      stat: `${stats.totalLeads} leads`,
     },
   ]
 

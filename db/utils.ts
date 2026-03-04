@@ -229,6 +229,31 @@ export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
   return findStmt.get(Number(result.lastInsertRowid)) as Lead
 }
 
+export function getLeadById(id: number): Lead | undefined {
+  const stmt = db.prepare("SELECT * FROM leads WHERE id = ?")
+  return stmt.get(id) as Lead | undefined
+}
+
+export function updateLead(id: number, data: Partial<Omit<Lead, 'id' | 'created_at'>>): Lead {
+  const updates: string[] = []
+  const values: any[] = []
+
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined) {
+      updates.push(`${k} = ?`)
+      values.push(v)
+    }
+  })
+
+  if (updates.length === 0) return getLeadById(id) as Lead
+
+  values.push(id)
+  const stmt = db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = ?`)
+  stmt.run(...values)
+
+  return getLeadById(id) as Lead
+}
+
 // -------------------- Productos --------------------
 export interface Producto {
   id: number
