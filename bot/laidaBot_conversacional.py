@@ -23,9 +23,16 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 DB_PATH = os.getenv("BOT_DB_PATH", "../bd/laida.db")
 CONVERSATIONS_DIR = os.getenv("BOT_CONVERSATIONS_DIR", ".")
+BOT_ID = os.getenv("BOT_ID")
+BOT_NOMBRE = os.getenv("BOT_NOMBRE", "LAIDA Bot")
 
 if not TOKEN:
-    raise ValueError("❌ No se encontró la variable TELEGRAM_TOKEN")
+    raise ValueError(
+        "❌ No se encontró TELEGRAM_TOKEN\n"
+        "   Este bot debe ejecutarse con bot_launcher.py\n"
+        "   Uso: python3 bot_launcher.py <bot_id>\n"
+        "   Los tokens se configuran desde el panel de super admin"
+    )
 
 # Estados del flujo conversacional
 STATE_START = "START"
@@ -681,7 +688,10 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    print("🤖 Bot conversacional de LAIDA en ejecución...")
+    bot_info = f"{BOT_NOMBRE} (ID: {BOT_ID})" if BOT_ID else "LAIDA Bot"
+    print(f"🤖 Bot conversacional básico en ejecución: {bot_info}")
+    print(f"📊 Base de datos: {DB_PATH}")
+    print(f"\n⏳ Esperando mensajes...\n")
     app.run_polling()
 
 

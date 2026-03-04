@@ -1,5 +1,36 @@
 # 🧠 Bot Conversacional con GPT - LAIDA
 
+> **🔔 IMPORTANTE**: Este bot ahora funciona en modo **multi-tenant**. Cada bot tiene su propia configuración de tokens. Ver [BOT_MULTITENANT.md](BOT_MULTITENANT.md) para instrucciones completas.
+
+## Inicio Rápido
+
+**Ejecutar un bot específico:**
+```bash
+cd bot
+python3 bot_launcher.py <bot_id>
+```
+
+**Ejemplo:**
+```bash
+python3 bot_launcher.py 1
+```
+
+El launcher:
+1. Lee la configuración del bot desde la base de datos
+2. Automáticamente ejecuta el bot con GPT si tiene `openai_key` configurado
+3. Ejecuta el bot básico si no tiene `openai_key`
+
+## Configuración (Desde Dashboard)
+
+Los tokens ya NO se configuran en `.env`. Ahora se configuran **por bot** desde el panel de super admin:
+
+1. **Dashboard** → **Bots** → **Crear/Editar Bot**
+2. Configurar:
+   - **Telegram Token**: Obtener de @BotFather
+   - **OpenAI API Key**: (Opcional) Para habilitar GPT
+
+---
+
 ## Descripción
 
 Bot de Telegram potenciado por GPT-4 de OpenAI que ofrece conversaciones naturales, análisis inteligente de intenciones y recomendaciones personalizadas de productos.
@@ -63,30 +94,44 @@ GPT genera: "Camiseta polo elegante y versátil, perfecta para look casual o sem
 
 ## 🚀 Configuración
 
-### 1. Obtener API Key de OpenAI
+### Flujo Multi-Tenant
+
+En LAIDA, cada bot tiene su propia configuración. No hay configuración global en `.env`.
+
+**Pasos:**
+
+1. **Obtener Token de Telegram** de @BotFather
+2. **Obtener API Key de OpenAI** (opcional, para GPT)
+3. **Crear bot desde el dashboard** con estos tokens
+4. **Ejecutar bot** con `python3 bot_launcher.py <bot_id>`
+
+### 1. Obtener Token de Telegram
+
+1. Abrir Telegram y buscar **@BotFather**
+2. Enviar `/newbot`
+3. Seguir instrucciones para crear tu bot
+4. Copiar el token que te da: `1234567890:ABCdef...`
+
+### 2. Obtener API Key de OpenAI
 
 1. Ve a [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. Crea una cuenta o inicia sesión
-3. Crea una nueva API key
-4. Copia la key (solo la verás una vez)
+3. Click en **"Create new secret key"**
+4. Copiar la key: `sk-proj-xxxxxxxxxxxxxxxxxx`
 
-### 2. Configurar Variables de Entorno
+### 3. Crear Bot desde Dashboard
 
-Edita el archivo `.env` en la raíz del proyecto:
+1. Ir a **Dashboard** → **Bots** → **Crear Nuevo Bot**
+2. Llenar formulario:
+   - **Nombre**: Ej: "Bot Tienda X"
+   - **Slug**: Ej: "tienda-x"
+   - **Telegram Token**: Pegar el token de @BotFather
+   - **OpenAI API Key**: Pegar la key de OpenAI (opcional)
+3. Click **"Guardar"**
 
-```env
-# Telegram Bot Token
-TELEGRAM_TOKEN=tu_token_de_telegram_aqui
+El bot queda guardado con ID automático (ej: 1, 2, 3...).
 
-# OpenAI API Key (REQUERIDO)
-OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxx
-
-# Database
-BOT_DB_PATH=../bd/laida.db
-BOT_CONVERSATIONS_DIR=.
-```
-
-### 3. Instalar Dependencias
+### 4. Instalar Dependencias
 
 ```bash
 cd bot
@@ -98,18 +143,43 @@ Esto instalará:
 - `python-dotenv==1.0.1`
 - `openai==1.54.3`
 
-### 4. Ejecutar el Bot con GPT
+### 5. Ejecutar el Bot
 
 ```bash
 cd bot
-python3 laidaBot_gpt.py
+python3 bot_launcher.py <bot_id>
+```
+
+**Ejemplo:**
+```bash
+python3 bot_launcher.py 1
 ```
 
 Verás en consola:
 ```
-🤖 Bot conversacional de LAIDA con GPT en ejecución...
+🔍 Cargando configuración del bot 1...
+✅ Bot encontrado: Bot Tienda X (@tienda-x)
+   Estado: activo
+   Telegram Token: ✅ Configurado
+   OpenAI Key: ✅ Configurado (modo GPT)
+
+🧠 Iniciando bot con inteligencia GPT...
+
+🤖 Bot conversacional con GPT en ejecución: Bot Tienda X (ID: 1)
 ✅ OpenAI API configurada
+📊 Base de datos: ../bd/laida.db
+
+⏳ Esperando mensajes...
 ```
+
+### 6. Probar el Bot
+
+1. Abrir Telegram
+2. Buscar tu bot por el username que configuraste
+3. Enviar `/start 1` (donde 1 es el bot_id)
+4. ¡El bot responderá con inteligencia GPT!
+
+---
 
 ## 💡 Casos de Uso
 
