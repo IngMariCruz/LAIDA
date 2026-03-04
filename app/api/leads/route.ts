@@ -4,9 +4,11 @@ import {
   getLeadsByBotId,
   getLeadsByBotIds,
   createLead,
+  createNotificacion,
+  getAllUsuarios,
+  getBotsAsignadosAUsuario,
 } from "@/db/utils"
 import { getAuthUser, requireManager } from "@/lib/auth"
-import { getBotsAsignadosAUsuario } from "@/db/utils"
 
 // GET - Obtener leads
 export async function GET(request: NextRequest) {
@@ -100,6 +102,45 @@ export async function POST(request: NextRequest) {
       telegram_user_id: telegram_user_id || null,
       estado: estado || "nuevo"
     })
+
+    // Crear notificaciones para usuarios relevantes
+    try {
+      const usuarios = getAllUsuarios()
+      
+      // Notificar a super admins
+      const superAdmins = usuarios.filter(u => u.rol === 'super_admin')
+      for (const admin of superAdmins) {
+        createNotificacion({
+          usuario_id: admin.id,
+          tipo: 'nuevo_lead',
+          titulo: '🎉 Nuevo Lead',
+          mensaje: `Lead interesado en "${interes}" - ${email}`,
+          lead_id: lead.id,
+          bot_id: bot_id || null,
+        })
+      }
+
+      // Notificar a managers asignados al bot (si hay bot_id)
+      if (bot_id) {
+        const managers = usuarios.filter(u => u.rol === 'manager')
+        for (const manager of managers) {
+          const botsAsignados = getBotsAsignadosAUsuario(manager.id)
+          if (botsAsignados.some(b => b.id === bot_id)) {
+            createNotificacion({
+              usuario_id: manager.id,
+              tipo: 'nuevo_lead',
+              titulo: '🎉 Nuevo Lead',
+              mensaje: `Lead interesado en "${interes}" - ${email}`,
+              lead_id: lead.id,
+              bot_id: bot_id,
+            })
+          }
+        }
+      }
+    } catch (notifError) {
+      console.error("Error creando notificaciones:", notifError)
+      // No fallar si las notificaciones fallan
+    }
 
     return NextResponse.json(lead, { status: 201 })
   } catch (error) {

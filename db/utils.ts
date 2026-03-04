@@ -611,3 +611,94 @@ export function getUsuariosAsignadosABot(botId: number): Usuario[] {
   return stmt.all(botId) as Usuario[]
 }
 
+// ==================== NOTIFICACIONES ====================
+
+export interface Notificacion {
+  id: number
+  usuario_id?: number | null
+  tipo: 'nuevo_lead' | 'lead_actualizado' | 'nuevo_bot' | 'sistema'
+  titulo: string
+  mensaje: string
+  lead_id?: number | null
+  bot_id?: number | null
+  leida: number
+  created_at: string
+}
+
+export function getAllNotificaciones(usuarioId?: number): Notificacion[] {
+  if (usuarioId) {
+    const stmt = db.prepare(`
+      SELECT * FROM notificaciones 
+      WHERE usuario_id IS NULL OR usuario_id = ? 
+      ORDER BY created_at DESC
+    `)
+    return stmt.all(usuarioId) as Notificacion[]
+  }
+  
+  const stmt = db.prepare("SELECT * FROM notificaciones ORDER BY created_at DESC")
+  return stmt.all() as Notificacion[]
+}
+
+export function getNotificacionesNoLeidas(usuarioId: number): Notificacion[] {
+  const stmt = db.prepare(`
+    SELECT * FROM notificaciones 
+    WHERE (usuario_id IS NULL OR usuario_id = ?) AND leida = 0
+    ORDER BY created_at DESC
+  `)
+  return stmt.all(usuarioId) as Notificacion[]
+}
+
+export function getNotificacionById(id: number): Notificacion | undefined {
+  const stmt = db.prepare("SELECT * FROM notificaciones WHERE id = ?")
+  return stmt.get(id) as Notificacion | undefined
+}
+
+export function createNotificacion(data: Omit<Notificacion, 'id' | 'created_at' | 'leida'>): Notificacion {
+  const stmt = db.prepare(`
+    INSERT INTO notificaciones (usuario_id, tipo, titulo, mensaje, lead_id, bot_id, leida)
+    VALUES (?, ?, ?, ?, ?, ?, 0)
+  `)
+  
+  const result = stmt.run(
+    data.usuario_id || null,
+    data.tipo,
+    data.titulo,
+    data.mensaje,
+    data.lead_id || null,
+    data.bot_id || null
+  )
+  
+  return getNotificacionById(Number(result.lastInsertRowid)) as Notificacion
+}
+
+export function marcarNotificacionComoLeida(id: number): Notificacion {
+  const stmt = db.prepare("UPDATE notificaciones SET leida = 1 WHERE id = ?")
+  stmt.run(id)
+  return getNotificacionById(id) as Notificacion
+}
+
+export function marcarTodasLeidasParaUsuario(usuarioId: number): void {
+  const stmt = db.prepare(`
+    UPDATE notificaciones 
+    SET leida = 1 
+    WHERE (usuario_id IS NULL OR usuario_id = ?) AND leida = 0
+  `)
+  stmt.run(usuarioId)
+}
+
+export function deleteNotificacion(id: number): boolean {
+  const stmt = db.prepare("DELETE FROM notificaciones WHERE id = ?")
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
+export function countNotificacionesNoLeidas(usuarioId: number): number {
+  const stmt = db.prepare(`
+    SELECT COUNT(*) as count FROM notificaciones 
+    WHERE (usuario_id IS NULL OR usuario_id = ?) AND leida = 0
+  `)
+  const result = stmt.get(usuarioId) as { count: number }
+  return result.count
+}
+
+export default db

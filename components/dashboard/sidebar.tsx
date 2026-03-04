@@ -10,7 +10,7 @@ export default function Sidebar() {
 
   const items = [
     { label: "Dashboard", href: "/dashboard", icon: FileText },
-    { label: "Leads", href: "/dashboard/leads", icon: FileText, note: "(próximamente)" },
+    { label: "Leads", href: "/dashboard/leads", icon: FileText },
     { label: "Clientes", href: "/dashboard/clientes", icon: Users },
     { label: "Productos", href: "/dashboard/productos", icon: Package },
     { label: "Marca", href: "/dashboard/marca", icon: Star },

@@ -84,6 +84,24 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
+  // Tabla de notificaciones
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS notificaciones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id INTEGER,
+      tipo TEXT NOT NULL CHECK(tipo IN ('nuevo_lead', 'lead_actualizado', 'nuevo_bot', 'sistema')),
+      titulo TEXT NOT NULL,
+      mensaje TEXT NOT NULL,
+      lead_id INTEGER,
+      bot_id INTEGER,
+      leida INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL,
+      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
+    )
+  `)
+
   // Crear usuario super admin por defecto si no existe
   const defaultAdmin = database
     .prepare("SELECT id FROM usuarios WHERE correo = ?")
