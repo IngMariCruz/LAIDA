@@ -1,0 +1,52 @@
+====================================
+Fecha: 2026-03-03 03:28:03
+bot_id: 2
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a nuevo.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-03 04:07:18
+bot_id: 2
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a nuevo.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-03 04:07:21
+bot_id: 2
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: Hola
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-03 04:07:27
+bot_id: 2
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: Cgiohidalgo@gmail.com
+respuesta_bot: Gracias. Ahora comparte tu número de teléfono (10 dígitos).
+
+====================================
+Fecha: 2026-03-03 04:07:33
+bot_id: 2
+user_id: 6691816954
+estado: CONFIRM
+mensaje_usuario: 3173810808
+respuesta_bot: ¡Gracias! 🎉 Hemos confirmado tus datos:
+
+⭐ Interés: Hola
+📧 Correo: Cgiohidalgo@gmail.com
+📞 Teléfono: 3173810808
+
+En breve alguien del equipo te contactará.
+

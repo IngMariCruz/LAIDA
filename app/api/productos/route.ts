@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import db from "@/db/init"
 import { getAllProductos, getProductoById, createProducto, updateProducto, deleteProducto } from "@/db/utils"
 
 export async function GET(request: NextRequest) {
@@ -10,14 +11,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'marcaId requerido' }, { status: 400 })
   }
 
+  // check whether marca exists
+  let showNulls = false
+  try {
+    const m = db.prepare('SELECT id FROM marcas WHERE id = ?').get(Number(marcaId))
+    if (!m) {
+      // if there is no marca record, treat this as request for unassigned products
+      showNulls = true
+    }
+  } catch {
+    // if db not accessible, just proceed
+  }
+
   if (id) {
     const producto = getProductoById(Number(id))
     // Validar que el producto pertenezca a la marca del usuario
-    if (!producto || producto.marca_id !== Number(marcaId)) {
+    if (!producto || (producto.marca_id !== Number(marcaId) && !(showNulls && producto.marca_id == null))) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
     }
     return NextResponse.json(producto)
   }
+
+  if (showNulls) {
+    // Return productos without marca_id
+    const stmt = db.prepare('SELECT * FROM productos WHERE marca_id IS NULL ORDER BY fecha_registro DESC')
+    return NextResponse.json(stmt.all())
+  }
+
   const productos = getAllProductos(Number(marcaId))
   return NextResponse.json(productos)
 }

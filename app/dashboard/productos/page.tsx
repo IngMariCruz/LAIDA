@@ -29,6 +29,10 @@ export default function ProductosAdminPage() {
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importMode, setImportMode] = useState<'file' | 'text' | 'url'>('file')
+  const [importText, setImportText] = useState('')
+  const [importUrl, setImportUrl] = useState('')
+  const [replaceExisting, setReplaceExisting] = useState(false)
  
   useEffect(() => {
     const u = localStorage.getItem('usuario')
@@ -49,10 +53,17 @@ export default function ProductosAdminPage() {
 
   const fetchProductos = async (id?: number | null) => {
     setLoading(true)
+    setError('')
     const params = id ? `?marcaId=${id}` : ''
     const res = await fetch(`/api/productos${params}`)
     const data = await res.json()
-    setProductos(data)
+    if (res.ok) {
+      setProductos(data)
+    } else {
+      // show server error
+      setError(data.error || 'Error cargando productos')
+      setProductos([])
+    }
     setLoading(false)
   }
 
@@ -100,11 +111,6 @@ export default function ProductosAdminPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      setError('Por favor selecciona un archivo Excel (.xlsx o .xls)')
-      return
-    }
-
     if (!marcaId) {
       setError('marca_id no disponible')
       return
@@ -127,7 +133,8 @@ export default function ProductosAdminPage() {
             body: JSON.stringify({
               filename: file.name,
               data: base64,
-              marcaId: marcaId
+              marcaId: marcaId,
+              replaceExisting
             })
           })
 
@@ -168,6 +175,65 @@ export default function ProductosAdminPage() {
     }
   }
 
+  const handleImportText = async () => {
+    if (!importText.trim()) return
+    if (!marcaId) {
+      setError('marca_id no disponible')
+      return
+    }
+    setImportLoading(true)
+    setError("")
+    setImportResult(null)
+    try {
+      const res = await fetch('/api/productos/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: importText, marcaId, replaceExisting })
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error || 'Error al importar')
+      } else {
+        setImportResult({ inserted: result.inserted, skipped: result.skipped, errors: result.errors || [] })
+        await fetchProductos(marcaId)
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  const handleImportUrl = async () => {
+    if (!importUrl.trim()) return
+    if (!marcaId) {
+      setError('marca_id no disponible')
+      return
+    }
+    setImportLoading(true)
+    setError("")
+    setImportResult(null)
+    try {
+      const res = await fetch('/api/productos/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl, marcaId, replaceExisting })
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error || 'Error al importar')
+      } else {
+        setImportResult({ inserted: result.inserted, skipped: result.skipped, errors: result.errors || [] })
+        await fetchProductos(marcaId)
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+
   const triggerFileInput = () => {
     fileInputRef.current?.click()
   }
@@ -177,13 +243,96 @@ export default function ProductosAdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-4">
           <h2 className="text-xl font-semibold">Productos</h2>
+          <div className="flex gap-4 items-center mt-2">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="importMode"
+                value="file"
+                checked={importMode === 'file'}
+                onChange={() => setImportMode('file')}
+                className="mr-1"
+              />
+              Archivo
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="importMode"
+                value="text"
+                checked={importMode === 'text'}
+                onChange={() => setImportMode('text')}
+                className="mr-1"
+              />
+              Texto / HTML
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="importMode"
+                value="url"
+                checked={importMode === 'url'}
+                onChange={() => setImportMode('url')}
+                className="mr-1"
+              />
+              URL
+            </label>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept="*/*"
             onChange={handleImportFile}
             className="hidden"
           />
+        </div>
+
+        {/* import controls */}
+        <div className="mb-4">
+          {importMode === 'file' && (
+            <Button onClick={triggerFileInput} disabled={importLoading}>
+              {importLoading ? 'Importando...' : 'Seleccionar archivo'}
+            </Button>
+          )}
+          <div className="mt-2">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={replaceExisting}
+                onChange={(e) => setReplaceExisting(e.target.checked)}
+                className="mr-1"
+              />
+              Reemplazar productos existentes
+            </label>
+          </div>
+
+          {importMode === 'text' && (
+            <textarea
+              className="w-full h-32 p-2 border rounded"
+              placeholder="Pega aquí texto separado por líneas: nombre - precio"
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+            />
+          )}
+
+          {importMode === 'url' && (
+            <Input
+              placeholder="https://ejemplo.com/productos"
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+            />
+          )}
+
+          {importMode !== 'file' && (
+            <div className="mt-2">
+              <Button
+                onClick={importMode === 'text' ? handleImportText : handleImportUrl}
+                disabled={importLoading}
+              >
+                {importLoading ? 'Importando...' : 'Importar'}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="mb-6">
@@ -215,6 +364,8 @@ export default function ProductosAdminPage() {
           </div>
 
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+          {/* display current marcaId for debugging */}
+          {marcaId !== null && <p className="text-xs text-muted-foreground mt-1">marcaId: {marcaId}</p>}
 
           {importResult && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
@@ -230,6 +381,36 @@ export default function ProductosAdminPage() {
                     ))}
                     {importResult.errors.length > 5 && <li>... y {importResult.errors.length - 5} más</li>}
                   </ul>
+                </div>
+              )}
+              {/* diff */}
+              {importResult.diff && (
+                <div className="mt-4">
+                  <h4 className="font-semibold">Cambios detectados</h4>
+                  {importResult.diff.added.length > 0 && (
+                    <div>
+                      <p className="text-sm">Nuevos:</p>
+                      <ul className="list-disc list-inside text-xs">
+                        {importResult.diff.added.map((p,i)=>(<li key={i}>{p.nombre} - {p.precio}</li>))}
+                      </ul>
+                    </div>
+                  )}
+                  {importResult.diff.updated.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm">Actualizados:</p>
+                      <ul className="list-disc list-inside text-xs">
+                        {importResult.diff.updated.map((u,i)=>(<li key={i}>{u.old.nombre}: {u.old.precio} → {u.new.precio}</li>))}
+                      </ul>
+                    </div>
+                  )}
+                  {importResult.diff.removed.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm">Eliminados:</p>
+                      <ul className="list-disc list-inside text-xs">
+                        {importResult.diff.removed.map((p,i)=>(<li key={i}>{p.nombre} - {p.precio}</li>))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

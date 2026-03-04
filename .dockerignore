@@ -4,11 +4,19 @@ node_modules
 .gitignore
 .env
 Dockerfile
+.dockerignore
 README.md
 *.log
+.DS_Store
+.vscode
+.idea
+.prettier*
+*.db
+bd/laida.db
 
-bd
 bot/__pycache__
 bot/.venv
 bot/.env
 bot/conversaciones.txt
+bot/node_modules
+bot/.next

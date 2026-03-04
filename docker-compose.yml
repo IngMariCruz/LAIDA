@@ -11,12 +11,16 @@ services:
       DB_PATH: /app/data/laida.db
     volumes:
       - ./bd:/app/data
+
   bot:
+    profiles:
+      - bot
     build:
       context: ./bot
       dockerfile: Dockerfile
     environment:
-      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      CONVERSATIONS_PATH: /app/data/conversaciones.txt
+      BOT_DB_PATH: /app/data/laida.db
+      BOT_CONVERSATIONS_DIR: /app/data/conversations
     volumes:
-      - ./bot/conversaciones.txt:/app/data/conversaciones.txt
+      - ./bd:/app/data
+    restart: unless-stopped

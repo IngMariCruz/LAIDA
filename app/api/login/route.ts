@@ -1,63 +1,65 @@
 import { NextRequest, NextResponse } from "next/server"
-import db from "@/db/init"
+import { getUsuarioByCorreo, getBotsAsignadosAUsuario } from "@/db/utils"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-
-    const { correoEmpresa, password } = body
+    const { correo, password } = body
 
     // Validar que todos los campos estén presentes
-    if (!correoEmpresa || !password) {
+    if (!correo || !password) {
       return NextResponse.json(
         { error: "Correo y contraseña son requeridos" },
         { status: 400 }
       )
     }
 
-    // Buscar la marca en la base de datos
-    const stmt = db.prepare(`
-      SELECT id, nombre_marca, correo_empresa, nombre_representante, numero, correo_personal, password
-      FROM marcas
-      WHERE correo_empresa = ?
-    `)
+    // Buscar el usuario en la base de datos
+    const usuario = getUsuarioByCorreo(correo)
 
-    const marca = stmt.get(correoEmpresa) as any
-
-    if (!marca) {
+    if (!usuario) {
       return NextResponse.json(
         { error: "Correo o contraseña incorrectos" },
         { status: 401 }
       )
     }
 
-    // Comparar contraseña (en producción, usar bcrypt)
-    // Por ahora, comparación simple
-    if (marca.password !== password) {
+    // Comparar contraseña (TODO: usar bcrypt en producción)
+    if (usuario.password !== password) {
       return NextResponse.json(
         { error: "Correo o contraseña incorrectos" },
         { status: 401 }
       )
     }
 
-    // Generar un token simple (en producción, usar JWT)
-    const token = Buffer.from(`${marca.id}:${Date.now()}`).toString("base64")
+    // Generar un token simple (TODO: usar JWT en producción)
+    const token = Buffer.from(`${usuario.id}:${usuario.rol}:${Date.now()}`).toString("base64")
+
+    // Obtener bots asignados si es manager
+    let botsAsignados = []
+    if (usuario.rol === 'manager') {
+      botsAsignados = getBotsAsignadosAUsuario(usuario.id)
+    }
 
     // Retornar información del usuario sin la contraseña
-    const usuario = {
-      id: marca.id,
-      nombreMarca: marca.nombre_marca,
-      correoEmpresa: marca.correo_empresa,
-      nombreRepresentante: marca.nombre_representante,
-      numero: marca.numero,
-      correoPersonal: marca.correo_personal,
+    const usuarioData = {
+      id: usuario.id,
+      correo: usuario.correo,
+      rol: usuario.rol,
+      nombre: usuario.nombre,
+      botsAsignados: botsAsignados.map(bot => ({
+        id: bot.id,
+        nombre: bot.nombre,
+        slug: bot.slug,
+        estado: bot.estado
+      }))
     }
 
     return NextResponse.json(
       {
         success: true,
         message: "Sesión iniciada exitosamente",
-        usuario,
+        usuario: usuarioData,
         token,
       },
       { status: 200 }
