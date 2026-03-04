@@ -79,8 +79,13 @@ function initTables(database: DatabaseType): void {
       telefono TEXT NOT NULL,
       telegram_user_id INTEGER,
       estado TEXT NOT NULL DEFAULT 'nuevo' CHECK(estado IN ('nuevo', 'contactado', 'cerrado')),
+      categoria TEXT DEFAULT 'cold' CHECK(categoria IN ('hot', 'warm', 'cold')),
+      producto_id INTEGER,
+      detalles_compra TEXT,
+      notas TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
+      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
+      FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
     )
   `)
 
@@ -156,8 +161,59 @@ function initTables(database: DatabaseType): void {
 
   // Tabla de productos
   database.exec(`
-    CREATE TABLE IF NOT EXISTS productos (
+    CRdescripcion TEXT,
+      imagen_url TEXT,
+      activo INTEGER DEFAULT 1,
+      fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
+    )
+  `)
+
+  // Tabla de atributos de productos
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS producto_atributos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      producto_id INTEGER NOT NULL,
+      nombre TEXT NOT NULL,
+      tipo TEXT NOT NULL CHECK(tipo IN ('text', 'number', 'select', 'color')),
+      opciones TEXT,
+      requerido INTEGER DEFAULT 1,
+      orden INTEGER DEFAULT 0,
+      FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+    )
+  `)
+
+  // Tabla de configuración de flujo del bot
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS bot_flow_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bot_id INTEGER NOT NULL UNIQUE,
+      mensaje_bienvenida TEXT,
+      mensaje_sin_interes TEXT,
+      mensaje_productos TEXT,
+      mensaje_caracteristicas TEXT,
+      mensaje_confirmacion TEXT,
+      mensaje_agradecimiento TEXT,
+      mostrar_productos_inicio INTEGER DEFAULT 1,
+      max_productos_mostrar INTEGER DEFAULT 5,
+      permitir_recomendaciones INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE
+    )
+  `)
+
+  // Tabla de interacciones del bot (para análisis)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS bot_interacciones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bot_id INTEGER,
+      telegram_user_id INTEGER,
+      tipo TEXT NOT NULL CHECK(tipo IN ('inicio', 'producto_visto', 'caracteristica', 'compra', 'abandono', 'desinteres')),
+      producto_id INTEGER,
+      datos TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
+      FOREIGN KEY (producto_id) REFERENCES producto
       nombre TEXT NOT NULL,
       precio REAL NOT NULL,
       marca_id INTEGER,

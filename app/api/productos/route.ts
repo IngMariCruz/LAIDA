@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nombre, precio, marca_id } = body
+    const { nombre, precio, marca_id, descripcion, imagen_url, activo } = body
 
     if (!marca_id) {
       return NextResponse.json({ error: 'marca_id requerido' }, { status: 400 })
@@ -55,7 +55,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Campos requeridos faltan' }, { status: 400 })
     }
 
-    const nuevo = createProducto({ nombre, precio: Number(precio), marca_id })
+    const nuevo = createProducto({ 
+      nombre, 
+      precio: Number(precio), 
+      marca_id,
+      descripcion: descripcion || null,
+      imagen_url: imagen_url || null,
+      activo: activo !== undefined ? Number(activo) : 1
+    })
     return NextResponse.json(nuevo, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Error creando producto' }, { status: 500 })

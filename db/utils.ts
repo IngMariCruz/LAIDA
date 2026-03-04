@@ -161,6 +161,10 @@ export interface Lead {
   telefono: string
   telegram_user_id?: number | null
   estado: 'nuevo' | 'contactado' | 'cerrado'
+  categoria?: 'hot' | 'warm' | 'cold' | null
+  producto_id?: number | null
+  detalles_compra?: string | null
+  notas?: string | null
   created_at: string
 }
 
@@ -210,8 +214,11 @@ export function getLeadsByBotIds(botIds: number[]): Lead[] {
 
 export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
   const stmt = db.prepare(`
-    INSERT INTO leads (bot_id, bot_slug, bot_nombre, interes, email, telefono, telegram_user_id, estado)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO leads (
+      bot_id, bot_slug, bot_nombre, interes, email, telefono, 
+      telegram_user_id, estado, categoria, producto_id, detalles_compra, notas
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
   const result = stmt.run(
@@ -222,7 +229,11 @@ export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
     data.email,
     data.telefono,
     data.telegram_user_id || null,
-    data.estado || 'nuevo'
+    data.estado || 'nuevo',
+    data.categoria || 'cold',
+    data.producto_id || null,
+    data.detalles_compra || null,
+    data.notas || null
   )
 
   const findStmt = db.prepare("SELECT * FROM leads WHERE id = ?")
@@ -260,6 +271,9 @@ export interface Producto {
   nombre: string
   precio: number
   marca_id?: number | null
+  descripcion?: string | null
+  imagen_url?: string | null
+  activo: number
   fecha_registro: string
 }
 
@@ -272,14 +286,37 @@ export function getAllProductos(marcaId?: number): Producto[] {
   return stmt.all() as Producto[]
 }
 
+export function getProductosActivos(marcaId?: number, limit?: number): Producto[] {
+  if (marcaId) {
+    const stmt = limit 
+      ? db.prepare("SELECT * FROM productos WHERE marca_id = ? AND activo = 1 ORDER BY fecha_registro DESC LIMIT ?")
+      : db.prepare("SELECT * FROM productos WHERE marca_id = ? AND activo = 1 ORDER BY fecha_registro DESC")
+    return limit ? stmt.all(marcaId, limit) as Producto[] : stmt.all(marcaId) as Producto[]
+  }
+  const stmt = limit
+    ? db.prepare("SELECT * FROM productos WHERE activo = 1 ORDER BY fecha_registro DESC LIMIT ?")
+    : db.prepare("SELECT * FROM productos WHERE activo = 1 ORDER BY fecha_registro DESC")
+  return limit ? stmt.all(limit) as Producto[] : stmt.all() as Producto[]
+}
+
 export function getProductoById(id: number): Producto | undefined {
   const stmt = db.prepare("SELECT * FROM productos WHERE id = ?")
   return stmt.get(id) as Producto | undefined
 }
 
 export function createProducto(data: Omit<Producto, 'id' | 'fecha_registro'>): Producto {
-  const stmt = db.prepare(`INSERT INTO productos (nombre, precio, marca_id) VALUES (?, ?, ?)`)
-  const result = stmt.run(data.nombre, data.precio, data.marca_id || null)
+  const stmt = db.prepare(`
+    INSERT INTO productos (nombre, precio, marca_id, descripcion, imagen_url, activo) 
+    VALUES (?, ?, ?, ?, ?, ?)
+  `)
+  const result = stmt.run(
+    data.nombre, 
+    data.precio, 
+    data.marca_id || null,
+    data.descripcion || null,
+    data.imagen_url || null,
+    data.activo !== undefined ? data.activo : 1
+  )
   return getProductoById(Number(result.lastInsertRowid)) as Producto
 }
 
@@ -699,6 +736,166 @@ export function countNotificacionesNoLeidas(usuarioId: number): number {
   `)
   const result = stmt.get(usuarioId) as { count: number }
   return result.count
+}
+
+// ==================== ATRIBUTOS DE PRODUCTOS ====================
+
+export interface ProductoAtributo {
+  id: number
+  producto_id: number
+  nombre: string
+  tipo: 'text' | 'number' | 'select' | 'color'
+  opciones?: string | null
+  requerido: number
+  orden: number
+}
+
+export function getAtributosByProductoId(productoId: number): ProductoAtributo[] {
+  const stmt = db.prepare(`
+    SELECT * FROM producto_atributos 
+    WHERE producto_id = ? 
+    ORDER BY orden ASC
+  `)
+  return stmt.all(productoId) as ProductoAtributo[]
+}
+
+export function createProductoAtributo(data: Omit<ProductoAtributo, 'id'>): ProductoAtributo {
+  const stmt = db.prepare(`
+    INSERT INTO producto_atributos (producto_id, nombre, tipo, opciones, requerido, orden)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `)
+  
+  const result = stmt.run(
+    data.producto_id,
+    data.nombre,
+    data.tipo,
+    data.opciones || null,
+    data.requerido,
+    data.orden
+  )
+  
+  const findStmt = db.prepare("SELECT * FROM producto_atributos WHERE id = ?")
+  return findStmt.get(Number(result.lastInsertRowid)) as ProductoAtributo
+}
+
+export function deleteProductoAtributo(id: number): boolean {
+  const stmt = db.prepare("DELETE FROM producto_atributos WHERE id = ?")
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
+// ==================== CONFIGURACIÓN DE FLUJO DEL BOT ====================
+
+export interface BotFlowConfig {
+  id: number
+  bot_id: number
+  mensaje_bienvenida?: string | null
+  mensaje_sin_interes?: string | null
+  mensaje_productos?: string | null
+  mensaje_caracteristicas?: string | null
+  mensaje_confirmacion?: string | null
+  mensaje_agradecimiento?: string | null
+  mostrar_productos_inicio: number
+  max_productos_mostrar: number
+  permitir_recomendaciones: number
+  created_at: string
+}
+
+export function getBotFlowConfig(botId: number): BotFlowConfig | undefined {
+  const stmt = db.prepare("SELECT * FROM bot_flow_config WHERE bot_id = ?")
+  return stmt.get(botId) as BotFlowConfig | undefined
+}
+
+export function createOrUpdateBotFlowConfig(data: Omit<BotFlowConfig, 'id' | 'created_at'>): BotFlowConfig {
+  const existing = getBotFlowConfig(data.bot_id)
+  
+  if (existing) {
+    const stmt = db.prepare(`
+      UPDATE bot_flow_config 
+      SET mensaje_bienvenida = ?, mensaje_sin_interes = ?, mensaje_productos = ?,
+          mensaje_caracteristicas = ?, mensaje_confirmacion = ?, mensaje_agradecimiento = ?,
+          mostrar_productos_inicio = ?, max_productos_mostrar = ?, permitir_recomendaciones = ?
+      WHERE bot_id = ?
+    `)
+    
+    stmt.run(
+      data.mensaje_bienvenida || null,
+      data.mensaje_sin_interes || null,
+      data.mensaje_productos || null,
+      data.mensaje_caracteristicas || null,
+      data.mensaje_confirmacion || null,
+      data.mensaje_agradecimiento || null,
+      data.mostrar_productos_inicio,
+      data.max_productos_mostrar,
+      data.permitir_recomendaciones,
+      data.bot_id
+    )
+    
+    return getBotFlowConfig(data.bot_id) as BotFlowConfig
+  }
+  
+  const stmt = db.prepare(`
+    INSERT INTO bot_flow_config (
+      bot_id, mensaje_bienvenida, mensaje_sin_interes, mensaje_productos,
+      mensaje_caracteristicas, mensaje_confirmacion, mensaje_agradecimiento,
+      mostrar_productos_inicio, max_productos_mostrar, permitir_recomendaciones
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `)
+  
+  stmt.run(
+    data.bot_id,
+    data.mensaje_bienvenida || null,
+    data.mensaje_sin_interes || null,
+    data.mensaje_productos || null,
+    data.mensaje_caracteristicas || null,
+    data.mensaje_confirmacion || null,
+    data.mensaje_agradecimiento || null,
+    data.mostrar_productos_inicio,
+    data.max_productos_mostrar,
+    data.permitir_recomendaciones
+  )
+  
+  return getBotFlowConfig(data.bot_id) as BotFlowConfig
+}
+
+// ==================== INTERACCIONES DEL BOT ====================
+
+export interface BotInteraccion {
+  id: number
+  bot_id?: number | null
+  telegram_user_id?: number | null
+  tipo: 'inicio' | 'producto_visto' | 'caracteristica' | 'compra' | 'abandono' | 'desinteres'
+  producto_id?: number | null
+  datos?: string | null
+  created_at: string
+}
+
+export function createBotInteraccion(data: Omit<BotInteraccion, 'id' | 'created_at'>): BotInteraccion {
+  const stmt = db.prepare(`
+    INSERT INTO bot_interacciones (bot_id, telegram_user_id, tipo, producto_id, datos)
+    VALUES (?, ?, ?, ?, ?)
+  `)
+  
+  const result = stmt.run(
+    data.bot_id || null,
+    data.telegram_user_id || null,
+    data.tipo,
+    data.producto_id || null,
+    data.datos || null
+  )
+  
+  const findStmt = db.prepare("SELECT * FROM bot_interacciones WHERE id = ?")
+  return findStmt.get(Number(result.lastInsertRowid)) as BotInteraccion
+}
+
+export function getInteraccionesByUser(botId: number, telegramUserId: number): BotInteraccion[] {
+  const stmt = db.prepare(`
+    SELECT * FROM bot_interacciones 
+    WHERE bot_id = ? AND telegram_user_id = ? 
+    ORDER BY created_at DESC
+  `)
+  return stmt.all(botId, telegramUserId) as BotInteraccion[]
 }
 
 export default db
