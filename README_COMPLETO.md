@@ -1278,7 +1278,7 @@ CREATE TABLE usuario_bots (
 3. Opcionalmente filtre por categoría (`hot`, `warm`, `cold`) o seleccione un bot específico.
 4. Programe una fecha/hora si quiere que se envíe más tarde.
 5. Presione **Crear**; la nueva campaña aparecerá en la tabla inferior.
-6. Las campañas se almacenan en la base de datos (`tabla campañas`) y pueden ser ejecutadas por un job o script externo más adelante.
+6. Las campañas se almacenan en la base de datos (`tabla campaigns`) y pueden ser ejecutadas por un job o script externo más adelante.
 
    El backend expone `/api/campaigns` que admite:
    - **GET**: devuelve el listado (filtrado según el rol y parámetro `botId`).

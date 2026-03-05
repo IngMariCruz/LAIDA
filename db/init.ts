@@ -219,7 +219,7 @@ function initTables(database: DatabaseType): void {
 
   // Tabla de campañas automatizadas
   database.exec(`
-    CREATE TABLE IF NOT EXISTS campañas (
+    CREATE TABLE IF NOT EXISTS campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
       mensaje TEXT NOT NULL,

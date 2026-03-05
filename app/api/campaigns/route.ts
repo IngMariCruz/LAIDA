@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/auth'
 import db from '@/db/init'
-import { getAllCampañas, createCampaña } from '@/db/utils'
+import { getAllCampaigns, createCampaign } from '@/db/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
       allowedBots = [idNum]
     }
 
-    const campaigns = getAllCampañas(allowedBots || undefined)
+    const campaigns = getAllCampaigns(allowedBots || undefined)
     return NextResponse.json(campaigns)
   } catch (err) {
-    console.error('Error listado campañas:', err)
+    console.error('Error listing campaigns:', err)
     return NextResponse.json({ error: 'Error al obtener campañas' }, { status: 500 })
   }
 }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const newCampaña = createCampaña({
+    const newCampaign = createCampaign({
       nombre,
       mensaje,
       categoria_filter: categoria_filter || null,
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       programada_para: programada_para || null
     })
 
-    return NextResponse.json(newCampaña, { status: 201 })
+    return NextResponse.json(newCampaign, { status: 201 })
   } catch (err: any) {
     console.error('Error creando campaña:', err)
     return NextResponse.json({ error: err.message || 'Error creando campaña' }, { status: 500 })
@@ -88,10 +88,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const now = new Date().toISOString()
-    const dueStmt = db.prepare(`SELECT * FROM campañas WHERE ejecutada = 0 AND (programada_para IS NULL OR programada_para <= ?)`)
+    const dueStmt = db.prepare(`SELECT * FROM campaigns WHERE ejecutada = 0 AND (programada_para IS NULL OR programada_para <= ?)`)
     const due: any[] = dueStmt.all(now)
 
-    const updateStmt = db.prepare(`UPDATE campañas SET ejecutada = 1 WHERE id = ?`)
+    const updateStmt = db.prepare(`UPDATE campaigns SET ejecutada = 1 WHERE id = ?`)
     due.forEach(c => updateStmt.run(c.id))
 
     return NextResponse.json({ processed: due, count: due.length })

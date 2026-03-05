@@ -343,7 +343,7 @@ export function deleteProducto(id: number): boolean {
 }
 
 // -------------------- Campañas automatizadas --------------------
-export interface Campaña {
+export interface Campaign {
   id: number
   nombre: string
   mensaje: string
@@ -354,24 +354,24 @@ export interface Campaña {
   created_at: string
 }
 
-export function getAllCampañas(botIds?: number[]): Campaña[] {
+export function getAllCampaigns(botIds?: number[]): Campaign[] {
   if (botIds && botIds.length > 0) {
     const placeholders = botIds.map(() => '?').join(', ')
-    const stmt = db.prepare(`SELECT * FROM campañas WHERE bot_id IN (${placeholders}) ORDER BY created_at DESC`)
-    return stmt.all(...botIds) as Campaña[]
+    const stmt = db.prepare(`SELECT * FROM campaigns WHERE bot_id IN (${placeholders}) ORDER BY created_at DESC`)
+    return stmt.all(...botIds) as Campaign[]
   }
-  const stmt = db.prepare('SELECT * FROM campañas ORDER BY created_at DESC')
-  return stmt.all() as Campaña[]
+  const stmt = db.prepare('SELECT * FROM campaigns ORDER BY created_at DESC')
+  return stmt.all() as Campaign[]
 }
 
-export function getCampañaById(id: number): Campaña | undefined {
-  const stmt = db.prepare('SELECT * FROM campañas WHERE id = ?')
-  return stmt.get(id) as Campaña | undefined
+export function getCampaignById(id: number): Campaign | undefined {
+  const stmt = db.prepare('SELECT * FROM campaigns WHERE id = ?')
+  return stmt.get(id) as Campaign | undefined
 }
 
-export function createCampaña(data: Omit<Campaña, 'id' | 'ejecutada' | 'created_at'>): Campaña {
+export function createCampaign(data: Omit<Campaign, 'id' | 'ejecutada' | 'created_at'>): Campaign {
   const stmt = db.prepare(`
-    INSERT INTO campañas (nombre, mensaje, categoria_filter, bot_id, programada_para, ejecutada)
+    INSERT INTO campaigns (nombre, mensaje, categoria_filter, bot_id, programada_para, ejecutada)
     VALUES (?, ?, ?, ?, ?, ?)
   `)
   const result = stmt.run(
@@ -382,11 +382,11 @@ export function createCampaña(data: Omit<Campaña, 'id' | 'ejecutada' | 'create
     data.programada_para || null,
     0
   )
-  return getCampañaById(Number(result.lastInsertRowid)) as Campaña
+  return getCampaignById(Number(result.lastInsertRowid)) as Campaign
 }
 
-export function markCampañaEjecutada(id: number): boolean {
-  const stmt = db.prepare('UPDATE campañas SET ejecutada = 1 WHERE id = ?')
+export function markCampaignExecuted(id: number): boolean {
+  const stmt = db.prepare('UPDATE campaigns SET ejecutada = 1 WHERE id = ?')
   const res = stmt.run(id)
   return res.changes > 0
 }
