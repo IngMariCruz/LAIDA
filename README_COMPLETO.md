@@ -1285,6 +1285,10 @@ CREATE TABLE usuario_bots (
    - **POST**: crea una nueva campaña (campos `nombre`, `mensaje`, `categoria_filter`, `bot_id`, `programada_para`).
    - **PATCH**: (solo super_admin) ejecuta campañas pendientes y las marca como `ejecutada`.
 
+   También se provee un script Python `bot/run_campaigns.py` que puede ejecutarse con
+   `python3 bot/run_campaigns.py` o desde cron/containers; recorre campañas due,
+   lista los leads asociados y las marca como ejecutadas (extensible para envío real).
+
 ### Para Manager
 
 #### 1. **Ver sus Leads**
