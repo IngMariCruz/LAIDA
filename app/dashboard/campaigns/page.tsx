@@ -122,6 +122,30 @@ export default function CampaignsPage() {
 
         {error && <p className="text-red-600">{error}</p>}
 
+        <div className="flex justify-end">
+          <Button onClick={async () => {
+            setError('')
+            try {
+              const token = localStorage.getItem('token')
+              const res = await fetch('/api/campaigns', {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` }
+              })
+              const data = await res.json()
+              if (!res.ok) {
+                setError(data.error || 'Error ejecutando campañas')
+              } else {
+                alert(`Procesadas ${data.count} campañas`)
+                fetchCampaigns()
+              }
+            } catch (e: any) {
+              setError(e.message || 'Error')
+            }
+          }} className="mb-4" variant="secondary">
+            Ejecutar campañas pendientes
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Crear nueva campaña</CardTitle>
