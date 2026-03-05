@@ -11,8 +11,10 @@ export default function Sidebar() {
   const items = [
     { label: "Dashboard", href: "/dashboard", icon: FileText },
     { label: "Leads", href: "/dashboard/leads", icon: FileText },
+    { label: "Analytics", href: "/dashboard/analytics", icon: Star },
     { label: "Clientes", href: "/dashboard/clientes", icon: Users },
     { label: "Productos", href: "/dashboard/productos", icon: Package },
+    { label: "Campañas", href: "/dashboard/campaigns", icon: Star },
     { label: "Marca", href: "/dashboard/marca", icon: Star },
     { label: "Configuración del bot", href: "/dashboard/config-bot", icon: Settings },
     { label: "Editar perfil", href: "/dashboard/editar-perfil", icon: Settings, note: "(próximamente)" },

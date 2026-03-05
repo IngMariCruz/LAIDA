@@ -342,6 +342,55 @@ export function deleteProducto(id: number): boolean {
   return result.changes > 0
 }
 
+// -------------------- Campañas automatizadas --------------------
+export interface Campaña {
+  id: number
+  nombre: string
+  mensaje: string
+  categoria_filter?: string | null
+  bot_id?: number | null
+  programada_para?: string | null
+  ejecutada: number
+  created_at: string
+}
+
+export function getAllCampañas(botIds?: number[]): Campaña[] {
+  if (botIds && botIds.length > 0) {
+    const placeholders = botIds.map(() => '?').join(', ')
+    const stmt = db.prepare(`SELECT * FROM campañas WHERE bot_id IN (${placeholders}) ORDER BY created_at DESC`)
+    return stmt.all(...botIds) as Campaña[]
+  }
+  const stmt = db.prepare('SELECT * FROM campañas ORDER BY created_at DESC')
+  return stmt.all() as Campaña[]
+}
+
+export function getCampañaById(id: number): Campaña | undefined {
+  const stmt = db.prepare('SELECT * FROM campañas WHERE id = ?')
+  return stmt.get(id) as Campaña | undefined
+}
+
+export function createCampaña(data: Omit<Campaña, 'id' | 'ejecutada' | 'created_at'>): Campaña {
+  const stmt = db.prepare(`
+    INSERT INTO campañas (nombre, mensaje, categoria_filter, bot_id, programada_para, ejecutada)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `)
+  const result = stmt.run(
+    data.nombre,
+    data.mensaje,
+    data.categoria_filter || null,
+    data.bot_id || null,
+    data.programada_para || null,
+    0
+  )
+  return getCampañaById(Number(result.lastInsertRowid)) as Campaña
+}
+
+export function markCampañaEjecutada(id: number): boolean {
+  const stmt = db.prepare('UPDATE campañas SET ejecutada = 1 WHERE id = ?')
+  const res = stmt.run(id)
+  return res.changes > 0
+}
+
 // -------------------- Esencia --------------------
 export interface Esencia {
   id: number

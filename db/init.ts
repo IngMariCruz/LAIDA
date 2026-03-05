@@ -213,12 +213,22 @@ function initTables(database: DatabaseType): void {
       datos TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
-      FOREIGN KEY (producto_id) REFERENCES producto
+      FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
+    )
+  `)
+
+  // Tabla de campañas automatizadas
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS campañas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
-      precio REAL NOT NULL,
-      marca_id INTEGER,
-      fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
+      mensaje TEXT NOT NULL,
+      categoria_filter TEXT,
+      bot_id INTEGER,
+      programada_para DATETIME,
+      ejecutada INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
     )
   `)
 
