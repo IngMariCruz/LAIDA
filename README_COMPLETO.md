@@ -1292,6 +1292,19 @@ CREATE TABLE usuario_bots (
    Telegram, simplemente imprime su email. Tras procesar todos los objetivos,
    la campaña se marca como ejecutada.
 
+   Alternativamente, la misma lógica se expone a través del endpoint `PATCH /api/campaigns`.
+   Un cron simple o tarea programada puede llamar a este endpoint cada cierto intervalo:
+
+   ```bash
+   # Ejecutar vía curl cada hora (por ejemplo) en servidor
+   curl -X PATCH \
+     -H "Authorization: Bearer <TOKEN_SUPER_ADMIN>" \
+     https://tu-dominio.com/api/campaigns
+   ```
+
+   Cualquiera de las dos estrategias (script Python o endpoint HTTP) funciona
+   bien; elige la que te sea más cómoda.
+
    - Asegúrate de que el bot tenga configurado `telegram_token` y los leads hayan
      interactuado previamente (para que se guarde su `telegram_user_id`).
    - Puedes personalizar la lógica de envío en el script para usar email u otro
