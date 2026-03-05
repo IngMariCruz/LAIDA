@@ -1287,7 +1287,15 @@ CREATE TABLE usuario_bots (
 
    También se provee un script Python `bot/run_campaigns.py` que puede ejecutarse con
    `python3 bot/run_campaigns.py` o desde cron/containers; recorre campañas due,
-   lista los leads asociados y las marca como ejecutadas (extensible para envío real).
+   obtiene el token del bot correspondiente y **envía el mensaje vía Telegram** a
+   cada lead que tenga disponible `telegram_user_id`. Si el lead no tiene ID de
+   Telegram, simplemente imprime su email. Tras procesar todos los objetivos,
+   la campaña se marca como ejecutada.
+
+   - Asegúrate de que el bot tenga configurado `telegram_token` y los leads hayan
+     interactuado previamente (para que se guarde su `telegram_user_id`).
+   - Puedes personalizar la lógica de envío en el script para usar email u otro
+     canal, o para agregar métricas de éxito/fallo.
 
 ### Para Manager
 
