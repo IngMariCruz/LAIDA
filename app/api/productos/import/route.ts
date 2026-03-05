@@ -25,24 +25,52 @@ export async function POST(request: NextRequest) {
       db.prepare(`DELETE FROM productos WHERE marca_id = ?`).run(effectiveMarcaId)
     }
 
-    // helper to parse lines into productos
-    function parseLines(lines: string[]): { nombre: string; precio: number }[] {
-      const products: { nombre: string; precio: number }[] = []
-      // match "name <sep> price" where sep can be hyphen, comma, semicolon, tab, pipe, with optional spaces
-      const re = /(.+?)\s*[-\t,;|]+\s*([0-9]+(?:[\.,][0-9]+)?)/
-      lines.forEach((raw, idx) => {
-        const line = raw.trim()
-        if (!line) return
-        const m = line.match(re)
-        if (m) {
-          const nombre = m[1].trim()
-          const precio = parseFloat(m[2].replace(',', '.'))
-          if (nombre && !Number.isNaN(precio)) {
-            products.push({ nombre, precio })
+    // helper to convert array of lines or raw text into product objects including description
+    function parseTextToProducts(text: string): { nombre: string; precio: number; descripcion?: string }[] {
+      const results: { nombre: string; precio: number; descripcion?: string }[] = []
+      // split into sections separated by empty lines - each section may describe one product
+      const sections = text.split(/\r?\n\s*\r?\n/) // blank line
+
+      sections.forEach((section) => {
+        const lines = section.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+        if (lines.length === 0) return
+
+        let nombre = ''
+        let precio: number | null = null
+        const descripcionParts: string[] = []
+
+        const reNamePrice = /(.+?)\s*[-\t,;|]+\s*([0-9]+(?:[\.,][0-9]+)?)/
+
+        lines.forEach((line) => {
+          const low = line.toLowerCase()
+          if (low.startsWith('nombre:')) {
+            nombre = line.split(/:\s*/)[1].trim()
+          } else if (low.startsWith('precio:')) {
+            precio = parseFloat(line.split(/:\s*/)[1].replace(',', '.'))
+          } else if (low.startsWith('descripci')) {
+            descripcionParts.push(line.split(/:\s*/)[1].trim())
+          } else if (!nombre && !precio) {
+            // try match on same line
+            const m = line.match(reNamePrice)
+            if (m) {
+              nombre = m[1].trim()
+              precio = parseFloat(m[2].replace(',', '.'))
+            } else {
+              // if still nothing, treat as potential description
+              descripcionParts.push(line)
+            }
+          } else {
+            // otherwise this line is part of description / características
+            descripcionParts.push(line)
           }
+        })
+
+        if (nombre && precio !== null && !Number.isNaN(precio)) {
+          results.push({ nombre, precio, descripcion: descripcionParts.join(' ') || undefined })
         }
       })
-      return products
+
+      return results
     }
 
     let lines: string[] = []
@@ -85,7 +113,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Se requiere archivo, texto o URL" }, { status: 400 })
     }
 
-    const products = parseLines(lines)
+    // join lines to raw text and parse into structured products
+    const rawText = lines.join('\n')
+    const products = parseTextToProducts(rawText)
 
     // find existing products for comparison
     const existingStmt = db.prepare(`SELECT id, nombre, precio FROM productos WHERE marca_id = ?`)
@@ -96,15 +126,18 @@ export async function POST(request: NextRequest) {
     const updated: Array<{old:any,new:any}> = []
 
     // build map by nombre for existing
-    const existingMap: Record<string,{id:number,precio:number}> = {}
-    existing.forEach(e=>{ existingMap[e.nombre] = {id:e.id,precio:e.precio} })
+    const existingMap: Record<string,{id:number,precio:number,descripcion?:string}> = {}
+    existing.forEach(e=>{ existingMap[e.nombre] = {id:e.id,precio:e.precio,descripcion:e.descripcion} })
 
     products.forEach(p=>{
       const e = existingMap[p.nombre]
       if (!e) {
         added.push(p)
-      } else if (e.precio !== p.precio) {
-        updated.push({old:e,new:p})
+      } else {
+        const descChanged = (p.descripcion||'') !== (e.descripcion||'')
+        if (e.precio !== p.precio || descChanged) {
+          updated.push({old:e,new:p})
+        }
       }
       delete existingMap[p.nombre]
     })
@@ -117,11 +150,11 @@ export async function POST(request: NextRequest) {
     let inserted = 0
     let skipped = 0
     const errors: string[] = []
-    const insertStmt = db.prepare(`INSERT INTO productos (nombre, precio, marca_id) VALUES (?, ?, ?)`)
+    const insertStmt = db.prepare(`INSERT INTO productos (nombre, precio, descripcion, marca_id) VALUES (?, ?, ?, ?)`)
 
     products.forEach((p, idx) => {
       try {
-        insertStmt.run(p.nombre, p.precio, effectiveMarcaId)
+        insertStmt.run(p.nombre, p.precio, p.descripcion || null, effectiveMarcaId)
         inserted++
       } catch (err: any) {
         skipped++

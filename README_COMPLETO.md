@@ -843,6 +843,11 @@ nombre,precio,descripcion
 
 Click en **[Importar desde Excel]** → Selecciona archivo
 
+### 2. **PDF**
+Puedes subir un PDF con un listado de productos; el sistema extraerá automáticamente nombre, precio, descripción y cualquier característica incluida dentro del texto. Sólo asegúrate de que cada producto esté separado por una línea en blanco o bien contenga campos ``Nombre:``, ``Precio:``, ``Descripción:`` en el documento. El bot intentará interpretar los bloques y llenar el campo "descripción" con el resto del contenido.
+
+### 3. **Texto Libre**
+```
 #### 2. **Texto Libre**
 ```
 Pega texto así:

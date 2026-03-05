@@ -11,6 +11,7 @@ interface Producto {
   id: number
   nombre: string
   precio: number
+  descripcion?: string
 }
 
 interface ImportResult {
@@ -295,9 +296,14 @@ export default function ProductosAdminPage() {
         {/* import controls */}
         <div className="mb-4">
           {importMode === 'file' && (
-            <Button onClick={triggerFileInput} disabled={importLoading}>
-              {importLoading ? 'Importando...' : 'Seleccionar archivo'}
-            </Button>
+            <>
+              <Button onClick={triggerFileInput} disabled={importLoading}>
+                {importLoading ? 'Importando...' : 'Seleccionar archivo'}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">
+                Puedes subir Excel, CSV, PDF o Word. El sistema extrae nombre, precio y descripción/ características automáticamente.
+              </p>
+            </>
           )}
           <div className="mt-2">
             <label className="inline-flex items-center">
@@ -349,6 +355,10 @@ export default function ProductosAdminPage() {
             <div>
               <Label>Precio</Label>
               <Input name="precio" value={form.precio || ''} onChange={handleChange} />
+            </div>
+            <div>
+              <Label>Descripción</Label>
+              <Input name="descripcion" value={(form as any).descripcion || ''} onChange={handleChange} />
             </div>
           </div>
 
@@ -429,6 +439,7 @@ export default function ProductosAdminPage() {
                 <tr className="text-left">
                   <th>Nombre</th>
                   <th>Precio</th>
+                  <th>Descripción</th>
                   <th></th>
                 </tr>
               </thead>
@@ -437,6 +448,7 @@ export default function ProductosAdminPage() {
                   <tr key={p.id} className="border-t">
                     <td className="py-2">{p.nombre}</td>
                     <td>{p.precio}</td>
+                    <td>{p.descripcion || '-'}</td>
                     <td className="py-2">
                       <div className="flex gap-2">
                         <Button variant="ghost" onClick={() => handleEditClick(p)}>Editar</Button>
