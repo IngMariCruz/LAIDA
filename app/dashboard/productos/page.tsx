@@ -241,51 +241,56 @@ export default function ProductosAdminPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Productos</h2>
-          <div className="flex gap-4 items-center mt-2">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="importMode"
-                value="file"
-                checked={importMode === 'file'}
-                onChange={() => setImportMode('file')}
-                className="mr-1"
-              />
-              Archivo
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="importMode"
-                value="text"
-                checked={importMode === 'text'}
-                onChange={() => setImportMode('text')}
-                className="mr-1"
-              />
-              Texto / HTML
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="importMode"
-                value="url"
-                checked={importMode === 'url'}
-                onChange={() => setImportMode('url')}
-                className="mr-1"
-              />
-              URL
-            </label>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="*/*"
-            onChange={handleImportFile}
-            className="hidden"
-          />
+          <Link href={`/dashboard/productos/atributos?marcaId=${marcaId}`}>
+            <Button variant="outline" size="sm">
+              Gestionar Atributos
+            </Button>
+          </Link>
         </div>
+        <div className="flex gap-4 items-center mt-2">
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              name="importMode"
+              value="file"
+              checked={importMode === 'file'}
+              onChange={() => setImportMode('file')}
+              className="mr-1"
+            />
+            Archivo
+          </label>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              name="importMode"
+              value="text"
+              checked={importMode === 'text'}
+              onChange={() => setImportMode('text')}
+              className="mr-1"
+            />
+            Texto / HTML
+          </label>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              name="importMode"
+              value="url"
+              checked={importMode === 'url'}
+              onChange={() => setImportMode('url')}
+              className="mr-1"
+            />
+            URL
+          </label>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="*/*"
+          onChange={handleImportFile}
+          className="hidden"
+        />
 
         {/* import controls */}
         <div className="mb-4">
