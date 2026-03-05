@@ -406,7 +406,17 @@ export default function ProductosAdminPage() {
                     <div>
                       <p className="text-sm">Nuevos:</p>
                       <ul className="list-disc list-inside text-xs">
-                        {importResult.diff.added.map((p,i)=>(<li key={i}>{p.nombre} - {p.precio}</li>))}
+                        {importResult.diff.added.map((p,i)=>(
+                          <li key={i}>
+                            <strong>{p.nombre}</strong> - {p.precio}
+                            {p.descripcion && <span>: {p.descripcion}</span>}
+                            {p.caracteristicas && p.caracteristicas.length > 0 && (
+                              <ul className="ml-4 list-disc">
+                                {p.caracteristicas.map((c:any,j)=>(<li key={j} className="text-xs">{c}</li>))}
+                              </ul>
+                            )}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -414,7 +424,21 @@ export default function ProductosAdminPage() {
                     <div className="mt-2">
                       <p className="text-sm">Actualizados:</p>
                       <ul className="list-disc list-inside text-xs">
-                        {importResult.diff.updated.map((u,i)=>(<li key={i}>{u.old.nombre}: {u.old.precio} → {u.new.precio}</li>))}
+                        {importResult.diff.updated.map((u,i)=>(
+                          <li key={i}>
+                            <strong>{u.old.nombre}</strong>:
+                            {u.old.precio} → {u.new.precio}
+                            {u.new.descripcion && <div className="text-xs">Desc: {u.new.descripcion}</div>}
+                            {u.new.caracteristicas && u.new.caracteristicas.length>0 && (
+                              <div className="text-xs">
+                                Características:
+                                <ul className="ml-4 list-disc">
+                                  {u.new.caracteristicas.map((c:any,j)=>(<li key={j}>{c}</li>))}
+                                </ul>
+                              </div>
+                            )}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}

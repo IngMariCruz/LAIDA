@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // helper to convert array of lines or raw text into product objects including description
-    function parseTextToProducts(text: string): { nombre: string; precio: number; descripcion?: string }[] {
-      const results: { nombre: string; precio: number; descripcion?: string }[] = []
+    function parseTextToProducts(text: string): { nombre: string; precio: number; descripcion?: string; caracteristicas?: string[] }[] {
+      const results: { nombre: string; precio: number; descripcion?: string; caracteristicas?: string[] }[] = []
       // split into sections separated by empty lines - each section may describe one product
       const sections = text.split(/\r?\n\s*\r?\n/) // blank line
 
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         let nombre = ''
         let precio: number | null = null
         const descripcionParts: string[] = []
+        const caracteristicas: string[] = []
 
         const reNamePrice = /(.+?)\s*[-\t,;|]+\s*([0-9]+(?:[\.,][0-9]+)?)/
 
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
             precio = parseFloat(line.split(/:\s*/)[1].replace(',', '.'))
           } else if (low.startsWith('descripci')) {
             descripcionParts.push(line.split(/:\s*/)[1].trim())
+          } else if (line.includes(':') && !low.startsWith('nombre:') && !low.startsWith('precio:') && !low.startsWith('descripci')) {
+            // any other key:value is treated as característica
+            caracteristicas.push(line)
           } else if (!nombre && !precio) {
             // try match on same line
             const m = line.match(reNamePrice)
@@ -60,13 +64,15 @@ export async function POST(request: NextRequest) {
               descripcionParts.push(line)
             }
           } else {
-            // otherwise this line is part of description / características
+            // otherwise this line is part of description
             descripcionParts.push(line)
           }
         })
 
         if (nombre && precio !== null && !Number.isNaN(precio)) {
-          results.push({ nombre, precio, descripcion: descripcionParts.join(' ') || undefined })
+          const product: any = { nombre, precio, descripcion: descripcionParts.join(' ') || undefined }
+          if (caracteristicas.length) product.caracteristicas = caracteristicas
+          results.push(product)
         }
       })
 
@@ -118,8 +124,8 @@ export async function POST(request: NextRequest) {
     const products = parseTextToProducts(rawText)
 
     // find existing products for comparison
-    const existingStmt = db.prepare(`SELECT id, nombre, precio FROM productos WHERE marca_id = ?`)
-    const existing: {id:number,nombre:string,precio:number}[] = existingStmt.all(effectiveMarcaId)
+    const existingStmt = db.prepare(`SELECT id, nombre, precio, descripcion FROM productos WHERE marca_id = ?`)
+    const existing: {id:number,nombre:string,precio:number,descripcion?:string}[] = existingStmt.all(effectiveMarcaId)
 
     const added: typeof products = []
     const removed: typeof existing = []
