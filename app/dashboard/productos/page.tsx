@@ -37,19 +37,30 @@ export default function ProductosAdminPage() {
  
   useEffect(() => {
     const u = localStorage.getItem('usuario')
-    if (!u) {
-      window.location.href = '/login'
-      return
-    }
+    if (!u) { window.location.href = '/login'; return }
 
-    let id: number | null = null
-    try { id = JSON.parse(u).id } catch { id = null }
-    if (id === null) {
-      window.location.href = '/login'
-      return
-    }
-    setMarcaId(id)
-    fetchProductos(id)
+    try {
+      const user = JSON.parse(u)
+      if (!user?.id) { window.location.href = '/login'; return }
+      const token = localStorage.getItem('token')
+
+      // Obtener bots frescos del servidor
+      fetch(`/api/usuarios/${user.id}/bots`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then((bots: any[]) => {
+          const lista = bots.length > 0 ? bots : (user.botsAsignados ?? [])
+          const id = lista.length > 0 ? lista[0].id : user.id
+          // Actualizar localStorage
+          localStorage.setItem('usuario', JSON.stringify({ ...user, botsAsignados: lista }))
+          setMarcaId(id)
+          fetchProductos(id)
+        })
+        .catch(() => {
+          const id = (user.botsAsignados?.[0]?.id) ?? user.id
+          setMarcaId(id)
+          fetchProductos(id)
+        })
+    } catch { window.location.href = '/login' }
   }, [])
 
   const fetchProductos = async (id?: number | null) => {

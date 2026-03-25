@@ -81,13 +81,36 @@ def get_bot_by_id(bot_id: int) -> Optional[Dict[str, Any]]:
 
 def get_bot_flow_config(bot_id: int) -> Dict[str, Any]:
     """Obtener configuración del flujo del bot"""
-    query = "SELECT * FROM bot_flow_config WHERE bot_id = ? LIMIT 1"
     with get_connection() as conn:
-        row = conn.execute(query, (bot_id,)).fetchone()
-    
-    if row:
-        return dict(row)
-    
+        bot_row = conn.execute("SELECT manager_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+        manager_id = bot_row["manager_id"] if bot_row else None
+
+        row = conn.execute("SELECT * FROM bot_flow_config WHERE bot_id = ? LIMIT 1", (bot_id,)).fetchone()
+
+        if row:
+            return dict(row)
+
+        # Fallback a config_bot si no existe bot_flow_config
+        config_row = None
+        if manager_id is not None:
+            config_row = conn.execute("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1", (manager_id,)).fetchone()
+
+        if not config_row:
+            config_row = conn.execute("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1", (bot_id,)).fetchone()
+
+        if config_row:
+            return {
+                "mensaje_bienvenida": config_row["mensaje_bienvenida"] or "¡Hola! 👋 Bienvenido a nuestra tienda.",
+                "mensaje_sin_interes": "Entiendo. Si cambias de opinión, aquí estaré para ayudarte. ¡Hasta pronto! 👋",
+                "mensaje_productos": "¿Te gustaría ver nuestros productos disponibles?",
+                "mensaje_caracteristicas": "¿Qué características te interesan para este producto?",
+                "mensaje_confirmacion": "¿Deseas confirmar tu interés en este producto?",
+                "mensaje_agradecimiento": "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊",
+                "mostrar_productos_inicio": 1,
+                "max_productos_mostrar": 5,
+                "permitir_recomendaciones": 1
+            }
+
     # Configuración por defecto
     return {
         "mensaje_bienvenida": "¡Hola! 👋 Bienvenido a nuestra tienda.",

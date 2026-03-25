@@ -1,176 +1,231 @@
 import { NextRequest, NextResponse } from "next/server"
 import db from "@/db/init"
-import * as XLSX from "xlsx"
-
 import pdf from "pdf-parse"
+import * as XLSX from "xlsx"
 import mammoth from "mammoth"
-import fetch from "node-fetch"
-import { JSDOM } from "jsdom"
+import OpenAI from "openai"
 
+// ── Obtener bot vinculado al manager ─────────────────────────────────────────
+function getBotByMarcaId(marcaId: number): { id: number; openai_key: string | null } | null {
+  // marcaId puede ser bot.id directamente o manager_id (usuario.id)
+  const byBotId = db
+    .prepare("SELECT id, openai_key FROM bots WHERE id = ? AND estado = 'activo' LIMIT 1")
+    .get(marcaId) as { id: number; openai_key: string | null } | undefined
+  if (byBotId) return byBotId
+
+  const byManager = db
+    .prepare("SELECT id, openai_key FROM bots WHERE manager_id = ? AND estado = 'activo' LIMIT 1")
+    .get(marcaId) as { id: number; openai_key: string | null } | undefined
+  return byManager ?? null
+}
+
+// ── Extraer texto plano según tipo de archivo ───────────────────────────────
+async function extractText(buffer: Buffer, filename: string): Promise<string> {
+  if (/\.pdf$/i.test(filename)) {
+    const parsed = await pdf(buffer)
+    return parsed.text
+  }
+  if (/\.xlsx?$/i.test(filename)) {
+    const wb = XLSX.read(buffer, { type: "buffer" })
+    return wb.SheetNames.map((name) =>
+      XLSX.utils.sheet_to_csv(wb.Sheets[name])
+    ).join("\n\n")
+  }
+  if (/\.docx?$/i.test(filename)) {
+    const result = await mammoth.extractRawText({ buffer })
+    return result.value
+  }
+  // txt / csv / cualquier otro
+  return buffer.toString("utf-8")
+}
+
+// ── Prompt para OpenAI ──────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `Eres un experto en extracción de catálogos de productos y servicios.
+Se te entregará texto extraído de un documento (PDF, Excel, Word, etc.).
+
+Tu tarea es extraer TODOS los productos y servicios, siguiendo estas reglas:
+
+1. PRODUCTOS FÍSICOS: extrae cada producto con nombre, precio, categoría y todas sus características
+   (material, dimensiones, colores, marca, capacidad, acabado, diseño especial, código de producto, etc.).
+
+2. SERVICIOS CON VARIANTES DE PRECIO: cuando un servicio tiene varias medidas/tamaños con precios distintos,
+   crea UN producto por cada variante. Ejemplo: "DTF Bolsillo 10x10cm", "DTF Logo 10x5cm", etc.
+   Incluye en caracteristicas: condición mínima, notas importantes.
+
+3. PRODUCTOS SIN PRECIO: si un producto no tiene precio claro, usa precio = 0 e inclúyelo igual.
+   NO omitas productos solo por falta de precio.
+
+4. CATEGORÍAS: usa la sección/encabezado más cercano como categoría
+   (ej: "MUGS", "CARAMAÑOLAS", "ROMPECABEZAS", "ESTAMPADO DTF", etc.).
+
+5. CARACTERÍSTICAS: extrae TODAS las que aparezcan:
+   - Material, Dimensiones, Colores, Marca, Capacidad, Acabado, Diseño, Código de producto,
+     Condiciones de venta, Notas, etc.
+   - Formato: "Clave: Valor"
+   - Si un valor dice "No especificado", "No especificada" o similar, inclúyelo igual.
+
+6. ELIMINACIÓN: descarta solo líneas que sean encabezados de sección sin datos de producto,
+   números de página, o texto decorativo. NO descartes productos reales.
+
+7. DEDUPLICACIÓN: si el mismo producto aparece repetido con exactamente los mismos datos, incluye solo uno.
+
+Devuelve ÚNICAMENTE un JSON válido sin texto adicional:
+{
+  "productos": [
+    {
+      "nombre": "string",
+      "precio": number,
+      "descripcion": "string",
+      "categoria": "string | null",
+      "caracteristicas": ["string"]
+    }
+  ]
+}
+
+- nombre: descriptivo y único, no genérico.
+- precio: número sin símbolos ni puntos de miles (ej: 20000, no "$20.000"). Si no hay precio usa 0.
+- descripcion: resumen breve máximo 150 caracteres.
+- caracteristicas: array de strings "Clave: Valor".`
+
+interface ProductoIA {
+  nombre: string
+  precio: number
+  descripcion: string
+  categoria: string | null
+  caracteristicas: string[]
+}
+
+async function extractProductsWithAI(text: string, apiKey: string): Promise<ProductoIA[]> {
+  const client = new OpenAI({ apiKey })
+
+  // Si el texto es muy largo, lo troceamos en chunks de ~12k chars
+  const CHUNK_SIZE = 12000
+  const chunks: string[] = []
+  for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+    chunks.push(text.slice(i, i + CHUNK_SIZE))
+  }
+
+  const allProducts: ProductoIA[] = []
+
+  for (const chunk of chunks) {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Texto del documento:\n\n${chunk}` },
+      ],
+    })
+
+    const raw = response.choices[0]?.message?.content ?? ""
+    try {
+      // Extraer JSON aunque venga envuelto en ```json ... ```
+      const jsonMatch = raw.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) continue
+      const parsed = JSON.parse(jsonMatch[0]) as { productos: ProductoIA[] }
+      if (Array.isArray(parsed.productos)) {
+        allProducts.push(...parsed.productos)
+      }
+    } catch {
+      console.error("Error parseando respuesta OpenAI:", raw.slice(0, 200))
+    }
+  }
+
+  // Deduplicar por nombre (case-insensitive)
+  const seen = new Set<string>()
+  return allProducts.filter((p) => {
+    const key = p.nombre.toLowerCase().trim()
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+// ── Handler principal ───────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { filename, data, marcaId, text, url, replaceExisting } = body
+    const { filename, data, marcaId, replaceExisting } = body
 
     if (!marcaId) {
       return NextResponse.json({ error: "marcaId es requerido" }, { status: 400 })
     }
 
-    // ensure marcaId refers to an existing marca; otherwise use null so FK doesn't fail
-    const marcaRow = db.prepare(`SELECT id FROM marcas WHERE id = ?`).get(marcaId)
-    const effectiveMarcaId = marcaRow ? marcaId : null
+    if (!data || !filename) {
+      return NextResponse.json({ error: "Se requiere archivo (filename + data)" }, { status: 400 })
+    }
 
-    // if the client asked to replace existing products, delete them first (use effective id)
+    // Resolver bot real (por bot.id o por manager_id)
+    const bot = getBotByMarcaId(Number(marcaId))
+    if (!bot) {
+      return NextResponse.json({ error: "No se encontró un bot activo para este usuario." }, { status: 404 })
+    }
+
+    const effectiveMarcaId = bot.id  // siempre guardar con bot.id
+    const openaiKey = bot.openai_key
+
+    if (!openaiKey) {
+      return NextResponse.json(
+        { error: "Este bot no tiene una clave de OpenAI configurada. Agrégala desde el panel de Super Admin." },
+        { status: 422 }
+      )
+    }
+
+    // 1. Convertir archivo a texto plano
+    const buffer = Buffer.from(data, "base64")
+    const rawText = await extractText(buffer, filename)
+
+    if (!rawText.trim()) {
+      return NextResponse.json({ error: "No se pudo extraer texto del archivo." }, { status: 422 })
+    }
+
+    // 2. Extraer productos con OpenAI
+    const productos = await extractProductsWithAI(rawText, openaiKey)
+
+    if (productos.length === 0) {
+      return NextResponse.json(
+        { error: "No se encontraron productos en el documento. Verifica que el archivo contenga un catálogo." },
+        { status: 422 }
+      )
+    }
+
+    // 3. Guardar en BD
     if (replaceExisting) {
-      db.prepare(`DELETE FROM productos WHERE marca_id = ?`).run(effectiveMarcaId)
+      db.prepare("DELETE FROM productos WHERE marca_id = ?").run(effectiveMarcaId)
     }
 
-    // helper to convert array of lines or raw text into product objects including description
-    function parseTextToProducts(text: string): { nombre: string; precio: number; descripcion?: string; caracteristicas?: string[] }[] {
-      const results: { nombre: string; precio: number; descripcion?: string; caracteristicas?: string[] }[] = []
-      // split into sections separated by empty lines - each section may describe one product
-      const sections = text.split(/\r?\n\s*\r?\n/) // blank line
-
-      sections.forEach((section) => {
-        const lines = section.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
-        if (lines.length === 0) return
-
-        let nombre = ''
-        let precio: number | null = null
-        const descripcionParts: string[] = []
-        const caracteristicas: string[] = []
-
-        const reNamePrice = /(.+?)\s*[-\t,;|]+\s*([0-9]+(?:[\.,][0-9]+)?)/
-
-        lines.forEach((line) => {
-          const low = line.toLowerCase()
-          if (low.startsWith('nombre:')) {
-            nombre = line.split(/:\s*/)[1].trim()
-          } else if (low.startsWith('precio:')) {
-            precio = parseFloat(line.split(/:\s*/)[1].replace(',', '.'))
-          } else if (low.startsWith('descripci')) {
-            descripcionParts.push(line.split(/:\s*/)[1].trim())
-          } else if (line.includes(':') && !low.startsWith('nombre:') && !low.startsWith('precio:') && !low.startsWith('descripci')) {
-            // any other key:value is treated as característica
-            caracteristicas.push(line)
-          } else if (!nombre && !precio) {
-            // try match on same line
-            const m = line.match(reNamePrice)
-            if (m) {
-              nombre = m[1].trim()
-              precio = parseFloat(m[2].replace(',', '.'))
-            } else {
-              // if still nothing, treat as potential description
-              descripcionParts.push(line)
-            }
-          } else {
-            // otherwise this line is part of description
-            descripcionParts.push(line)
-          }
-        })
-
-        if (nombre && precio !== null && !Number.isNaN(precio)) {
-          const product: any = { nombre, precio, descripcion: descripcionParts.join(' ') || undefined }
-          if (caracteristicas.length) product.caracteristicas = caracteristicas
-          results.push(product)
-        }
-      })
-
-      return results
-    }
-
-    let lines: string[] = []
-
-    if (data && filename) {
-      const buffer = Buffer.from(data, "base64")
-      if (/\.(xlsx?|xls)$/i.test(filename)) {
-        // spreadsheet
-        const workbook = XLSX.read(buffer, { type: "buffer" })
-        const sheetName = workbook.SheetNames[0]
-        const sheet = workbook.Sheets[sheetName]
-        const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" })
-        // convert rows to text lines for reuse of parser
-        rows.forEach((row) => {
-          const nombre = row.nombre || row.producto || ''
-          const precio = row.precio || row.price || ''
-          if (nombre || precio) lines.push(`${nombre}\t${precio}`)
-        })
-      } else if (/\.pdf$/i.test(filename)) {
-        const parsed = await pdf(buffer)
-        lines = parsed.text.split(/\r?\n/)
-      } else if (/\.docx?$/i.test(filename)) {
-        const result = await mammoth.extractRawText({ buffer })
-        lines = result.value.split(/\r?\n/)
-      } else if (/\.html?$/i.test(filename)) {
-        const dom = new JSDOM(buffer.toString())
-        lines = dom.window.document.body.textContent?.split(/\r?\n/) || []
-      } else {
-        // plain text fallback
-        lines = buffer.toString('utf-8').split(/\r?\n/)
-      }
-    } else if (text) {
-      lines = text.split(/\r?\n/)
-    } else if (url) {
-      const resp = await fetch(url)
-      const html = await resp.text()
-      const dom = new JSDOM(html)
-      lines = dom.window.document.body.textContent?.split(/\r?\n/) || []
-    } else {
-      return NextResponse.json({ error: "Se requiere archivo, texto o URL" }, { status: 400 })
-    }
-
-    // join lines to raw text and parse into structured products
-    const rawText = lines.join('\n')
-    const products = parseTextToProducts(rawText)
-
-    // find existing products for comparison
-    const existingStmt = db.prepare(`SELECT id, nombre, precio, descripcion FROM productos WHERE marca_id = ?`)
-    const existing: {id:number,nombre:string,precio:number,descripcion?:string}[] = existingStmt.all(effectiveMarcaId)
-
-    const added: typeof products = []
-    const removed: typeof existing = []
-    const updated: Array<{old:any,new:any}> = []
-
-    // build map by nombre for existing
-    const existingMap: Record<string,{id:number,precio:number,descripcion?:string}> = {}
-    existing.forEach(e=>{ existingMap[e.nombre] = {id:e.id,precio:e.precio,descripcion:e.descripcion} })
-
-    products.forEach(p=>{
-      const e = existingMap[p.nombre]
-      if (!e) {
-        added.push(p)
-      } else {
-        const descChanged = (p.descripcion||'') !== (e.descripcion||'')
-        if (e.precio !== p.precio || descChanged) {
-          updated.push({old:e,new:p})
-        }
-      }
-      delete existingMap[p.nombre]
-    })
-    // remaining keys in existingMap are removed
-    for (const name in existingMap) {
-      const e=existingMap[name]
-      removed.push({id:e.id,nombre:name,precio:e.precio})
-    }
+    const insert = db.prepare(
+      "INSERT INTO productos (nombre, precio, descripcion, marca_id) VALUES (?, ?, ?, ?)"
+    )
 
     let inserted = 0
     let skipped = 0
     const errors: string[] = []
-    const insertStmt = db.prepare(`INSERT INTO productos (nombre, precio, descripcion, marca_id) VALUES (?, ?, ?, ?)`)
 
-    products.forEach((p, idx) => {
+    for (const p of productos) {
       try {
-        insertStmt.run(p.nombre, p.precio, p.descripcion || null, effectiveMarcaId)
+        const descripcionCompleta = [
+          p.descripcion,
+          p.categoria ? `Categoría: ${p.categoria}` : null,
+          ...(p.caracteristicas ?? []),
+        ]
+          .filter(Boolean)
+          .join(" | ")
+
+        insert.run(p.nombre, p.precio, descripcionCompleta || null, effectiveMarcaId)
         inserted++
       } catch (err: any) {
         skipped++
-        errors.push(`Línea ${idx + 1}: ${err.message}`)
+        errors.push(`${p.nombre}: ${err.message}`)
       }
-    })
+    }
 
-    return NextResponse.json({ success: true, inserted, skipped, errors, diff:{added,removed,updated} }, { status: 200 })
+    return NextResponse.json({ success: true, inserted, skipped, errors })
   } catch (error: any) {
     console.error("Error importando productos:", error)
-    return NextResponse.json({ error: "Error al procesar el archivo" }, { status: 500 })
+    const msg = error?.message?.includes("API key")
+      ? "Clave de OpenAI inválida o sin créditos."
+      : "Error al procesar el archivo."
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

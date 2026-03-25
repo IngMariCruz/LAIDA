@@ -1,9 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getMarcaById, saveConfigBot } from "@/db/utils"
+import { getUsuarioById, saveConfigBot, getConfigBotByMarcaId } from "@/db/utils"
+import fs from "fs"
+import path from "path"
 
 type ConfigBotPayload = {
   marca_id?: number
   mensaje_bienvenida?: string
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const marcaId = searchParams.get("marcaId")
+
+    if (!marcaId || Number.isNaN(Number(marcaId))) {
+      return NextResponse.json({ success: false, message: "marcaId requerido" }, { status: 400 })
+    }
+
+    const config = getConfigBotByMarcaId(Number(marcaId))
+
+    if (!config) {
+      return NextResponse.json({ success: true, data: null })
+    }
+
+    return NextResponse.json({ success: true, data: config })
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error?.message || "Error obteniendo configuración" }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -32,7 +55,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const marca = getMarcaById(marca_id)
+    const marca = getUsuarioById(marca_id)
     if (!marca) {
       return NextResponse.json(
         {
@@ -44,6 +67,12 @@ export async function POST(request: NextRequest) {
     }
 
     const config = saveConfigBot({ marca_id, mensaje_bienvenida })
+
+    // Señal al bot para que recargue su configuración
+    try {
+      const dbDir = path.dirname(process.env.DB_PATH ?? path.join(process.cwd(), "laida.db"))
+      fs.writeFileSync(path.join(dbDir, `reload_bot_${marca_id}.flag`), Date.now().toString())
+    } catch { /* no bloquear si falla */ }
 
     return NextResponse.json(
       {

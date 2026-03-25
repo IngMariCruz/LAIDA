@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/cgiohidalgos/Desktop/LAIDA/app/dashboard/manager/bot/[slug]/clientes)",
+      "Bash(mkdir -p /Users/cgiohidalgos/Desktop/LAIDA/app/dashboard/manager/bot/[slug]/productos)",
+      "Bash(mkdir -p /Users/cgiohidalgos/Desktop/LAIDA/app/dashboard/manager/bot/[slug]/marca)",
+      "Bash(pnpm install:*)",
+      "Bash(sqlite3 /Users/cgiohidalgos/Desktop/LAIDA/bd/laida.db \".tables\")",
+      "Bash(sqlite3 /Users/cgiohidalgos/Desktop/LAIDA/bd/laida.db:*)",
+      "Bash(curl -s \"https://api.telegram.org/bot8787456321:AAEd9cLY5cQWe3mQDUBR_obtCtQhg5JL_Bk/getMe\")",
+      "Bash(curl -s \"https://api.telegram.org/bot8787456321:AAEd9cLY5cQWe3mQDUBR_obtCtQhg5JL_Bk/getWebhookInfo\")",
+      "Bash(curl -s \"https://api.telegram.org/bot8787456321:AAEd9cLY5cQWe3mQDUBR_obtCtQhg5JL_Bk/getUpdates\")",
+      "Bash(docker exec:*)",
+      "Bash(kill 25928)",
+      "Bash(pnpm add:*)",
+      "Bash(cat /Users/cgiohidalgos/Desktop/LAIDA/.env*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(curl -s \"http://localhost:3000/api/productos?marcaId=1\")",
+      "Bash(grep -n \"marcaId\" /Users/cgiohidalgos/Desktop/LAIDA/app/dashboard/manager/bot/[slug]/productos/page.tsx)",
+      "Bash(grep -rn \"marcaId:\" /Users/cgiohidalgos/Desktop/LAIDA/app/dashboard/manager/bot/[slug]/productos/page.tsx)",
+      "Bash(pkill -f laidaBot_multitenant.py)",
+      "Bash(pkill -f python.*bot)"
+    ],
+    "additionalDirectories": [
+      "/Users/cgiohidalgos/Desktop/LAIDA/app/api/usuarios/[id]"
+    ]
+  }
+}

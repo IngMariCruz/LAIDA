@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     Bot,
     Boxes,
@@ -59,6 +59,27 @@ export default function ConfigBotPage() {
     const [isSaving, setIsSaving] = useState(false)
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
     const characterCount = useMemo(() => welcomeMessage.length, [welcomeMessage])
+
+    useEffect(() => {
+        const loadConfig = async () => {
+            const marcaId = getMarcaIdFromSession()
+            if (!marcaId) return
+
+            try {
+                const res = await fetch(`/api/config-bot?marcaId=${marcaId}`)
+                if (!res.ok) return
+
+                const data = await res.json() as { success: boolean; data?: { mensaje_bienvenida?: string } | null }
+                if (data.success && data.data?.mensaje_bienvenida) {
+                    setWelcomeMessage(data.data.mensaje_bienvenida)
+                }
+            } catch {
+                // ignorar errores de carga inicial
+            }
+        }
+
+        loadConfig()
+    }, [])
 
     const getMarcaIdFromSession = (): number | null => {
         const rawUser = localStorage.getItem("usuario")

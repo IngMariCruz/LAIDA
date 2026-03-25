@@ -161,11 +161,16 @@ function initTables(database: DatabaseType): void {
 
   // Tabla de productos
   database.exec(`
-    CRdescripcion TEXT,
+    CREATE TABLE IF NOT EXISTS productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      precio REAL NOT NULL,
+      marca_id INTEGER,
+      descripcion TEXT,
       imagen_url TEXT,
       activo INTEGER DEFAULT 1,
       fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
+      FOREIGN KEY (marca_id) REFERENCES bots(id) ON DELETE SET NULL
     )
   `)
 
@@ -241,7 +246,7 @@ function initTables(database: DatabaseType): void {
       historia TEXT NOT NULL,
       marca_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )
   `)
 
@@ -252,7 +257,7 @@ function initTables(database: DatabaseType): void {
       marca_id INTEGER NOT NULL UNIQUE,
       mensaje_bienvenida TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )
   `)
 

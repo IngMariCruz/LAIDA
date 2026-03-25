@@ -1,0 +1,982 @@
+====================================
+Fecha: 2026-03-25 17:11:42
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:15:20
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:15:25
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: que me ofreces?
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:15:48
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: que tinees
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:15:59
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:16:06
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:16:10
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: holz
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:16:15
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: gmail.com
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:16:23
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: cgiohidaflo@gmail.com
+respuesta_bot: Gracias. Ahora comparte tu número de teléfono (10 dígitos).
+
+====================================
+Fecha: 2026-03-25 17:16:28
+bot_id: 1
+user_id: 6691816954
+estado: CONFIRM
+mensaje_usuario: 3232323232
+respuesta_bot: ¡Gracias! 🎉 Hemos confirmado tus datos:
+
+⭐ Interés: holz
+📧 Correo: cgiohidaflo@gmail.com
+📞 Teléfono: 3232323232
+
+En breve alguien del equipo te contactará.
+
+====================================
+Fecha: 2026-03-25 17:19:17
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:21:42
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: hola
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:21:47
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: hola
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:21:49
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: hola
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:25:47
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: hola
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:26:42
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: hola
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:27:27
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_EMAIL
+mensaje_usuario: hola
+respuesta_bot: Ese correo no parece válido. Intenta nuevamente con formato nombre@dominio.com
+
+====================================
+Fecha: 2026-03-25 17:27:36
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:27:40
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: hola
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:31:25
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:31:27
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: hola
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:33:42
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:33:45
+bot_id: 1
+user_id: 6691816954
+estado: WAIT_INTEREST
+mensaje_usuario: hola
+respuesta_bot: Perfecto. Ahora compárteme tu correo electrónico.
+
+====================================
+Fecha: 2026-03-25 17:35:42
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:35:45
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:36:28
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:36:30
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:36:31
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:36:51
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:37:42
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:37:44
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:37:46
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:38:23
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:38:25
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:38:37
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:39:23
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:39:25
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:39:26
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:39:59
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:40:01
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:40:09
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:40:43
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 17:42:50
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: ¡Hola! 👋 Bienvenido a prueba.
+Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado?
+
+====================================
+Fecha: 2026-03-25 19:27:44
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+====================================
+Fecha: 2026-03-25 19:27:44
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+====================================
+Fecha: 2026-03-25 19:27:44
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+====================================
+Fecha: 2026-03-25 19:27:45
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+====================================
+Fecha: 2026-03-25 19:27:45
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+====================================
+Fecha: 2026-03-25 19:27:45
+bot_id: 1
+user_id: 6691816954
+estado: WELCOME
+mensaje_usuario: /start
+respuesta_bot: olisss
+
+Actualmente no tengo productos destacados, pero puedo ayudarte a descubrir lo que buscas. ¿Qué tipo de producto o servicio te interesa?
+
+[2026-03-25 19:38:05] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< olisss
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 19:38:26] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< olisss
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 19:39:01] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< olisss
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 19:39:48] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 19:44:20] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 19:44:26] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> que productos tienes
+  <<< Basado en lo que buscas, te recomiendo:
+
+1. *$1* — $333.0
+2. *(55) 1234* — $5678.0
+
+Escribe el *número* o el *nombre* del producto para ver más detalles.
+
+[2026-03-25 19:44:33] bot=1 user=6691816954 estado=WAIT_SELECTION
+  >>> 1
+  <<< Aquí tienes los detalles:
+
+*$1*
+💰 Precio: $333.0
+📝 Kit Godín Botella de 250ml vidrio y bambú, juego de cubiertos, popotes de acero y juego de 3 platos de bambú. Kit Básicos $733.00 2 popotes de acero inoxidable, cuchcara de bambú, cepillo dental mango de bambú y cerdas suaves, rastrillo de acero inoxidable con 5 navajas de repuesto. Categoría Accesorios
+
+¿Te gustaría continuar con este producto? Responde *sí* o *no*.
+
+[2026-03-25 20:44:45] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 20:44:56] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> que productos tienes?
+  <<< Basado en lo que buscas, te recomiendo:
+
+1. *Mug Blanco* — $22000.0
+2. *Mug Mágico* — $20000.0
+3. *Mug Color* — $27000.0
+4. *Caramañola Liceria* — $50000.0
+
+Escribe el *número* o el *nombre* del producto para ver más detalles.
+
+[2026-03-25 20:45:05] bot=1 user=6691816954 estado=WAIT_SELECTION
+  >>> 1
+  <<< Aquí tienes los detalles:
+
+*Mug Blanco*
+💰 Precio: $22000.0
+📝 Mug de color blanco con acabado mate. | Categoría: MUGS | Capacidad: No especificada | Material: No especificado | Colores: Blanco | Acabado: Mate
+
+¿Te gustaría continuar con este producto? Responde *sí* o *no*.
+
+[2026-03-25 20:45:12] bot=1 user=6691816954 estado=PRODUCT_DETAIL
+  >>> si
+  <<< Perfecto, solo necesito un par de datos para completar tu registro.
+
+¿Cuál es tu *correo electrónico*?
+
+[2026-03-25 20:55:22] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 20:55:22] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+1. *Mug Blanco* — $22000.0
+2. *Mug Mágico* — $20000.0
+3. *Mug Color* — $27000.0
+4. *Caramañola Liceria* — $50000.0
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando y te ayudo a encontrarlo. 😊
+
+[2026-03-25 20:55:51] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> quiero una regalo para mi novia
+  <<< Basado en lo que buscas, te recomiendo:
+
+1. *Mug Blanco* — $22000.0
+2. *Mug Mágico* — $20000.0
+3. *Mug Color* — $27000.0
+4. *Caramañola Liceria* — $50000.0
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-03-25 20:57:24] bot=1 user=6691816954 estado=WAIT_SELECTION
+  >>> otros productos
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+1. *Mug Blanco* — $22000.0
+2. *Mug Mágico* — $20000.0
+3. *Mug Color* — $27000.0
+4. *Caramañola Liceria* — $50000.0
+
+[2026-03-25 20:57:27] bot=1 user=6691816954 estado=WAIT_SELECTION
+  >>> otros
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+1. *Mug Blanco* — $22000.0
+2. *Mug Mágico* — $20000.0
+3. *Mug Color* — $27000.0
+4. *Caramañola Liceria* — $50000.0
+
+[2026-03-25 20:59:47] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 20:59:48] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando y te ayudo a encontrarlo. 😊
+
+[2026-03-25 21:01:57] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:01:57] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando y te ayudo a encontrarlo. 😊
+
+[2026-03-25 21:02:00] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:02:01] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando y te ayudo a encontrarlo. 😊
+
+[2026-03-25 21:02:37] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:02:37] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando y te ayudo a encontrarlo. 😊
+
+[2026-03-25 21:03:07] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> me interesa  Estampado DTF Bolsillo 10x10cm
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-03-25 21:03:15] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:03:16] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Llavero Circular Liceria — Consultar
+
+🔹 *ROMPECABEZAS*
+  2. Rompecabezas Liceria Rectangular — Consultar
+
+🔹 *ESTAMPADOS DTF*
+  3. Estampado DTF Manga 10x8cm — $6.000
+
+🔹 *MUGS*
+  4. Mug Color — $27.000
+  5. Mug Mágico — $20.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-03-25 21:03:21] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> me interesa Estampado DTF Bolsillo 10x10cm
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-03-25 21:08:11] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:08:12] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *ESTAMPADOS DTF*
+  1. Estampado DTF A4 20x20cm — $12.500
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+
+🔹 *MUGS*
+  2. Mug Mágico — $20.000
+  6. Mug Blanco — $22.000
+
+🔹 *ROMPECABEZAS*
+  3. Rompecabezas Liceria Rectangular — Consultar
+
+🔹 *OTROS*
+  4. PadMouse Liceria — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-03-25 21:08:22] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> intersado en Mug Mágico
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-03-25 21:11:33] bot=1 user=6691816954 estado=START
+  >>> /start
+  <<< Hola soy tu asistente virtual.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-03-25 21:11:33] bot=1 user=6691816954 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *CARAMAÑOLAS*
+  1. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  2. Estampado DTF Manga 10x8cm — $6.000
+  3. Estampado DTF A4 20x20cm — $12.500
+
+🔹 *OTROS*
+  4. Destapador Botella Liceria — Consultar
+
+🔹 *MUGS*
+  5. Mug Blanco — $22.000
+  6. Mug Color — $27.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-03-25 21:11:37] bot=1 user=6691816954 estado=WAIT_INTEREST
+  >>> intersado en Mug Mágico
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Mágico — $20.000
+  3. Mug Color — $27.000
+
+🔹 *CARAMAÑOLAS*
+  4. Caramañola Liceria — $50.000
+
+🔹 *ESTAMPADOS DTF*
+  5. Estampado DTF Bolsillo 10x10cm — $8.500
+  6. Estampado DTF Logo 10x5cm — $5.000
+  7. Estampado DTF Manga 10x8cm — $6.000
+  8. Estampado DTF Oficio 25x35cm — $15.000
+  9. Estampado DTF A4 20x20cm — $12.500
+  10. Estampado DTF Tabloide 30x50cm — $20.500
+
+🔹 *ROMPECABEZAS*
+  11. Rompecabezas Liceria Rectangular — Consultar
+  12. Rompecabezas Liceria Circular — Consultar
+  13. Rompecabezas Liceria Corazón — Consultar
+
+🔹 *OTROS*
+  14. Llavero Circular Liceria — Consultar
+  15. PadMouse Liceria — Consultar
+  16. Destapador Botella Liceria — Consultar
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
