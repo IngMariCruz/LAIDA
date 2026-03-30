@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
       openai_key: openai_key || null,
       estado: estado || "activo",
       manager_id: manager_id || null,
+      marca_id: manager_id || null,
     })
 
     // Si se asignó un manager, crear la relación en usuario_bots

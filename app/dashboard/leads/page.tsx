@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -14,18 +12,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, XCircle, Mail, Phone, Zap } from "lucide-react"
+import { CheckCircle, Clock, Mail, Phone, Zap } from "lucide-react"
 
 interface Lead {
   id: number
   bot_id?: number
   bot_slug?: string
   bot_nombre?: string
-  interes: string
-  email: string
-  telefono: string
+  interes?: string | null
+  email?: string | null
+  telefono?: string | null
   telegram_user_id?: number
   estado: "nuevo" | "contactado" | "cerrado"
+  categoria?: "hot" | "warm" | "cold" | null
+  actualizado_en?: string | null
   created_at: string
 }
 
@@ -45,18 +45,23 @@ export default function LeadsPage() {
   useEffect(() => {
     verificarAuth()
     cargarLeads()
+    const interval = setInterval(() => {
+      cargarLeads({ silent: true })
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const verificarAuth = () => {
     const usuario = localStorage.getItem("usuario")
     if (!usuario) {
       router.push("/login")
-      return
     }
   }
 
-  const cargarLeads = async () => {
+  const cargarLeads = async (opts?: { silent?: boolean }) => {
     try {
+      if (!opts?.silent) setLoading(true)
       const token = localStorage.getItem("token")
 
       const res = await fetch("/api/leads", {
@@ -83,7 +88,7 @@ export default function LeadsPage() {
     } catch (error) {
       console.error("Error:", error)
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }
 
@@ -113,16 +118,44 @@ export default function LeadsPage() {
   }
 
   const leadsFiltered = leads.filter((lead) => {
+    const email = (lead.email || "").toLowerCase()
+    const interes = (lead.interes || "").toLowerCase()
+    const telefono = lead.telefono || ""
+
     const matchesSearch =
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.interes.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.telefono.includes(searchTerm)
+      email.includes(searchTerm.toLowerCase()) ||
+      interes.includes(searchTerm.toLowerCase()) ||
+      telefono.includes(searchTerm)
 
     const matchesEstado =
       selectedEstado === "todos" || lead.estado === selectedEstado
 
     return matchesSearch && matchesEstado
   })
+
+  const getCategoriaBadgeVariant = (categoria?: Lead["categoria"]) => {
+    switch (categoria) {
+      case "hot":
+        return "destructive" as const
+      case "warm":
+        return "secondary" as const
+      case "cold":
+      default:
+        return "outline" as const
+    }
+  }
+
+  const getCategoriaLabel = (categoria?: Lead["categoria"]) => {
+    switch (categoria) {
+      case "hot":
+        return "CALIENTE"
+      case "warm":
+        return "TIBIO"
+      case "cold":
+      default:
+        return "FRÍO"
+    }
+  }
 
   const getEstadoIcon = (estado: string) => {
     switch (estado) {
@@ -246,17 +279,18 @@ export default function LeadsPage() {
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Buscar por email o teléfono</label>
+              <label htmlFor="lead-search" className="text-sm font-medium">Buscar por email o teléfono</label>
               <Input
+                id="lead-search"
                 placeholder="ejemplo@email.com o 1234567890"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Estado</label>
+              <label htmlFor="lead-estado" className="text-sm font-medium">Estado</label>
               <Select value={selectedEstado} onValueChange={setSelectedEstado}>
-                <SelectTrigger>
+                <SelectTrigger id="lead-estado">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -292,7 +326,10 @@ export default function LeadsPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{lead.interes}</h3>
+                          <h3 className="font-semibold">{lead.interes || "(Sin interés registrado)"}</h3>
+                          <Badge variant={getCategoriaBadgeVariant(lead.categoria)}>
+                            {getCategoriaLabel(lead.categoria)}
+                          </Badge>
                           <Badge className={`${getEstadoColor(lead.estado)} border`}>
                             {getEstadoIcon(lead.estado)}
                             <span className="ml-1">{getEstadoLabel(lead.estado)}</span>
@@ -304,7 +341,7 @@ export default function LeadsPage() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {formatDate(lead.created_at)}
+                          {formatDate((lead.actualizado_en || lead.created_at) as string)}
                         </p>
                       </div>
                       <Select
@@ -323,20 +360,34 @@ export default function LeadsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm">
-                      <a
-                        href={`mailto:${lead.email}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                      >
-                        <Mail className="h-4 w-4" />
-                        {lead.email}
-                      </a>
-                      <a
-                        href={`tel:${lead.telefono}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                      >
-                        <Phone className="h-4 w-4" />
-                        {lead.telefono}
-                      </a>
+                      {lead.email ? (
+                        <a
+                          href={`mailto:${lead.email}`}
+                          className="flex items-center gap-2 text-primary hover:underline"
+                        >
+                          <Mail className="h-4 w-4" />
+                          {lead.email}
+                        </a>
+                      ) : (
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          Sin email
+                        </span>
+                      )}
+                      {lead.telefono ? (
+                        <a
+                          href={`tel:${lead.telefono}`}
+                          className="flex items-center gap-2 text-primary hover:underline"
+                        >
+                          <Phone className="h-4 w-4" />
+                          {lead.telefono}
+                        </a>
+                      ) : (
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          Sin teléfono
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

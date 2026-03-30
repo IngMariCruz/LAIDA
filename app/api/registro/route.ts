@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import db from "@/db/init"
+import { createUsuario, getUsuarioByCorreo } from "@/db/utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,32 +33,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insertar en la base de datos
-    const stmt = db.prepare(`
-      INSERT INTO marcas (
-        nombre_marca,
-        correo_empresa,
-        nombre_representante,
-        numero,
-        correo_personal,
-        password
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `)
+    // Crear usuario manager (la marca opera con su cuenta de manager)
+    const existingUser = getUsuarioByCorreo(String(correoPersonal).trim())
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Ya existe un usuario con ese correo personal" },
+        { status: 409 }
+      )
+    }
 
-    const result = stmt.run(
-      nombreMarca,
-      correoEmpresa,
-      nombreRepresentante,
-      numero,
-      correoPersonal,
-      password
-    )
+    // Transacción simple
+    const tx = db.transaction(() => {
+      // Insertar en marcas (legacy / datos de negocio)
+      const stmt = db.prepare(`
+        INSERT INTO marcas (
+          nombre_marca,
+          correo_empresa,
+          nombre_representante,
+          numero,
+          correo_personal,
+          password
+        ) VALUES (?, ?, ?, ?, ?, ?)
+      `)
+
+      const result = stmt.run(
+        nombreMarca,
+        correoEmpresa,
+        nombreRepresentante,
+        numero,
+        correoPersonal,
+        password
+      )
+
+      // Insertar en usuarios como manager (marca)
+      const nuevoUsuario = createUsuario({
+        correo: String(correoPersonal).trim(),
+        password: String(password),
+        rol: "manager",
+        // Guardar nombre de marca para usarlo como contexto en bot/dashboard
+        nombre: String(nombreMarca).trim(),
+      })
+
+      return {
+        marcaId: result.lastInsertRowid,
+        usuarioId: nuevoUsuario.id,
+      }
+    })
+
+    const result = tx()
 
     return NextResponse.json(
       {
         success: true,
         message: "Registro completado exitosamente",
-        id: result.lastInsertRowid,
+        marcaId: result.marcaId,
+        usuarioId: result.usuarioId,
       },
       { status: 201 }
     )

@@ -6,6 +6,7 @@ import {
   getUsuariosAsignadosABot,
   getUsuarioById,
   getBotById,
+  updateBot,
 } from "@/db/utils"
 import { getAuthUser, requireManager } from "@/lib/auth"
 
@@ -90,6 +91,13 @@ export async function POST(request: NextRequest) {
     }
 
     asignarBotAUsuario(Number(usuarioId), Number(botId))
+
+    // Mantener consistencia: el bot hereda la marca del manager asignado
+    try {
+      updateBot(Number(botId), { manager_id: Number(usuarioId), marca_id: Number(usuarioId) })
+    } catch {
+      // no bloquear asignación si falla el update
+    }
 
     return NextResponse.json({
       success: true,

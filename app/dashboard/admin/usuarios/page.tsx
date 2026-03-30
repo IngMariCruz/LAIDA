@@ -22,13 +22,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Table,
   TableBody,
   TableCell,
@@ -56,7 +49,7 @@ export default function UsuariosPage() {
   const [formData, setFormData] = useState({
     correo: "",
     password: "",
-    rol: "manager" as "super_admin" | "manager",
+    rol: "super_admin" as "super_admin" | "manager",
     nombre: "",
   })
 
@@ -113,11 +106,11 @@ export default function UsuariosPage() {
         ? {
             id: editingUsuario.id,
             correo: formData.correo,
-            rol: formData.rol,
+            rol: editingUsuario.rol,
             nombre: formData.nombre || null,
             ...(formData.password && { password: formData.password }),
           }
-        : formData
+        : { ...formData, rol: "super_admin" }
 
       const response = await fetch(url, {
         method,
@@ -176,7 +169,7 @@ export default function UsuariosPage() {
     setFormData({
       correo: "",
       password: "",
-      rol: "manager",
+      rol: "super_admin",
       nombre: "",
     })
     setEditingUsuario(null)
@@ -207,7 +200,7 @@ export default function UsuariosPage() {
         <div>
           <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
           <p className="text-muted-foreground mt-1">
-            Administra administradores y managers
+            Administra administradores (Super Admin)
           </p>
         </div>
 
@@ -274,21 +267,10 @@ export default function UsuariosPage() {
               </div>
 
               <div>
-                <Label htmlFor="rol">Rol</Label>
-                <Select
-                  value={formData.rol}
-                  onValueChange={(value: "super_admin" | "manager") =>
-                    setFormData({ ...formData, rol: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Rol</Label>
+                <div className="text-sm text-muted-foreground">
+                  {editingUsuario ? editingUsuario.rol : "super_admin"}
+                </div>
               </div>
 
               <div className="flex justify-end gap-2">

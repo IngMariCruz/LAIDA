@@ -72,23 +72,17 @@ export async function POST(request: NextRequest) {
       email,
       telefono,
       telegram_user_id,
-      estado = "nuevo"
+      estado = "nuevo",
+      categoria,
+      producto_id,
+      detalles_compra,
+      notas,
     } = body
 
-    // Validar campos requeridos
-    if (!interes || !email || !telefono) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos: interes, email, telefono" },
-        { status: 400 }
-      )
-    }
-
-    // Validar email básico
-    if (!email.includes("@")) {
-      return NextResponse.json(
-        { error: "Email no válido" },
-        { status: 400 }
-      )
+    // Permitir leads parciales (sin email/teléfono) para clasificar desde el primer mensaje.
+    // Validar email solo si viene.
+    if (email && typeof email === "string" && !email.includes("@")) {
+      return NextResponse.json({ error: "Email no válido" }, { status: 400 })
     }
 
     // Crear el lead
@@ -96,11 +90,15 @@ export async function POST(request: NextRequest) {
       bot_id: bot_id || null,
       bot_slug: bot_slug || null,
       bot_nombre: bot_nombre || null,
-      interes,
-      email,
-      telefono,
+      interes: interes ?? null,
+      email: email ?? null,
+      telefono: telefono ?? null,
       telegram_user_id: telegram_user_id || null,
-      estado: estado || "nuevo"
+      estado: estado || "nuevo",
+      categoria: categoria || null,
+      producto_id: producto_id || null,
+      detalles_compra: detalles_compra || null,
+      notas: notas || null,
     })
 
     // Crear notificaciones para usuarios relevantes
@@ -114,7 +112,7 @@ export async function POST(request: NextRequest) {
           usuario_id: admin.id,
           tipo: 'nuevo_lead',
           titulo: '🎉 Nuevo Lead',
-          mensaje: `Lead interesado en "${interes}" - ${email}`,
+          mensaje: `Lead interesado en "${interes || 'Sin interés registrado'}" - ${email || 'Sin email'}`,
           lead_id: lead.id,
           bot_id: bot_id || null,
         })
@@ -130,7 +128,7 @@ export async function POST(request: NextRequest) {
               usuario_id: manager.id,
               tipo: 'nuevo_lead',
               titulo: '🎉 Nuevo Lead',
-              mensaje: `Lead interesado en "${interes}" - ${email}`,
+              mensaje: `Lead interesado en "${interes || 'Sin interés registrado'}" - ${email || 'Sin email'}`,
               lead_id: lead.id,
               bot_id: bot_id,
             })

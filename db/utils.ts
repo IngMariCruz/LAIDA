@@ -156,15 +156,16 @@ export interface Lead {
   bot_id?: number | null
   bot_slug?: string | null
   bot_nombre?: string | null
-  interes: string
-  email: string
-  telefono: string
+  interes?: string | null
+  email?: string | null
+  telefono?: string | null
   telegram_user_id?: number | null
   estado: 'nuevo' | 'contactado' | 'cerrado'
   categoria?: 'hot' | 'warm' | 'cold' | null
   producto_id?: number | null
   detalles_compra?: string | null
   notas?: string | null
+  actualizado_en?: string | null
   created_at: string
 }
 
@@ -175,7 +176,7 @@ export function getAllLeads(): Lead[] {
       COALESCE(b.nombre, l.bot_nombre) AS bot_nombre
     FROM leads l
     LEFT JOIN bots b ON b.id = l.bot_id
-    ORDER BY l.created_at DESC
+    ORDER BY COALESCE(l.actualizado_en, l.created_at) DESC
   `)
 
   return stmt.all() as Lead[]
@@ -189,7 +190,7 @@ export function getLeadsByBotId(botId: number): Lead[] {
     FROM leads l
     LEFT JOIN bots b ON b.id = l.bot_id
     WHERE l.bot_id = ?
-    ORDER BY l.created_at DESC
+    ORDER BY COALESCE(l.actualizado_en, l.created_at) DESC
   `)
 
   return stmt.all(botId) as Lead[]
@@ -206,7 +207,7 @@ export function getLeadsByBotIds(botIds: number[]): Lead[] {
     FROM leads l
     LEFT JOIN bots b ON b.id = l.bot_id
     WHERE l.bot_id IN (${placeholders})
-    ORDER BY l.created_at DESC
+    ORDER BY COALESCE(l.actualizado_en, l.created_at) DESC
   `)
 
   return stmt.all(...botIds) as Lead[]
@@ -216,18 +217,18 @@ export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
   const stmt = db.prepare(`
     INSERT INTO leads (
       bot_id, bot_slug, bot_nombre, interes, email, telefono, 
-      telegram_user_id, estado, categoria, producto_id, detalles_compra, notas
+      telegram_user_id, estado, categoria, producto_id, detalles_compra, notas, actualizado_en
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   `)
 
   const result = stmt.run(
     data.bot_id || null,
     data.bot_slug || null,
     data.bot_nombre || null,
-    data.interes,
-    data.email,
-    data.telefono,
+    data.interes ?? null,
+    data.email ?? null,
+    data.telefono ?? null,
     data.telegram_user_id || null,
     data.estado || 'nuevo',
     data.categoria || 'cold',
@@ -258,6 +259,7 @@ export function updateLead(id: number, data: Partial<Omit<Lead, 'id' | 'created_
 
   if (updates.length === 0) return getLeadById(id) as Lead
 
+  updates.push('actualizado_en = CURRENT_TIMESTAMP')
   values.push(id)
   const stmt = db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = ?`)
   stmt.run(...values)
@@ -572,6 +574,7 @@ export interface Bot {
   openai_key?: string | null
   estado: 'activo' | 'inactivo'
   manager_id?: number | null
+  marca_id?: number | null
   created_at: string
   actualizado_en: string
 }
@@ -603,8 +606,8 @@ export function getBotsByManagerId(managerId: number): Bot[] {
 
 export function createBot(data: Omit<Bot, 'id' | 'created_at' | 'actualizado_en'>): Bot {
   const stmt = db.prepare(`
-    INSERT INTO bots (nombre, slug, telegram_token, openai_key, estado, manager_id)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO bots (nombre, slug, telegram_token, openai_key, estado, manager_id, marca_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
   
   const result = stmt.run(
@@ -613,7 +616,8 @@ export function createBot(data: Omit<Bot, 'id' | 'created_at' | 'actualizado_en'
     data.telegram_token,
     data.openai_key || null,
     data.estado || 'activo',
-    data.manager_id || null
+    data.manager_id || null,
+    data.marca_id || null
   )
   
   return getBotById(Number(result.lastInsertRowid)) as Bot

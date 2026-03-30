@@ -16,15 +16,26 @@ CREATE TABLE leads (
   bot_id INTEGER,                    -- Referencia al bot que capturó el lead
   bot_slug TEXT,                     -- Slug del bot
   bot_nombre TEXT,                   -- Nombre del bot
-  interes TEXT NOT NULL,             -- Producto/servicio de interés
-  email TEXT NOT NULL,               -- Email del lead
-  telefono TEXT NOT NULL,            -- Teléfono del lead
+  interes TEXT,                      -- Producto/servicio de interés (puede ser NULL)
+  email TEXT,                        -- Email del lead (puede ser NULL)
+  telefono TEXT,                     -- Teléfono del lead (puede ser NULL)
   telegram_user_id INTEGER,          -- ID del usuario de Telegram
   estado TEXT DEFAULT 'nuevo',       -- Estado: nuevo, contactado, cerrado
+  categoria TEXT DEFAULT 'cold',     -- Clasificación: hot, warm, cold
+  producto_id INTEGER,               -- Producto seleccionado (opcional)
+  detalles_compra TEXT,              -- JSON/Texto con detalles (opcional)
+  notas TEXT,                        -- Notas internas (opcional)
+  actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(bot_id, telegram_user_id),
   FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
 )
 ```
+
+**Notas importantes:**
+- Se permiten **leads parciales** para poder clasificar desde el primer mensaje.
+- `categoria` se muestra en el dashboard como **CALIENTE/TIBIO/FRÍO**, pero se almacena como `hot/warm/cold`.
+- Con `UNIQUE(bot_id, telegram_user_id)` el lead se puede **actualizar** (UPSERT) a medida que el usuario escribe.
 
 ### APIs
 
@@ -72,19 +83,19 @@ Permite crear un lead desde el dashboard o desde terceros.
   "email": "usuario@email.com",
   "telefono": "1234567890",
   "telegram_user_id": 123456789,
-  "estado": "nuevo"
+  "estado": "nuevo",
+  "categoria": "warm"
 }
 ```
 
-**Campos Requeridos**:
-- `interes`
-- `email`
-- `telefono`
+**Campos opcionales**:
+- `interes`, `email`, `telefono` pueden ser `null`.
+- `categoria`: `hot` | `warm` | `cold`.
 
 ---
 
-#### 3. **PATCH /api/leads/:id** - Actualizar un lead
-Actualiza el estado u otros datos de un lead existente.
+#### 3. **PATCH /api/leads/{id}** - Actualizar un lead
+Actualiza el estado u otros datos básicos de un lead existente.
 
 **Body**:
 ```json
@@ -101,7 +112,7 @@ Actualiza el estado u otros datos de un lead existente.
 
 ---
 
-#### 4. **DELETE /api/leads/:id** - Eliminar un lead
+#### 4. **DELETE /api/leads/{id}** - Eliminar un lead
 Solo disponible para Super Admin (próximamente implementado).
 
 ---
@@ -110,10 +121,10 @@ Solo disponible para Super Admin (próximamente implementado).
 
 ### Flujo de Captura de Leads
 
-El bot de Telegram (`laidaBot.py`) sigue este flujo:
+El bot (modo básico o GPT) sigue un flujo de conversación para entender interés y capturar datos de contacto.
 
 ```
-/start [marca_id]
+/start
     ↓
 ¿En qué producto estás interesado? (WAIT_INTEREST)
     ↓
@@ -126,26 +137,11 @@ Comparte tu teléfono (WAIT_PHONE)
 Confirmación en Telegram
 ```
 
-### Guardar Lead en la Base de Datos
+### Actualización "en vivo" (cada mensaje)
 
-Cuando el usuario confirma su teléfono, el bot ejecuta:
+Los bots actualizan el lead **cada vez que el usuario escribe**, de forma que el dashboard refleje la **clasificación** y los datos disponibles en tiempo real.
 
-```python
-cursor.execute("""
-    INSERT INTO leads (bot_id, bot_slug, bot_nombre, interes, email, telefono, telegram_user_id, estado)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-""", (
-    marca_id,              # bot_id
-    None,                  # bot_slug
-    marca_nombre,          # bot_nombre
-    lead_data['interest'], # interes
-    lead_data['email'],    # email
-    lead_data['phone'],    # telefono
-    user_id,               # telegram_user_id
-    'nuevo'                # estado
-))
-conn.commit()
-```
+La estrategia es mantener un único registro por usuario/telegram dentro del bot con `UNIQUE(bot_id, telegram_user_id)` y actualizarlo progresivamente.
 
 ---
 
@@ -167,10 +163,10 @@ conn.commit()
 - 📊 **Estado**: Filtra por estado (Todos, Nuevo, Contactado, Cerrado)
 
 #### Gestión de Leads
-- Ver información de cada lead (email, teléfono)
+- Ver información de cada lead (email, teléfono; pueden venir vacíos)
 - Cambiar estado de un lead con un dropdown
 - Enviar email o llamar directamente (links activables)
-- Ver fecha y hora de captura
+- Ver fecha y hora de actualización (`actualizado_en`)
 
 #### Permisos
 - **Super Admin**: Ve todos los leads de todos los bots

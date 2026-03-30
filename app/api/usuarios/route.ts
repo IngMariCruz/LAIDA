@@ -68,9 +68,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!["super_admin", "manager"].includes(rol)) {
+    if (rol !== "super_admin") {
       return NextResponse.json(
-        { error: 'El rol debe ser "super_admin" o "manager"' },
+        { error: "No permitido: los managers deben registrarse con su marca" },
         { status: 400 }
       )
     }
@@ -133,6 +133,14 @@ export async function PUT(request: NextRequest) {
     const usuario = getUsuarioById(Number(id))
     if (!usuario) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+    }
+
+    // No permitir convertir/forzar rol manager desde panel admin
+    if ((data as any).rol === "manager") {
+      return NextResponse.json(
+        { error: "No permitido: los managers deben registrarse con su marca" },
+        { status: 400 }
+      )
     }
 
     // Si se está actualizando la contraseña, hashearla

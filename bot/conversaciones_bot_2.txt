@@ -1,0 +1,70 @@
+====================================
+Fecha: 2026-03-29 22:55:05
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! Soy el bot de Marca Demo Uno. ¿En qué puedo ayudarte hoy?
+
+¿Te gustaría ver nuestros productos disponibles?
+
+====================================
+Fecha: 2026-03-29 22:55:10
+bot_id: 2
+user_id: 1578862237
+estado: INITIAL_INTEREST
+mensaje_usuario: Si
+respuesta_bot: ¡Perfecto! 😊 Aquí están nuestros productos disponibles:
+
+Selecciona el que te interese:
+
+====================================
+Fecha: 2026-03-29 22:55:37
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Mari@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-03-29 22:57:02
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! Soy el bot de Marca Demo Uno. ¿En qué puedo ayudarte hoy?
+
+¿Te gustaría ver nuestros productos disponibles?
+
+====================================
+Fecha: 2026-03-29 22:57:12
+bot_id: 2
+user_id: 1578862237
+estado: INITIAL_INTEREST
+mensaje_usuario: No
+respuesta_bot: Entiendo. Si cambias de opinión, aquí estaré para ayudarte. ¡Hasta pronto! 👋
+
+====================================
+Fecha: 2026-03-29 22:57:21
+bot_id: 2
+user_id: 1578862237
+estado: COLD_REENGAGEMENT
+mensaje_usuario: Gracias
+respuesta_bot: ¡Genial! 😊 Mira nuestros productos disponibles:
+
+====================================
+Fecha: 2026-03-29 22:57:41
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Ing.m@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-03-29 22:58:02
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: Holaaa
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+

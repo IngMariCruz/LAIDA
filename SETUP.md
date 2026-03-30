@@ -35,8 +35,7 @@ Sistema completo de gestión de bots de Telegram con arquitectura multi-tenant, 
 
 1. **Super Admin**
    - Crear y gestionar bots
-   - Crear usuarios (managers)
-   - Asignar bots a managers
+   - Asignar bots a managers (registrados)
    - Acceso completo al sistema
 
 2. **Manager**
@@ -87,6 +86,8 @@ El sistema estará disponible en:
 - Frontend: http://localhost:3000
 - Bots: Se ejecutan automáticamente según configuración en BD
 
+Si la base de datos está vacía, LAIDA puede aplicar una **precarga demo** (idempotente) con un manager y un bot de ejemplo en estado `inactivo`.
+
 ### 4. Primer acceso
 
 #### Super Admin por defecto:
@@ -136,7 +137,7 @@ id, correo, password, rol, nombre, created_at, actualizado_en
 
 #### `bots`
 ```sql
-id, nombre, slug, telegram_token, openai_key, estado, manager_id, created_at, actualizado_en
+id, nombre, slug, telegram_token, openai_key, estado, manager_id, marca_id, created_at, actualizado_en
 ```
 - Estados: `activo`, `inactivo`
 
@@ -160,15 +161,15 @@ id, usuario_id, bot_id, created_at
    - **OpenAI API Key**: (Opcional) Para funciones IA
    - **Estado**: Activo/Inactivo
 
-### Crear un Manager
+**Nota (Multi-tenant por marca):** cuando asignas un bot a un manager, el bot queda asociado a la marca del manager mediante `marca_id`.
 
-1. Ir a **Dashboard > Gestión de Usuarios**
-2. Click en **Crear Usuario**
-3. Completar datos:
-   - Correo
-   - Contraseña (temporal)
-   - Rol: **Manager**
-   - Nombre (opcional)
+### Registrar un Manager (Marca)
+
+Los managers se registran desde la página de registro; el Super Admin **no** crea managers desde el panel.
+
+1. Abrir `/registro`
+2. Completar los datos de la marca
+3. Crear la cuenta (se creará un usuario con rol `manager`)
 
 ### Asignar Bot a Manager
 
@@ -192,7 +193,7 @@ Ejecuta automáticamente todos los bots activos
 **Un bot específico:**
 ```bash
 cd bot
-python laidaBot_multitenant.py <slug>
+python bot_launcher.py <bot_id>
 ```
 
 **Todos los bots activos:**
@@ -244,9 +245,19 @@ DELETE /api/bots?id=1         # Eliminar
 ```
 GET    /api/usuarios          # Listar todos
 GET    /api/usuarios?id=1     # Uno específico
-POST   /api/usuarios          # Crear
+POST   /api/usuarios          # Crear (solo super_admin)
 PUT    /api/usuarios          # Actualizar
 DELETE /api/usuarios?id=1     # Eliminar
+
+### Registro (Público)
+
+POST   /api/registro          # Registro de manager + marca
+
+### Leads
+
+GET    /api/leads             # Listar leads (según rol)
+POST   /api/leads             # Crear lead (admite parciales)
+PATCH  /api/leads/{id}        # Actualizar lead (estado/datos básicos)
 ```
 
 ### Accesos (Super Admin)

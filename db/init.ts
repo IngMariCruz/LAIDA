@@ -8,7 +8,8 @@ let db: DatabaseType | null = null
 function getDb(): DatabaseType {
   if (db) return db
 
-  const dbPath = process.env.DB_PATH ?? path.join(process.cwd(), "laida.db")
+  // Mantener consistencia con docker-compose (volumen ./bd) cuando no hay DB_PATH.
+  const dbPath = process.env.DB_PATH ?? path.join(process.cwd(), "bd", "laida.db")
   const dbDir = path.dirname(dbPath)
 
   if (!fs.existsSync(dbDir)) {
@@ -48,11 +49,19 @@ function initTables(database: DatabaseType): void {
       openai_key TEXT,
       estado TEXT NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
       manager_id INTEGER,
+      marca_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (manager_id) REFERENCES usuarios(id) ON DELETE SET NULL
     )
   `)
+
+  // Migración suave: agregar marca_id si la tabla bots ya existía
+  try {
+    database.exec("ALTER TABLE bots ADD COLUMN marca_id INTEGER")
+  } catch {
+    // ya existe
+  }
 
   // Tabla de relación usuarios-bots
   database.exec(`
@@ -68,26 +77,97 @@ function initTables(database: DatabaseType): void {
   `)
 
   // Tabla de leads capturados por bots
+  // Nota: para poder visualizar clasificación desde el primer mensaje, email/telefono/interes pueden ser NULL.
   database.exec(`
     CREATE TABLE IF NOT EXISTS leads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       bot_id INTEGER,
       bot_slug TEXT,
       bot_nombre TEXT,
-      interes TEXT NOT NULL,
-      email TEXT NOT NULL,
-      telefono TEXT NOT NULL,
+      interes TEXT,
+      email TEXT,
+      telefono TEXT,
       telegram_user_id INTEGER,
       estado TEXT NOT NULL DEFAULT 'nuevo' CHECK(estado IN ('nuevo', 'contactado', 'cerrado')),
       categoria TEXT DEFAULT 'cold' CHECK(categoria IN ('hot', 'warm', 'cold')),
       producto_id INTEGER,
       detalles_compra TEXT,
       notas TEXT,
+      actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(bot_id, telegram_user_id),
       FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
       FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
     )
   `)
+
+  // Migración: si la tabla leads fue creada con NOT NULL en email/telefono/interes, recrearla.
+  // Se conserva el último registro (mayor id) por (bot_id, telegram_user_id) para mantener unicidad.
+  try {
+    const leadsInfo = database.prepare("PRAGMA table_info(leads)").all() as Array<{ name: string; notnull: number }>
+    const emailInfo = leadsInfo.find((c) => c.name === "email")
+    const telefonoInfo = leadsInfo.find((c) => c.name === "telefono")
+    const interesInfo = leadsInfo.find((c) => c.name === "interes")
+    const hasActualizado = leadsInfo.some((c) => c.name === "actualizado_en")
+    const needsRebuild = Boolean(emailInfo?.notnull || telefonoInfo?.notnull || interesInfo?.notnull || !hasActualizado)
+
+    if (needsRebuild) {
+      database.exec("PRAGMA foreign_keys = OFF")
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS leads_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          bot_id INTEGER,
+          bot_slug TEXT,
+          bot_nombre TEXT,
+          interes TEXT,
+          email TEXT,
+          telefono TEXT,
+          telegram_user_id INTEGER,
+          estado TEXT NOT NULL DEFAULT 'nuevo' CHECK(estado IN ('nuevo', 'contactado', 'cerrado')),
+          categoria TEXT DEFAULT 'cold' CHECK(categoria IN ('hot', 'warm', 'cold')),
+          producto_id INTEGER,
+          detalles_compra TEXT,
+          notas TEXT,
+          actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(bot_id, telegram_user_id)
+        )
+      `)
+
+      // Copiar: último por (bot_id, telegram_user_id). Si telegram_user_id es NULL, se conserva por id.
+      database.exec(`
+        INSERT INTO leads_new (
+          id, bot_id, bot_slug, bot_nombre, interes, email, telefono,
+          telegram_user_id, estado, categoria, producto_id, detalles_compra, notas,
+          actualizado_en, created_at
+        )
+        SELECT
+          l.id, l.bot_id, l.bot_slug, l.bot_nombre, l.interes, l.email, l.telefono,
+          l.telegram_user_id, l.estado,
+          COALESCE(l.categoria, 'cold') AS categoria,
+          l.producto_id, l.detalles_compra, l.notas,
+          COALESCE(l.actualizado_en, l.created_at, CURRENT_TIMESTAMP) AS actualizado_en,
+          COALESCE(l.created_at, CURRENT_TIMESTAMP) AS created_at
+        FROM leads l
+        INNER JOIN (
+          SELECT
+            COALESCE(bot_id, -1) AS bot_id_key,
+            COALESCE(telegram_user_id, id) AS user_key,
+            MAX(id) AS max_id
+          FROM leads
+          GROUP BY bot_id_key, user_key
+        ) t
+        ON l.id = t.max_id
+      `)
+
+      database.exec("DROP TABLE leads")
+      database.exec("ALTER TABLE leads_new RENAME TO leads")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch {
+    // Si algo falla, no bloquear inicialización. El sistema seguirá con el esquema existente.
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
 
   // Tabla de notificaciones
   database.exec(`
@@ -170,7 +250,7 @@ function initTables(database: DatabaseType): void {
       imagen_url TEXT,
       activo INTEGER DEFAULT 1,
       fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES bots(id) ON DELETE SET NULL
+      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE SET NULL
     )
   `)
 
@@ -272,6 +352,119 @@ function initTables(database: DatabaseType): void {
     database.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
   } catch {
     // La columna ya existe
+  }
+
+  seedDemoData(database)
+}
+
+function seedDemoData(database: DatabaseType): void {
+  // Seed mínimo e idempotente para entornos nuevos (evita que la app arranque "vacía")
+  try {
+    const hasAnyBot = database.prepare("SELECT 1 FROM bots LIMIT 1").get()
+    const hasAnyProduct = database.prepare("SELECT 1 FROM productos LIMIT 1").get()
+    const hasAnyEssence = database.prepare("SELECT 1 FROM esencia LIMIT 1").get()
+    const hasAnyConfig = database.prepare("SELECT 1 FROM config_bot LIMIT 1").get()
+
+    if (hasAnyBot || hasAnyProduct || hasAnyEssence || hasAnyConfig) return
+
+    // Crear manager demo si no existe
+    const managerEmail = "demo@laida.com"
+    const existingManager = database
+      .prepare("SELECT id FROM usuarios WHERE correo = ?")
+      .get(managerEmail) as { id: number } | undefined
+
+    let managerId = existingManager?.id
+    if (!managerId) {
+      const result = database.prepare(
+        "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+      ).run(managerEmail, "demo123", "manager", "Marca Demo")
+      managerId = Number(result.lastInsertRowid)
+    }
+
+    // Crear bot demo (inactivo, token placeholder)
+    const botSlug = "bot-demo"
+    const existingBot = database
+      .prepare("SELECT id FROM bots WHERE slug = ?")
+      .get(botSlug) as { id: number } | undefined
+
+    let botId = existingBot?.id
+    if (!botId) {
+      const result = database.prepare(
+        `INSERT INTO bots (nombre, slug, telegram_token, openai_key, estado, manager_id, marca_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        "Bot Demo",
+        botSlug,
+        "000000:demo-token",
+        null,
+        "inactivo",
+        managerId,
+        managerId
+      )
+      botId = Number(result.lastInsertRowid)
+    }
+
+    // Asignación usuario_bots
+    try {
+      database
+        .prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
+        .run(managerId, botId)
+    } catch {
+      // ignore
+    }
+
+    // Config bot y esencia demo para la marca (manager)
+    database
+      .prepare(
+        "INSERT OR IGNORE INTO config_bot (marca_id, mensaje_bienvenida) VALUES (?, ?)"
+      )
+      .run(managerId, "¡Hola! Soy tu asistente. ¿Qué estás buscando hoy?")
+
+    database
+      .prepare(
+        "INSERT OR IGNORE INTO esencia (valores, diferencia, historia, marca_id) VALUES (?, ?, ?, ?)"
+      )
+      .run(
+        "Calidad, confianza, cercanía",
+        "Atención personalizada y respuesta rápida",
+        "Somos una marca enfocada en ayudarte a elegir mejor.",
+        managerId
+      )
+
+    // Productos demo
+    const insertProducto = database.prepare(
+      `INSERT INTO productos (nombre, precio, marca_id, descripcion, activo)
+       VALUES (?, ?, ?, ?, ?)`
+    )
+    insertProducto.run("Producto Demo A", 10000, managerId, "Descripción demo del producto A", 1)
+    insertProducto.run("Producto Demo B", 25000, managerId, "Descripción demo del producto B", 1)
+    insertProducto.run("Producto Demo C", 0, managerId, "Precio a consultar", 1)
+
+    // Flow config demo (opcional)
+    database
+      .prepare(
+        `INSERT OR IGNORE INTO bot_flow_config (
+           bot_id, mensaje_bienvenida, mensaje_sin_interes, mensaje_productos,
+           mensaje_caracteristicas, mensaje_confirmacion, mensaje_agradecimiento,
+           mostrar_productos_inicio, max_productos_mostrar, permitir_recomendaciones
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        botId,
+        "¡Hola! 👋 Bienvenido a nuestra tienda.",
+        "Entiendo. Antes de irte, ¿quieres que te muestre algunos productos?",
+        "¿Te gustaría ver nuestros productos disponibles?",
+        "¿Qué características te interesan?",
+        "¿Deseas confirmar tu interés en este producto?",
+        "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊",
+        1,
+        5,
+        1
+      )
+
+    console.log("✅ Precarga demo aplicada (BD vacía)")
+  } catch {
+    // No bloquear arranque si el seed falla
   }
 }
 

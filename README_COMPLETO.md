@@ -1248,15 +1248,11 @@ CREATE TABLE usuario_bots (
 5. Hacer click en el producto
 6. Agregar atributos como se describe arriba
 
-#### 3. **Crear Manager**
-1. Ir a `/dashboard/admin/usuarios`
-2. Click **[Crear Usuario]**
-3. Llenar:
-   - Email: manager@empresa.com
-   - Contraseña: segura_password
-   - Rol: Manager
-   - Bots asignados: Seleccionar 1 o más
-4. Click **[Créar]**
+#### 3. **Registrar Manager (Marca)**
+1. Ir a `/registro`
+2. Completar los datos de la marca (nombre de marca, correos, representante, etc.)
+3. Crear la cuenta
+4. Iniciar sesión como Super Admin y asignar bots desde `/dashboard/admin/accesos`
 
 #### 4. **Monitorear Leads**
 1. Ir a `/dashboard/leads`

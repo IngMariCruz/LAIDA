@@ -23,6 +23,33 @@ Correo: admin@laida.com
 Contraseña: admin123
 ```
 
+## 🧩 Precarga demo (Seed)
+
+Cuando LAIDA inicia con una **base de datos vacía**, aplica una precarga demo (idempotente) para que puedas probar el dashboard sin configurar todo desde cero.
+
+La precarga solo se ejecuta si no existen registros en tablas clave (bots/productos/config/esencia). Si ya tienes datos, **no pisa** nada.
+
+### ¿Qué crea?
+
+- 1 manager demo (marca): `demo@laida.com` / `demo123`
+- 1 bot demo: **Bot Demo** (slug `bot-demo`) en estado **inactivo**
+- Configuración y esencia demo para la marca
+- 3 productos demo
+
+### Importante sobre el bot demo
+
+El bot demo se crea con un token placeholder `000000:demo-token` que **no es válido** en Telegram.
+Para usarlo, edita el bot en el dashboard y pega el token real de @BotFather, luego actívalo.
+
+### ¿Cómo re-ejecutar la precarga?
+
+Si quieres volver a un estado “como recién instalado”, elimina la base de datos/volúmenes y vuelve a levantar:
+
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+
 ### 3. Crear Tu Primer Bot
 
 1. En el dashboard, ve a **"Gestión de Bots"**
@@ -35,16 +62,15 @@ Contraseña: admin123
 
 4. Guarda
 
-### 4. Crear un Manager
+### 4. Registrar un Manager (Marca)
 
-1. Ve a **"Gestión de Usuarios"**
-2. Click en **"Crear Usuario"**
-3. Completa:
-   - **Correo**: manager@ejemplo.com
-   - **Contraseña**: temporal123
-   - **Rol**: Manager
+Los **managers se registran** desde la pantalla de registro (el Super Admin no crea managers).
 
-### 5. Asignar el Bot
+1. Abrir: http://localhost:3000/registro
+2. Completar los datos de la marca (nombre de marca, correos, representante, etc.)
+3. Crear la cuenta
+
+### 5. Asignar el Bot al Manager
 
 1. Ve a **"Gestión de Accesos"**
 2. Click en **"Asignar Bot"**
@@ -113,6 +139,11 @@ docker-compose logs bot
 # 4. Reiniciar
 docker-compose restart bot
 ```
+
+### Veo un bot demo pero no responde
+
+En una base vacía, LAIDA puede precargar un **bot demo** con token placeholder (`000000:demo-token`).
+Ese token es inválido: edita el bot y coloca el token real de @BotFather.
 
 ### No puedo iniciar sesión
 
