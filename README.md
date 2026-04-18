@@ -78,8 +78,7 @@ docker-compose up --build
 ### Super Admin
 
 - ✅ Crear y gestionar múltiples bots
-- ✅ Crear usuarios managers
-- ✅ Asignar bots a managers
+- ✅ Asignar bots a managers (registrados)
 - ✅ Ver estadísticas globales
 - ✅ Configurar tokens y API keys
 
@@ -94,7 +93,7 @@ docker-compose up --build
 ### Bots de Telegram
 
 - ✅ Flujo conversacional personalizable
-- ✅ Captura de: interés, email, teléfono
+- ✅ Captura progresiva de datos (interés/email/teléfono pueden ser parciales)
 - ✅ Validación de datos
 - ✅ Multi-lenguaje
 - ✅ Logs de conversaciones
@@ -206,14 +205,15 @@ bots (id, nombre, slug, telegram_token, openai_key, estado)
 -- Relación usuarios-bots
 usuario_bots (usuario_id, bot_id)
 
--- Leads capturados
-clientes (id, nombre, email, telefono, bot_id)
+-- Leads capturados (se actualizan con cada mensaje)
+leads (id, bot_id, telegram_user_id, interes, email, telefono, estado, categoria, actualizado_en, created_at)
 
 -- Productos/Servicios
-productos (id, nombre, precio, bot_id)
+productos (id, nombre, precio, marca_id)
 
 -- Configuración de marca
-esencia (id, valores, diferencia, historia, bot_id)
+config_bot (id, marca_id, mensaje_bienvenida)
+esencia (id, valores, diferencia, historia, marca_id)
 ```
 
 ---
@@ -237,7 +237,7 @@ pnpm lint
 
 - 📖 [QUICKSTART.md](./QUICKSTART.md) - Inicio rápido
 - 📘 [SETUP.md](./SETUP.md) - Documentación completa
-- 🔧 [API.md](./API.md) - Documentación de APIs (por crear)
+- 🔧 [API.md](./API.md) - API reference
 
 ---
 

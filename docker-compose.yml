@@ -1,16 +1,20 @@
 services:
   web:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      DB_PATH: /app/data/laida.db
     volumes:
+      - ./frontend:/app          # código fuente montado en vivo
+      - /app/node_modules        # preserva node_modules del contenedor
       - ./bd:/app/data
+    environment:
+      NODE_ENV: development
+      DB_PATH: /app/data/laida.db
+      WATCHPACK_POLLING: "true"  # necesario en Windows para detectar cambios
+    env_file:
+      - .env
 
   bot:
     profiles:

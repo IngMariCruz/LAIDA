@@ -50,6 +50,40 @@ Inicia sesión y obtiene un token de autenticación.
 
 ---
 
+### 1.1 Registro (Manager + Marca)
+
+#### POST /api/registro
+
+Registra un **manager** junto con su **marca** (tenant). No requiere autenticación.
+
+**Request:**
+```json
+{
+  "nombreMarca": "Marca Demo",
+  "correoEmpresa": "ventas@marca.com",
+  "nombreRepresentante": "Mariana",
+  "numero": "+57 300 000 0000",
+  "correoPersonal": "mariana@marca.com",
+  "password": "secreto123"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Registro completado exitosamente",
+  "marcaId": 1,
+  "usuarioId": 2
+}
+```
+
+**Errores:**
+- `400`: Campos faltantes o correos inválidos
+- `409`: El correo ya está registrado
+
+---
+
 ### 2. Bots
 
 #### GET /api/bots
@@ -77,6 +111,7 @@ Authorization: Bearer <token>
     "openai_key": "sk-...",
     "estado": "activo",
     "manager_id": null,
+    "marca_id": null,
     "created_at": "2026-03-02T10:00:00.000Z",
     "actualizado_en": "2026-03-02T10:00:00.000Z"
   }
@@ -182,13 +217,16 @@ Obtiene todos los usuarios (Solo Super Admin).
 
 Crea un nuevo usuario (Solo Super Admin).
 
+**Nota:** este endpoint solo permite crear usuarios con rol `super_admin`.
+Los managers deben registrarse con su marca usando `/api/registro`.
+
 **Request:**
 ```json
 {
-  "correo": "manager@empresa.com",
+  "correo": "admin2@laida.com",
   "password": "temporal123",
-  "rol": "manager",
-  "nombre": "Juan Pérez"
+  "rol": "super_admin",
+  "nombre": "Otro Super Admin"
 }
 ```
 
@@ -199,16 +237,16 @@ Crea un nuevo usuario (Solo Super Admin).
   "message": "Usuario creado exitosamente",
   "usuario": {
     "id": 3,
-    "correo": "manager@empresa.com",
-    "rol": "manager",
-    "nombre": "Juan Pérez",
+    "correo": "admin2@laida.com",
+    "rol": "super_admin",
+    "nombre": "Otro Super Admin",
     ...
   }
 }
 ```
 
 **Errores:**
-- `400`: Email duplicado o rol inválido
+- `400`: Email duplicado o rol inválido (no se permite `manager`)
 
 #### PUT /api/usuarios
 
@@ -293,6 +331,66 @@ Remueve acceso de un usuario a un bot (Solo Super Admin).
 
 ---
 
+### 5. Leads
+
+#### GET /api/leads
+
+Retorna leads según el rol:
+- `super_admin`: todos los leads.
+- `manager`: solo leads de sus bots asignados.
+
+**Query Parameters:**
+- `botId` (opcional)
+- `estado` (opcional): `nuevo` | `contactado` | `cerrado`
+
+#### POST /api/leads
+
+Crea un lead. Se permiten **leads parciales** (email/teléfono/interés pueden ser `null`) para poder clasificar desde el primer mensaje.
+
+**Request (ejemplo mínimo):**
+```json
+{
+  "bot_id": 1,
+  "telegram_user_id": 123456789,
+  "categoria": "warm"
+}
+```
+
+**Request (ejemplo completo):**
+```json
+{
+  "bot_id": 1,
+  "bot_slug": "mi-bot",
+  "bot_nombre": "Mi Bot",
+  "interes": "Producto X",
+  "email": "cliente@email.com",
+  "telefono": "3000000000",
+  "telegram_user_id": 123456789,
+  "estado": "nuevo",
+  "categoria": "hot",
+  "producto_id": 10,
+  "detalles_compra": "{\"color\":\"rojo\"}",
+  "notas": "Dijo que compra hoy"
+}
+```
+
+#### PATCH /api/leads/{id}
+
+Actualiza un lead existente (por ejemplo, cambiar `estado`). Requiere autenticación y rol `manager` o `super_admin`.
+
+**Request:**
+```json
+{
+  "estado": "contactado"
+}
+```
+
+#### DELETE /api/leads/{id}
+
+Solo `super_admin`. Actualmente retorna un mensaje (borrado real: próximamente).
+
+---
+
 ## 🧪 Ejemplos con cURL
 
 ### Login
@@ -334,11 +432,26 @@ curl -X POST http://localhost:3000/api/usuarios \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <tu-token>" \
   -d '{
-    "correo": "nuevo@manager.com",
+    "correo": "admin2@laida.com",
     "password": "temporal123",
-    "rol": "manager",
-    "nombre": "Nuevo Manager"
+    "rol": "super_admin",
+    "nombre": "Otro Super Admin"
   }'
+
+### Registrar Manager (sin auth)
+
+```bash
+curl -X POST http://localhost:3000/api/registro \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombreMarca": "Marca Demo",
+    "correoEmpresa": "ventas@marca.com",
+    "nombreRepresentante": "Mariana",
+    "numero": "+57 300 000 0000",
+    "correoPersonal": "mariana@marca.com",
+    "password": "secreto123"
+  }'
+```
 ```
 
 ### Asignar Bot

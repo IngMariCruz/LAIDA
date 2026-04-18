@@ -73,7 +73,7 @@ def get_connection() -> sqlite3.Connection:
 
 def get_bot_by_id(bot_id: int) -> Optional[Dict[str, Any]]:
     """Obtener información del bot"""
-    query = "SELECT id, nombre, slug FROM bots WHERE id = ? LIMIT 1"
+    query = "SELECT id, nombre, slug, manager_id, marca_id FROM bots WHERE id = ? LIMIT 1"
     with get_connection() as conn:
         row = conn.execute(query, (bot_id,)).fetchone()
     return dict(row) if row else None
@@ -82,8 +82,9 @@ def get_bot_by_id(bot_id: int) -> Optional[Dict[str, Any]]:
 def get_bot_flow_config(bot_id: int) -> Dict[str, Any]:
     """Obtener configuración del flujo del bot"""
     with get_connection() as conn:
-        bot_row = conn.execute("SELECT manager_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+        bot_row = conn.execute("SELECT manager_id, marca_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
         manager_id = bot_row["manager_id"] if bot_row else None
+        marca_id = bot_row["marca_id"] if bot_row else None
 
         row = conn.execute("SELECT * FROM bot_flow_config WHERE bot_id = ? LIMIT 1", (bot_id,)).fetchone()
 
@@ -92,8 +93,9 @@ def get_bot_flow_config(bot_id: int) -> Dict[str, Any]:
 
         # Fallback a config_bot si no existe bot_flow_config
         config_row = None
-        if manager_id is not None:
-            config_row = conn.execute("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1", (manager_id,)).fetchone()
+        config_marca_id = marca_id if marca_id is not None else manager_id
+        if config_marca_id is not None:
+            config_row = conn.execute("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1", (config_marca_id,)).fetchone()
 
         if not config_row:
             config_row = conn.execute("SELECT * FROM config_bot WHERE marca_id = ? LIMIT 1", (bot_id,)).fetchone()
@@ -127,7 +129,7 @@ def get_bot_flow_config(bot_id: int) -> Dict[str, Any]:
 
 def get_productos_activos(marca_id: Optional[int] = None, limit: int = 10) -> List[Dict[str, Any]]:
     """Obtener productos activos"""
-    if marca_id:
+    if marca_id is not None:
         query = "SELECT * FROM productos WHERE marca_id = ? AND activo = 1 ORDER BY fecha_registro DESC LIMIT ?"
         params = (marca_id, limit)
     else:
@@ -171,6 +173,33 @@ def is_valid_email(email: str) -> bool:
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email.strip()))
 
 
+def has_strong_purchase_intent(text: str) -> bool:
+    """Heurística simple para marcar HOT solo con intención fuerte."""
+    t = text.lower()
+    strong_keywords = [
+        "comprar",
+        "lo compro",
+        "lo quiero",
+        "quiero comprar",
+        "precio",
+        "cuánto cuesta",
+        "cuanto cuesta",
+        "pagar",
+        "pago",
+        "envío",
+        "envio",
+        "entrega",
+        "hoy",
+        "ahora",
+        "reservar",
+        "ordenar",
+        "pedido",
+        "stock",
+        "disponible",
+    ]
+    return any(k in t for k in strong_keywords)
+
+
 def extract_phone(text: str) -> Optional[str]:
     """Extraer y validar teléfono (10 dígitos)"""
     phone = re.sub(r"\D", "", text)
@@ -181,10 +210,23 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
     """Guardar lead en la base de datos"""
     query = """
         INSERT INTO leads (
-            bot_id, bot_slug, bot_nombre, interes, email, telefono, 
-            telegram_user_id, estado, categoria, producto_id, detalles_compra, notas
+            bot_id, bot_slug, bot_nombre, interes, email, telefono,
+            telegram_user_id, estado, categoria, producto_id, detalles_compra, notas,
+            actualizado_en
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(bot_id, telegram_user_id) DO UPDATE SET
+            bot_slug = COALESCE(excluded.bot_slug, leads.bot_slug),
+            bot_nombre = COALESCE(excluded.bot_nombre, leads.bot_nombre),
+            interes = COALESCE(NULLIF(excluded.interes, ''), leads.interes),
+            email = COALESCE(excluded.email, leads.email),
+            telefono = COALESCE(excluded.telefono, leads.telefono),
+            estado = COALESCE(excluded.estado, leads.estado),
+            categoria = COALESCE(excluded.categoria, leads.categoria),
+            producto_id = COALESCE(excluded.producto_id, leads.producto_id),
+            detalles_compra = COALESCE(excluded.detalles_compra, leads.detalles_compra),
+            notas = COALESCE(excluded.notas, leads.notas),
+            actualizado_en = CURRENT_TIMESTAMP
     """
     
     with get_connection() as conn:
@@ -204,7 +246,11 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
             data.get('notas')
         ))
         conn.commit()
-        return cursor.lastrowid
+        row = conn.execute(
+            "SELECT id FROM leads WHERE bot_id = ? AND telegram_user_id = ? LIMIT 1",
+            (bot_id, telegram_user_id),
+        ).fetchone()
+        return int(row["id"]) if row else 0
 
 
 def save_interaccion(bot_id: int, telegram_user_id: int, tipo: str, producto_id: Optional[int] = None, datos: Optional[str] = None) -> None:
@@ -312,6 +358,12 @@ def analyze_user_intent_with_gpt(user_message: str, productos: List[Dict[str, An
 1. ¿Muestra interés en comprar? (true/false)
 2. Nivel de interés: "hot" (listo para comprar), "warm" (interesado pero evaluando), o "cold" (sin interés)
 3. ¿Hay algún producto que le podría interesar basándote en su mensaje?
+
+Reglas IMPORTANTES para evitar falsos "hot":
+- Marca "hot" SOLO si el cliente expresa intención clara de compra inmediata (p.ej. quiere comprar, precio, pago, envío, disponibilidad, hoy/ahora) o confirma que desea comprar.
+- Si el cliente solo pregunta información general o está explorando, marca "warm".
+- Si el cliente dice que no le interesa o rechaza, marca "cold".
+- No uses email/teléfono del cliente (puede no existir); decide solo por el contenido del mensaje.
 
 Mensaje del cliente: "{user_message}"
 
@@ -474,10 +526,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     flow_config = get_bot_flow_config(bot_id)
     
     # Obtener productos
-    productos = get_productos_activos(limit=flow_config.get("max_productos_mostrar", 5))
+    marca_id = bot_info.get("marca_id")
+    if marca_id is None:
+        marca_id = bot_info.get("manager_id")
+
+    productos = get_productos_activos(
+        marca_id=marca_id,
+        limit=flow_config.get("max_productos_mostrar", 5),
+    )
     
     # Obtener esencia de marca
-    marca_id = bot_info.get("marca_id")
     esencia = get_esencia_marca(marca_id) if marca_id else None
 
     # Inicializar datos del usuario
@@ -487,6 +545,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "flow_config": flow_config,
         "productos": productos,
         "esencia": esencia,
+        "marca_id": marca_id,
         "selected_product": None,
         "product_attributes": {},
         "email": None,
@@ -535,14 +594,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     productos = data.get("productos", [])
     esencia = data.get("esencia")
 
+    # Upsert ligero en cada mensaje (para reflejar actividad en dashboard).
+    # En STATE_FREE_CONVERSATION se actualizará de nuevo con la categoría calculada.
+    try:
+        save_lead(bot_id, user_id, {
+            "bot_slug": data["bot_info"].get("slug"),
+            "bot_nombre": data["bot_info"].get("nombre"),
+            "interes": data.get("interes") or f"Lead {user_id}",
+            "email": data.get("email"),
+            "telefono": data.get("phone"),
+            "estado": "nuevo",
+            "categoria": data.get("categoria", "warm"),
+        })
+    except Exception as e:
+        print(f"Error upsert lead (pre): {e}")
+
     # ===== ESTADO: Conversación libre con GPT =====
     if state == STATE_FREE_CONVERSATION:
         # Analizar intención del usuario con GPT
         analisis = analyze_user_intent_with_gpt(text, productos, esencia)
         
-        data["categoria"] = analisis.get("categoria", "warm")
         interes = analisis.get("interes", True)
         producto_recomendado_id = analisis.get("producto_recomendado_id")
+
+        categoria = analisis.get("categoria", "warm")
+        if not interes:
+            categoria = "cold"
+        elif categoria == "hot":
+            # HOT solo si hay señales fuertes; si no, degradar a WARM
+            if not producto_recomendado_id and not data.get("selected_product") and not (data.get("email") or data.get("phone")):
+                if not has_strong_purchase_intent(text):
+                    categoria = "warm"
+
+        data["categoria"] = categoria
         
         # Generar respuesta con GPT
         respuesta_gpt = generate_gpt_response(user_id, text, productos, esencia)
@@ -595,6 +679,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_text(respuesta_gpt)
         
         data["interes"] = text
+
+        # Upsert con la categoría resultante de este mensaje
+        try:
+            save_lead(bot_id, user_id, {
+                "bot_slug": data["bot_info"].get("slug"),
+                "bot_nombre": data["bot_info"].get("nombre"),
+                "interes": data.get("interes", ""),
+                "email": data.get("email"),
+                "telefono": data.get("phone"),
+                "estado": "nuevo",
+                "categoria": data.get("categoria", "warm"),
+                "producto_id": producto_recomendado_id,
+                "notas": f"Lead actualizado por mensaje (GPT). Categoría: {data.get('categoria', 'warm')}",
+            })
+        except Exception as e:
+            print(f"Error upsert lead (post): {e}")
+
         guardar_conversacion(bot_id, user_id, state, text, respuesta_gpt)
     
     # ===== ESTADO: Re-engagement de leads fríos =====
@@ -791,6 +892,21 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     bot_id = data["bot_id"]
     flow_config = data["flow_config"]
     callback_data = query.data
+
+    # Upsert del lead también en interacciones por botones (no solo mensajes)
+    try:
+        save_lead(bot_id, user_id, {
+            "bot_slug": data["bot_info"].get("slug"),
+            "bot_nombre": data["bot_info"].get("nombre"),
+            "interes": data.get("interes") or f"Lead {user_id}",
+            "email": data.get("email"),
+            "telefono": data.get("phone"),
+            "estado": "nuevo",
+            "categoria": data.get("categoria", "warm"),
+            "notas": "Interacción por botón (callback)",
+        })
+    except Exception as e:
+        print(f"Error upsert lead (callback): {e}")
     
     # ===== Re-engagement =====
     if callback_data == "reengagement_si":
@@ -816,6 +932,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         await query.edit_message_text("¡Perfecto! 😊 Aquí están nuestros productos:", reply_markup=reply_markup)
         save_interaccion(bot_id, user_id, "producto_visto")
+
+        try:
+            save_lead(bot_id, user_id, {
+                "bot_slug": data["bot_info"].get("slug"),
+                "bot_nombre": data["bot_info"].get("nombre"),
+                "interes": data.get("interes") or f"Lead {user_id}",
+                "estado": "nuevo",
+                "categoria": data.get("categoria", "warm"),
+                "notas": "Re-engagement: aceptó ver productos",
+            })
+        except Exception as e:
+            print(f"Error upsert lead (reengagement_si): {e}")
     
     elif callback_data == "reengagement_no":
         # Usuario confirma que no le interesa
@@ -855,6 +983,19 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         data["selected_product"] = producto
         data["interes"] = f"Interesado en {producto['nombre']}"
         data["categoria"] = "warm"
+
+        try:
+            save_lead(bot_id, user_id, {
+                "bot_slug": data["bot_info"].get("slug"),
+                "bot_nombre": data["bot_info"].get("nombre"),
+                "interes": data.get("interes") or f"Lead {user_id}",
+                "estado": "nuevo",
+                "categoria": data.get("categoria", "warm"),
+                "producto_id": producto_id,
+                "notas": "Seleccionó producto",
+            })
+        except Exception as e:
+            print(f"Error upsert lead (producto): {e}")
         
         # Obtener atributos del producto
         atributos = get_producto_atributos(producto_id)
@@ -1012,6 +1153,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         respuesta = "¡Genial! 🎉 Para finalizar, necesito algunos datos.\n\n¿Cuál es tu correo electrónico?"
         await query.edit_message_text(respuesta)
+
+        try:
+            save_lead(bot_id, user_id, {
+                "bot_slug": data["bot_info"].get("slug"),
+                "bot_nombre": data["bot_info"].get("nombre"),
+                "interes": data.get("interes") or f"Lead {user_id}",
+                "estado": "nuevo",
+                "categoria": data.get("categoria", "hot"),
+                "notas": "Confirmó interés de compra",
+            })
+        except Exception as e:
+            print(f"Error upsert lead (confirmar_si): {e}")
     
     # ===== Confirmación de compra: LUEGO =====
     elif callback_data == "confirmar_luego":
@@ -1020,6 +1173,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         respuesta = "Entiendo. De todas formas, déjame tus datos para poder contactarte después.\n\n¿Cuál es tu correo electrónico?"
         await query.edit_message_text(respuesta)
+
+        try:
+            save_lead(bot_id, user_id, {
+                "bot_slug": data["bot_info"].get("slug"),
+                "bot_nombre": data["bot_info"].get("nombre"),
+                "interes": data.get("interes") or f"Lead {user_id}",
+                "estado": "nuevo",
+                "categoria": data.get("categoria", "warm"),
+                "notas": "Postergó compra (warm)",
+            })
+        except Exception as e:
+            print(f"Error upsert lead (confirmar_luego): {e}")
 
 
 def main() -> None:

@@ -8,6 +8,11 @@ En LAIDA, cada **super admin** puede crear múltiples bots, y cada bot:
 - Se ejecuta de forma independiente
 - Captura sus propios leads
 
+Además, LAIDA separa la información por **marca (tenant)**:
+- Los **managers se registran** con su marca en `/registro`.
+- Un bot asignado a un manager queda asociado a la marca mediante `marca_id` (normalmente igual al `id` del manager).
+- Productos, esencia y configuración se consultan por `marca_id`.
+
 **No hay configuración global.** Todo se gestiona por bot desde el dashboard.
 
 ## 📊 Arquitectura
@@ -41,7 +46,7 @@ Desde el dashboard:
    - **Slug**: Identificador único (ej: "tienda-x")
    - **Token de Telegram**: Obtener de @BotFather
    - **OpenAI API Key**: (Opcional) Para habilitar GPT
-   - **Manager**: Asignar a un usuario manager (opcional)
+  - **Manager**: Asignar a un usuario manager (opcional, debe existir por registro)
 
 3. Click **"Guardar"**
 
@@ -55,6 +60,10 @@ En el servidor, ejecutar:
 cd bot
 python3 bot_launcher.py <bot_id>
 ```
+
+`bot_id` es el **ID numérico** del bot en la tabla `bots` (visible en el dashboard o consultable por API).
+
+⚠️ Si ves un bot demo con token `000000:demo-token`, ese token es placeholder y no funcionará con Telegram.
 
 **Ejemplo:**
 ```bash
