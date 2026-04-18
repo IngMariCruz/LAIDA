@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
 LAIDA Bot - Sistema Multi-Tenant
-Flujo de 6 pasos:
-  1. Obtener contexto (config + esencia + productos desde BD)
-  2. El lead escribe al bot (/start)
-  3. Dar mensaje de bienvenida
-  4. Preguntar interés
-  5. Capturar interés y mostrar producto
-  6. Almacenar datos del lead (email + teléfono)
+Flujo:
+  1. /start → crea lead inicial (datos temporales) + muestra productos
+  2. Cada mensaje → clasifica lead (cold/warm/hot) con IA
+  3. Al llegar a hot → pide nombre, email, teléfono y actualiza datos reales
 """
 
+import json
 import os
 import re
 import sys
@@ -18,8 +16,15 @@ import random
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 from dotenv import load_dotenv
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 load_dotenv()
@@ -28,12 +33,13 @@ DB_PATH = os.getenv("BOT_DB_PATH", "../bd/laida.db")
 CONVERSATIONS_DIR = os.getenv("BOT_CONVERSATIONS_DIR", ".")
 
 # ── Estados del flujo ──────────────────────────────────────────────────────────
-STATE_WAIT_INTEREST  = "WAIT_INTEREST"   # Paso 4: preguntar interés
-STATE_WAIT_SELECTION = "WAIT_SELECTION"  # Paso 5a: elegir producto de lista
-STATE_PRODUCT_DETAIL = "PRODUCT_DETAIL"  # Paso 5b: confirmar producto elegido
-STATE_GET_EMAIL      = "GET_EMAIL"       # Paso 6a: capturar email
-STATE_GET_PHONE      = "GET_PHONE"       # Paso 6b: capturar teléfono
-STATE_DONE           = "DONE"            # Flujo completado
+STATE_WAIT_INTEREST  = "WAIT_INTEREST"
+STATE_WAIT_SELECTION = "WAIT_SELECTION"
+STATE_PRODUCT_DETAIL = "PRODUCT_DETAIL"
+STATE_GET_NOMBRE     = "GET_NOMBRE"
+STATE_GET_EMAIL      = "GET_EMAIL"
+STATE_GET_PHONE      = "GET_PHONE"
+STATE_DONE           = "DONE"
 
 user_state: Dict[int, str] = {}
 user_data:  Dict[int, Dict[str, Any]] = {}
@@ -49,11 +55,8 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
-# PASO 1 ── Obtener contexto completo del bot
 def cargar_configuracion_bot(bot_slug: str) -> Optional[Dict[str, Any]]:
-    """
-    Carga config del bot + mensajes de flujo + esencia de marca desde la BD.
-    """
+    """Carga config del bot + mensajes de flujo + esencia de marca desde la BD."""
     query = """
         SELECT
             b.id,
@@ -106,7 +109,7 @@ def cargar_configuracion_bot(bot_slug: str) -> Optional[Dict[str, Any]]:
             "mensaje_sin_interes":   row["mensaje_sin_interes"]    or "Entendido, si en algún momento necesitas algo aquí estaré. 😊",
             "mensaje_productos":     row["mensaje_productos"]       or "Basado en lo que buscas, te recomiendo:",
             "mensaje_caracteristicas": row["mensaje_caracteristicas"] or "Aquí tienes los detalles:",
-            "mensaje_confirmacion":  row["mensaje_confirmacion"]    or "Perfecto, solo necesito un par de datos para completar tu registro.",
+            "mensaje_confirmacion":  row["mensaje_confirmacion"]    or "¡Genial! Para enviarte atención personalizada, necesito un par de datos.",
             "mensaje_agradecimiento": row["mensaje_agradecimiento"] or "¡Listo! 🎉 Nuestro equipo te contactará pronto.",
             "mostrar_productos_inicio": bool(row["mostrar_productos_inicio"] if row["mostrar_productos_inicio"] is not None else 1),
             "max_productos":         row["max_productos_mostrar"] or 20,
@@ -145,22 +148,88 @@ def get_productos(bot_id: int, limit: int = 4, filtro: str = "") -> List[Dict[st
         return []
 
 
+def crear_lead_inicial(bot_id: int, telegram_user_id: int, bot_slug: str, bot_nombre: str) -> bool:
+    """Crea el lead en el primer mensaje con datos temporales. Retorna True si es lead nuevo."""
+    try:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                """INSERT OR IGNORE INTO leads
+                     (bot_id, bot_slug, bot_nombre, nombre, email, telefono,
+                      telegram_user_id, estado, categoria, actualizado_en)
+                   VALUES (?, ?, ?, 'lead1', 'lead@laida.com', '00000000', ?, 'nuevo', 'cold', CURRENT_TIMESTAMP)""",
+                (bot_id, bot_slug, bot_nombre, telegram_user_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+    except sqlite3.Error as e:
+        print(f"❌ Error creando lead inicial: {e}")
+        return False
+
+
+def actualizar_lead(bot_id: int, telegram_user_id: int, **kwargs) -> bool:
+    """Actualiza campos del lead. Solo actualiza los campos pasados como kwargs."""
+    if not kwargs:
+        return False
+    campos = ", ".join(f"{k} = ?" for k in kwargs)
+    valores = list(kwargs.values()) + [bot_id, telegram_user_id]
+    try:
+        with get_connection() as conn:
+            conn.execute(
+                f"UPDATE leads SET {campos}, actualizado_en = CURRENT_TIMESTAMP WHERE bot_id = ? AND telegram_user_id = ?",
+                valores,
+            )
+            conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ Error actualizando lead: {e}")
+        return False
+
+
+def tiene_datos_reales(bot_id: int, telegram_user_id: int) -> bool:
+    """Retorna True si el lead ya tiene nombre real (distinto de 'lead1')."""
+    try:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT nombre FROM leads WHERE bot_id = ? AND telegram_user_id = ?",
+                (bot_id, telegram_user_id),
+            ).fetchone()
+        if not row:
+            return False
+        nombre = row["nombre"]
+        return bool(nombre and nombre != "lead1")
+    except sqlite3.Error as e:
+        print(f"❌ Error verificando datos reales: {e}")
+        return False
+
+
+def obtener_categoria_actual(bot_id: int, telegram_user_id: int) -> str:
+    """Recupera la categoría actual del lead desde DB."""
+    try:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT categoria FROM leads WHERE bot_id = ? AND telegram_user_id = ?",
+                (bot_id, telegram_user_id),
+            ).fetchone()
+        if row and row["categoria"]:
+            return row["categoria"]
+    except sqlite3.Error:
+        pass
+    return "cold"
+
+
 def buscar_producto(selector: str, productos: List[Dict]) -> Optional[Dict]:
     s = selector.strip().lower()
     if s.isdigit():
         idx = int(s) - 1
         if 0 <= idx < len(productos):
             return productos[idx]
-    # Coincidencia exacta: el texto del usuario == nombre del producto
     for p in productos:
         if s == p.get("nombre", "").lower():
             return p
-    # El nombre del producto está contenido en el mensaje del usuario
     for p in productos:
         nombre = p.get("nombre", "").lower()
         if nombre and nombre in s:
             return p
-    # El texto del usuario está contenido en el nombre del producto
     for p in productos:
         if s and s in p.get("nombre", "").lower():
             return p
@@ -186,7 +255,6 @@ def extract_phone(text: str) -> Optional[str]:
 
 
 def extraer_categoria(producto: Dict) -> str:
-    """Extrae la categoría desde la descripción del producto."""
     desc = producto.get("descripcion") or ""
     for parte in desc.split("|"):
         parte = parte.strip()
@@ -196,8 +264,6 @@ def extraer_categoria(producto: Dict) -> str:
 
 
 def formato_productos(productos: List[Dict]) -> str:
-    """Lista numerada agrupada por categoría."""
-    # Agrupar
     grupos: Dict[str, List[tuple]] = {}
     for i, p in enumerate(productos):
         cat = extraer_categoria(p)
@@ -214,13 +280,7 @@ def formato_productos(productos: List[Dict]) -> str:
     return "\n".join(lineas).strip()
 
 
-# ── Detalle de producto ────────────────────────────────────────────────────────
-
 def _formatear_caracteristicas(descripcion: str) -> str:
-    """
-    Convierte la descripción del producto en características legibles.
-    Formato esperado: "desc principal | Categoría: X | Material: Y | Colores: Z | ..."
-    """
     if not descripcion:
         return ""
     partes = [p.strip() for p in descripcion.split("|")]
@@ -234,6 +294,67 @@ def _formatear_caracteristicas(descripcion: str) -> str:
     return "\n".join(lineas)
 
 
+def clasificar_lead(historial: List[Dict], openai_key: Optional[str]) -> str:
+    """Clasifica el lead como cold/warm/hot usando OpenAI o heurística de fallback."""
+    if not historial:
+        return "cold"
+
+    if openai_key and OPENAI_AVAILABLE:
+        try:
+            ultimos = historial[-10:]
+            mensajes = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Eres un clasificador de leads para una tienda. "
+                        "Dado el historial de conversación, clasifica al cliente como:\n"
+                        '- "cold": curiosidad casual, sin interés específico\n'
+                        '- "warm": hace preguntas, muestra interés en productos\n'
+                        '- "hot": quiere comprar, pregunta por precio/disponibilidad/producto específico\n'
+                        'Responde SOLO con JSON: {"categoria": "cold|warm|hot"}'
+                    ),
+                }
+            ]
+            for turno in ultimos:
+                role = "user" if turno.get("role") == "user" else "assistant"
+                mensajes.append({"role": role, "content": turno.get("content", "")})
+
+            client = OpenAI(api_key=openai_key)
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=mensajes,
+                max_tokens=50,
+                temperature=0,
+            )
+            raw = resp.choices[0].message.content or ""
+            match = re.search(r"\{[^}]+\}", raw)
+            if match:
+                datos = json.loads(match.group())
+                cat = datos.get("categoria", "").lower()
+                if cat in ("cold", "warm", "hot"):
+                    return cat
+        except Exception as e:
+            print(f"⚠️ OpenAI classify error: {e}")
+
+    # Fallback heurístico: revisar el último mensaje del usuario
+    for turno in reversed(historial):
+        if turno.get("role") == "user":
+            return "warm" if detecta_interes(turno.get("content", "")) else "cold"
+    return "cold"
+
+
+# ── Persistencia ───────────────────────────────────────────────────────────────
+
+def log_conversacion(bot_id: int, user_id: int, estado: str, msg_user: str, msg_bot: str) -> None:
+    os.makedirs(CONVERSATIONS_DIR, exist_ok=True)
+    path = os.path.join(CONVERSATIONS_DIR, f"conversaciones_bot_{bot_id}.txt")
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] bot={bot_id} user={user_id} estado={estado}\n")
+        f.write(f"  >>> {msg_user}\n  <<< {msg_bot}\n\n")
+
+
+# ── Detalle de producto ────────────────────────────────────────────────────────
+
 async def _mostrar_detalle_producto(
     update: Update,
     producto: Dict,
@@ -241,8 +362,8 @@ async def _mostrar_detalle_producto(
     bot_id: int,
     uid: int,
     texto_usuario: str,
-) -> None:
-    """Muestra características completas de un producto e invita a comprar."""
+) -> str:
+    """Muestra características completas de un producto. Retorna el texto enviado."""
     precio_fmt = f"${int(producto['precio']):,}".replace(",", ".") if producto.get("precio") else "Consultar"
     caracteristicas = _formatear_caracteristicas(producto.get("descripcion") or "")
 
@@ -260,58 +381,42 @@ async def _mostrar_detalle_producto(
     )
     await update.message.reply_text(respuesta, parse_mode="Markdown")
     log_conversacion(bot_id, uid, "DETALLE_PRODUCTO", texto_usuario, respuesta)
+    return respuesta
 
 
-# ── Persistencia ───────────────────────────────────────────────────────────────
+async def _clasificar_y_posiblemente_pedir_datos(
+    bot_id: int,
+    uid: int,
+    data: Dict[str, Any],
+    update: Update,
+) -> None:
+    """Reclasifica el lead y, si llega a hot sin datos reales, solicita nombre."""
+    openai_key = bot_config.get("openai_key") if bot_config else None
+    nueva_cat = clasificar_lead(data["historial"], openai_key)
 
-def log_conversacion(bot_id: int, user_id: int, estado: str, msg_user: str, msg_bot: str) -> None:
-    os.makedirs(CONVERSATIONS_DIR, exist_ok=True)
-    path = os.path.join(CONVERSATIONS_DIR, f"conversaciones_bot_{bot_id}.txt")
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] bot={bot_id} user={user_id} estado={estado}\n")
-        f.write(f"  >>> {msg_user}\n  <<< {msg_bot}\n\n")
+    if nueva_cat != data.get("categoria_actual"):
+        data["categoria_actual"] = nueva_cat
+        actualizar_lead(bot_id, uid, categoria=nueva_cat)
 
-
-# PASO 6 ── Guardar lead en BD
-def guardar_lead(bot_id: int, data: Dict[str, Any]) -> bool:
-    try:
-        producto = data.get("producto") or {}
-        with get_connection() as conn:
-            conn.execute(
-                """INSERT INTO leads
-                     (bot_id, bot_slug, bot_nombre, interes, email, telefono,
-                      telegram_user_id, estado, categoria, producto_id, notas)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'nuevo', 'warm', ?, ?)""",
-                (
-                    bot_id,
-                    bot_config.get("slug") if bot_config else None,
-                    bot_config.get("nombre") if bot_config else None,
-                    data.get("interes") or producto.get("nombre"),
-                    data.get("email"),
-                    data.get("telefono"),
-                    data.get("telegram_user_id"),
-                    producto.get("id"),
-                    data.get("notas"),
-                ),
-            )
-            conn.commit()
-        print(f"✅ Lead guardado — bot {bot_id} | {data.get('email', '?')}")
-        return True
-    except sqlite3.Error as e:
-        print(f"❌ Error guardando lead: {e}")
-        return False
+    if (
+        nueva_cat == "hot"
+        and not data.get("datos_recolectados")
+        and not tiene_datos_reales(bot_id, uid)
+    ):
+        user_state[uid] = STATE_GET_NOMBRE
+        respuesta = "¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?"
+        await update.message.reply_text(respuesta)
+        log_conversacion(bot_id, uid, "GET_NOMBRE_TRIGGER", "", respuesta)
 
 
 # ── Handlers de Telegram ───────────────────────────────────────────────────────
 
-# PASOS 2 y 3 ── Lead escribe /start → bienvenida
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.effective_user:
         return
 
     uid = update.effective_user.id
 
-    # Recargar config desde BD en cada /start para reflejar cambios del dashboard
     global bot_config
     if bot_config:
         config_fresca = cargar_configuracion_bot(bot_config["slug"])
@@ -322,34 +427,74 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("⚠️ Bot no configurado correctamente.")
         return
 
-    # Inicializar sesión del usuario
-    user_data[uid] = {
-        "telegram_user_id": uid,
-        "interes": "",
-        "producto": None,
-        "email": "",
-        "telefono": "",
-        "notas": "",
-    }
+    bot_id = bot_config["id"]
 
-    bot_id   = bot_config["id"]
+    # Crear lead inicial (INSERT OR IGNORE) — primer /start crea el registro
+    es_nuevo = crear_lead_inicial(bot_id, uid, bot_config["slug"], bot_config["nombre"])
+
+    if es_nuevo:
+        user_data[uid] = {
+            "telegram_user_id": uid,
+            "interes": "",
+            "producto": None,
+            "productos_lista": [],
+            "todos_productos": [],
+            "historial": [],
+            "categoria_actual": "cold",
+            "datos_recolectados": False,
+            "nombre": "",
+            "email": "",
+            "telefono": "",
+            "notas": "",
+        }
+    else:
+        cat = obtener_categoria_actual(bot_id, uid)
+        ya_tiene_datos = tiene_datos_reales(bot_id, uid)
+        if uid in user_data:
+            user_data[uid]["categoria_actual"] = cat
+            user_data[uid]["datos_recolectados"] = ya_tiene_datos
+            user_data[uid]["historial"] = []
+        else:
+            user_data[uid] = {
+                "telegram_user_id": uid,
+                "interes": "",
+                "producto": None,
+                "productos_lista": [],
+                "todos_productos": [],
+                "historial": [],
+                "categoria_actual": cat,
+                "datos_recolectados": ya_tiene_datos,
+                "nombre": "",
+                "email": "",
+                "telefono": "",
+                "notas": "",
+            }
+
     max_prod = int(bot_config.get("max_productos", 4))
+    data = user_data[uid]
 
-    # PASO 3 ── Mensaje de bienvenida + pregunta interés
     bienvenida = bot_config["mensaje_bienvenida"]
     msg1 = f"{bienvenida}\n\n¿En qué producto o servicio estás interesado hoy?"
     user_state[uid] = STATE_WAIT_INTEREST
 
-    await update.message.reply_text(msg1, parse_mode="Markdown")
+    try:
+        await update.message.reply_text(msg1, parse_mode="Markdown")
+    except BadRequest as e:
+        if "can't parse entities" in str(e).lower():
+            await update.message.reply_text(msg1)
+        else:
+            raise
+    data["historial"].append({"role": "bot", "content": msg1})
     log_conversacion(bot_id, uid, "START", "/start", msg1)
 
-    # Segundo mensaje con productos destacados (4-6 aleatorios)
     todos = get_productos(bot_id, 100)
     if todos:
-        n = random.randint(4, min(6, len(todos)))
+        n_min = min(4, len(todos))
+        n_max = min(6, len(todos))
+        n = random.randint(n_min, n_max)
         destacados = random.sample(todos, n)
-        user_data[uid]["productos_lista"] = destacados
-        user_data[uid]["todos_productos"] = todos
+        data["productos_lista"] = destacados
+        data["todos_productos"] = todos
         listado = formato_productos(destacados)
         msg2 = (
             f"✨ *Algunos de nuestros productos destacados:*\n\n"
@@ -358,11 +503,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "o cuéntame qué estás buscando.\n"
             "También puedes escribir *\"ver todos\"* para ver el catálogo completo. 😊"
         )
-        await update.message.reply_text(msg2, parse_mode="Markdown")
+        try:
+            await update.message.reply_text(msg2, parse_mode="Markdown")
+        except BadRequest as e:
+            if "can't parse entities" in str(e).lower():
+                await update.message.reply_text(msg2)
+            else:
+                raise
+        data["historial"].append({"role": "bot", "content": msg2})
         log_conversacion(bot_id, uid, "START_SUGERENCIA", "/start", msg2)
 
 
-# PASO 4-6 ── Manejo del flujo conversacional
 async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.effective_user:
         return
@@ -383,9 +534,12 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
     bot_id   = bot_config["id"]
     max_prod = int(bot_config.get("max_productos", 4))
 
-    # ── "ver todos" desde cualquier estado activo ─────────────────────────────
+    # Agregar mensaje del usuario al historial
+    data["historial"].append({"role": "user", "content": text})
+
+    # ── "ver todos" desde cualquier estado de browsing ────────────────────────
     VER_TODOS = ["ver todos", "todos", "mostrar todos", "otros productos", "ver más", "ver mas", "más productos", "mas productos"]
-    if text.lower().strip() in VER_TODOS and state not in (STATE_GET_EMAIL, STATE_GET_PHONE, STATE_DONE):
+    if text.lower() in VER_TODOS and state not in (STATE_GET_NOMBRE, STATE_GET_EMAIL, STATE_GET_PHONE, STATE_DONE):
         todos = data.get("todos_productos") or get_productos(bot_id, 100)
         data["productos_lista"] = todos
         data["todos_productos"] = todos
@@ -397,14 +551,74 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
         )
         user_state[uid] = STATE_WAIT_SELECTION
         await update.message.reply_text(respuesta, parse_mode="Markdown")
+        data["historial"].append({"role": "bot", "content": respuesta})
         log_conversacion(bot_id, uid, "VER_TODOS", text, respuesta)
+        await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
         return
 
-    # ── PASO 4 completado: capturar interés y mostrar productos ──────────────
+    # ── GET_NOMBRE: capturar nombre real ──────────────────────────────────────
+    if state == STATE_GET_NOMBRE:
+        if len(text.strip()) < 2:
+            respuesta = "Por favor ingresa tu nombre (mínimo 2 caracteres)."
+            await update.message.reply_text(respuesta)
+            log_conversacion(bot_id, uid, STATE_GET_NOMBRE, text, respuesta)
+            return
+        data["nombre"] = text.strip()
+        actualizar_lead(bot_id, uid, nombre=text.strip())
+        user_state[uid] = STATE_GET_EMAIL
+        respuesta = f"Gracias, *{text.strip()}*! ¿Cuál es tu *correo electrónico*?"
+        await update.message.reply_text(respuesta, parse_mode="Markdown")
+        log_conversacion(bot_id, uid, STATE_GET_NOMBRE, text, respuesta)
+        return
+
+    # ── GET_EMAIL: capturar email ─────────────────────────────────────────────
+    if state == STATE_GET_EMAIL:
+        if not is_valid_email(text):
+            respuesta = "Ese correo no parece válido. Intenta con el formato *nombre@dominio.com*"
+            await update.message.reply_text(respuesta, parse_mode="Markdown")
+            log_conversacion(bot_id, uid, STATE_GET_EMAIL, text, respuesta)
+            return
+        data["email"] = text
+        actualizar_lead(bot_id, uid, email=text)
+        user_state[uid] = STATE_GET_PHONE
+        respuesta = "Gracias. Ahora comparte tu *número de teléfono* (10 dígitos)."
+        await update.message.reply_text(respuesta, parse_mode="Markdown")
+        log_conversacion(bot_id, uid, STATE_GET_EMAIL, text, respuesta)
+        return
+
+    # ── GET_PHONE: capturar teléfono y marcar datos completos ─────────────────
+    if state == STATE_GET_PHONE:
+        telefono = extract_phone(text)
+        if not telefono:
+            respuesta = "No pude validar ese número. Debe tener exactamente *10 dígitos*."
+            await update.message.reply_text(respuesta, parse_mode="Markdown")
+            log_conversacion(bot_id, uid, STATE_GET_PHONE, text, respuesta)
+            return
+
+        data["telefono"] = telefono
+        data["datos_recolectados"] = True
+        actualizar_lead(bot_id, uid, telefono=telefono)
+
+        producto_nombre = (data.get("producto") or {}).get("nombre", "")
+        respuesta = (
+            f"{bot_config['mensaje_agradecimiento']}\n\n"
+            f"📋 *Resumen de tu registro:*\n"
+            f"• Nombre: {data.get('nombre') or '-'}\n"
+            f"• Interés: {data.get('interes') or producto_nombre or '-'}\n"
+            f"• Correo: {data['email']}\n"
+            f"• Teléfono: {telefono}\n\n"
+            "Escribe /start si deseas hacer otra consulta."
+        )
+        user_state[uid] = STATE_DONE
+        await update.message.reply_text(respuesta, parse_mode="Markdown")
+        log_conversacion(bot_id, uid, STATE_GET_PHONE, text, respuesta)
+        return
+
+    # ── WAIT_INTEREST: capturar interés y mostrar productos ───────────────────
     if state == STATE_WAIT_INTEREST:
         data["interes"] = text
+        actualizar_lead(bot_id, uid, interes=text)
 
-        # Buscar en TODOS los productos (sugeridos + todos los de la marca)
         todos = data.get("todos_productos") or get_productos(bot_id, 100)
         data["todos_productos"] = todos
         producto_directo = buscar_producto(text, todos)
@@ -412,10 +626,11 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
         if producto_directo:
             data["producto"] = producto_directo
             user_state[uid] = STATE_PRODUCT_DETAIL
-            await _mostrar_detalle_producto(update, producto_directo, bot_config, bot_id, uid, text)
+            respuesta_texto = await _mostrar_detalle_producto(update, producto_directo, bot_config, bot_id, uid, text)
+            data["historial"].append({"role": "bot", "content": respuesta_texto})
+            await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
             return
 
-        # Sin coincidencia directa: buscar por filtro de texto
         productos = get_productos(bot_id, max_prod, filtro=text)
         data["productos_lista"] = productos
 
@@ -429,18 +644,16 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
             )
             user_state[uid] = STATE_WAIT_SELECTION
         else:
-            respuesta = (
-                f"{bot_config['mensaje_sin_interes']}\n\n"
-                f"{bot_config['mensaje_confirmacion']}\n\n"
-                "¿Cuál es tu correo electrónico?"
-            )
-            user_state[uid] = STATE_GET_EMAIL
+            respuesta = bot_config["mensaje_sin_interes"]
+            user_state[uid] = STATE_WAIT_SELECTION
 
         await update.message.reply_text(respuesta, parse_mode="Markdown")
+        data["historial"].append({"role": "bot", "content": respuesta})
         log_conversacion(bot_id, uid, STATE_WAIT_INTEREST, text, respuesta)
+        await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
         return
 
-    # ── PASO 5a: usuario elige producto de la lista ───────────────────────────
+    # ── WAIT_SELECTION: usuario elige producto de la lista ────────────────────
     if state == STATE_WAIT_SELECTION:
         productos = data.get("productos_lista", [])
         producto  = buscar_producto(text, productos)
@@ -451,25 +664,36 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
                 + formato_productos(productos)
             )
             await update.message.reply_text(respuesta, parse_mode="Markdown")
+            data["historial"].append({"role": "bot", "content": respuesta})
             log_conversacion(bot_id, uid, STATE_WAIT_SELECTION, text, respuesta)
+            await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
             return
 
         data["producto"] = producto
         user_state[uid]  = STATE_PRODUCT_DETAIL
-
-        await _mostrar_detalle_producto(update, producto, bot_config, bot_id, uid, text)
+        respuesta_texto = await _mostrar_detalle_producto(update, producto, bot_config, bot_id, uid, text)
+        data["historial"].append({"role": "bot", "content": respuesta_texto})
+        await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
         return
 
-    # ── PASO 5b: confirmar producto ──────────────────────────────────────────
+    # ── PRODUCT_DETAIL: confirmar compra o ver otras opciones ─────────────────
     if state == STATE_PRODUCT_DETAIL:
         if detecta_interes(text):
-            user_state[uid] = STATE_GET_EMAIL
-            respuesta = (
-                f"{bot_config['mensaje_confirmacion']}\n\n"
-                "¿Cuál es tu *correo electrónico*?"
-            )
+            # Usuario confirma querer el producto → siempre es hot
+            data["categoria_actual"] = "hot"
+            actualizar_lead(bot_id, uid, categoria="hot")
+
+            if not data.get("datos_recolectados") and not tiene_datos_reales(bot_id, uid):
+                user_state[uid] = STATE_GET_NOMBRE
+                respuesta = "¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?"
+            else:
+                user_state[uid] = STATE_DONE
+                respuesta = bot_config["mensaje_agradecimiento"] + "\n\nEscribe /start si deseas hacer otra consulta."
+
+            await update.message.reply_text(respuesta, parse_mode="Markdown")
+            data["historial"].append({"role": "bot", "content": respuesta})
+            log_conversacion(bot_id, uid, STATE_PRODUCT_DETAIL, text, respuesta)
         else:
-            # Ofrecer otra selección
             productos = get_productos(bot_id, max_prod)
             data["productos_lista"] = productos
             user_state[uid] = STATE_WAIT_SELECTION
@@ -484,53 +708,10 @@ async def handle_message(update: Update, _context: ContextTypes.DEFAULT_TYPE) ->
                 respuesta = bot_config["mensaje_sin_interes"]
                 user_state[uid] = STATE_DONE
 
-        await update.message.reply_text(respuesta, parse_mode="Markdown")
-        log_conversacion(bot_id, uid, STATE_PRODUCT_DETAIL, text, respuesta)
-        return
-
-    # ── PASO 6a: capturar email ───────────────────────────────────────────────
-    if state == STATE_GET_EMAIL:
-        if not is_valid_email(text):
-            respuesta = "Ese correo no parece válido. Intenta con el formato *nombre@dominio.com*"
             await update.message.reply_text(respuesta, parse_mode="Markdown")
-            log_conversacion(bot_id, uid, STATE_GET_EMAIL, text, respuesta)
-            return
-
-        data["email"] = text
-        user_state[uid] = STATE_GET_PHONE
-        respuesta = "Gracias. Ahora comparte tu *número de teléfono* (10 dígitos)."
-        await update.message.reply_text(respuesta, parse_mode="Markdown")
-        log_conversacion(bot_id, uid, STATE_GET_EMAIL, text, respuesta)
-        return
-
-    # ── PASO 6b: capturar teléfono y guardar lead ─────────────────────────────
-    if state == STATE_GET_PHONE:
-        telefono = extract_phone(text)
-        if not telefono:
-            respuesta = "No pude validar ese número. Debe tener exactamente *10 dígitos*."
-            await update.message.reply_text(respuesta, parse_mode="Markdown")
-            log_conversacion(bot_id, uid, STATE_GET_PHONE, text, respuesta)
-            return
-
-        data["telefono"] = telefono
-        guardado = guardar_lead(bot_id, data)
-
-        if guardado:
-            producto_nombre = (data.get("producto") or {}).get("nombre", "tu consulta")
-            respuesta = (
-                f"{bot_config['mensaje_agradecimiento']}\n\n"
-                f"📋 *Resumen de tu registro:*\n"
-                f"• Interés: {data.get('interes') or producto_nombre}\n"
-                f"• Correo: {data['email']}\n"
-                f"• Teléfono: {telefono}\n\n"
-                "Escribe /start si deseas hacer otra consulta."
-            )
-        else:
-            respuesta = "Ocurrió un error al guardar tus datos. Por favor escribe /start e inténtalo de nuevo."
-
-        user_state[uid] = STATE_DONE
-        await update.message.reply_text(respuesta, parse_mode="Markdown")
-        log_conversacion(bot_id, uid, STATE_GET_PHONE, text, respuesta)
+            data["historial"].append({"role": "bot", "content": respuesta})
+            log_conversacion(bot_id, uid, STATE_PRODUCT_DETAIL, text, respuesta)
+            await _clasificar_y_posiblemente_pedir_datos(bot_id, uid, data, update)
         return
 
     # ── Flujo terminado ───────────────────────────────────────────────────────
@@ -584,6 +765,8 @@ def main(bot_slug: str) -> None:
     print(f"✅ Bot configurado: {bot_config['nombre']}")
     print(f"   ID: {bot_config['id']} | Slug: {bot_config['slug']}")
     print(f"   Manager ID: {bot_config['manager_id']}")
+    openai_status = "con OpenAI" if bot_config.get("openai_key") and OPENAI_AVAILABLE else "sin OpenAI (heurística)"
+    print(f"   Clasificación: {openai_status}")
     if bot_config.get("esencia_valores"):
         print(f"   Esencia: {bot_config['esencia_valores']}")
     print(f"🤖 Bot '{bot_config['nombre']}' en ejecución...")
@@ -591,6 +774,7 @@ def main(bot_slug: str) -> None:
     app = Application.builder().token(bot_config["telegram_token"]).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
     async def on_startup(_app: Application) -> None:
         import asyncio
         asyncio.get_event_loop().create_task(watch_reload_flag(bot_slug))

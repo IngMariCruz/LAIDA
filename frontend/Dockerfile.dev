@@ -1,0 +1,14 @@
+FROM node:20-slim
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    g++ make python3 python3-setuptools pkg-config libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+RUN npm_config_build_from_source=true pnpm install --no-frozen-lockfile
+
+EXPOSE 3000
+CMD ["sh", "-c", "node init-db.js && pnpm dev"]
