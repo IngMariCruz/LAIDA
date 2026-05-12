@@ -106,11 +106,11 @@ export default function UsuariosPage() {
         ? {
             id: editingUsuario.id,
             correo: formData.correo,
-            rol: editingUsuario.rol,
+            rol: formData.rol,
             nombre: formData.nombre || null,
             ...(formData.password && { password: formData.password }),
           }
-        : { ...formData, rol: "super_admin" }
+        : { ...formData }
 
       const response = await fetch(url, {
         method,
@@ -268,9 +268,19 @@ export default function UsuariosPage() {
 
               <div>
                 <Label>Rol</Label>
-                <div className="text-sm text-muted-foreground">
-                  {editingUsuario ? editingUsuario.rol : "super_admin"}
-                </div>
+                <select
+                  value={formData.rol}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      rol: e.target.value as "super_admin" | "manager",
+                    })
+                  }
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="super_admin">Super Admin</option>
+                  <option value="manager">Manager</option>
+                </select>
               </div>
 
               <div className="flex justify-end gap-2">

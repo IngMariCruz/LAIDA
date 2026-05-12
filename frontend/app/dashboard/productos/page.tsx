@@ -5,6 +5,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 
 interface Producto {
@@ -18,6 +25,19 @@ interface ImportResult {
   inserted: number
   skipped: number
   errors: string[]
+  diff?: {
+    added: Array<{ nombre: string; precio: number; descripcion?: string; caracteristicas?: string[] }>
+    updated: Array<{
+      old: { nombre: string; precio: number }
+      new: { precio: number; descripcion?: string; caracteristicas?: string[] }
+    }>
+    removed: Array<{ nombre: string; precio: number }>
+  }
+}
+
+interface Marca {
+  id: number
+  nombre_marca: string
 }
 
 export default function ProductosAdminPage() {
@@ -27,6 +47,8 @@ export default function ProductosAdminPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [marcaId, setMarcaId] = useState<number | null>(null)
+  const [marcas, setMarcas] = useState<Marca[]>([])
+  const [marcasLoading, setMarcasLoading] = useState(true)
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -34,6 +56,7 @@ export default function ProductosAdminPage() {
   const [importText, setImportText] = useState('')
   const [importUrl, setImportUrl] = useState('')
   const [replaceExisting, setReplaceExisting] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
  
   useEffect(() => {
     const u = localStorage.getItem('usuario')
@@ -43,23 +66,44 @@ export default function ProductosAdminPage() {
       const user = JSON.parse(u)
       if (!user?.id) { window.location.href = '/login'; return }
       const token = localStorage.getItem('token')
+      setUserRole(user.rol || null)
 
-      // Obtener bots frescos del servidor
-      fetch(`/api/usuarios/${user.id}/bots`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : [])
-        .then((bots: any[]) => {
-          const lista = bots.length > 0 ? bots : (user.botsAsignados ?? [])
-          const id = lista.length > 0 ? lista[0].id : user.id
-          // Actualizar localStorage
-          localStorage.setItem('usuario', JSON.stringify({ ...user, botsAsignados: lista }))
-          setMarcaId(id)
-          fetchProductos(id)
-        })
-        .catch(() => {
-          const id = (user.botsAsignados?.[0]?.id) ?? user.id
-          setMarcaId(id)
-          fetchProductos(id)
-        })
+      // Si es super_admin, cargar todas las marcas
+      if (user.rol === 'super_admin') {
+        fetch('/api/marcas', { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.ok ? r.json() : [])
+          .then((data: Marca[]) => {
+            setMarcas(data)
+            setMarcasLoading(false)
+            // Seleccionar la primera marca por defecto
+            if (data.length > 0) {
+              setMarcaId(data[0].id)
+              fetchProductos(data[0].id)
+            }
+          })
+          .catch(() => {
+            setMarcasLoading(false)
+          })
+      } else {
+        // Para managers, obtener sus bots/marcas asignadas
+        fetch(`/api/usuarios/${user.id}/bots`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.ok ? r.json() : [])
+          .then((bots: any[]) => {
+            const lista = bots.length > 0 ? bots : (user.botsAsignados ?? [])
+            const id = lista.length > 0 ? lista[0].id : user.id
+            // Actualizar localStorage
+            localStorage.setItem('usuario', JSON.stringify({ ...user, botsAsignados: lista }))
+            setMarcaId(id)
+            fetchProductos(id)
+            setMarcasLoading(false)
+          })
+          .catch(() => {
+            const id = (user.botsAsignados?.[0]?.id) ?? user.id
+            setMarcaId(id)
+            fetchProductos(id)
+            setMarcasLoading(false)
+          })
+      }
     } catch { window.location.href = '/login' }
   }, [])
 
@@ -253,13 +297,42 @@ export default function ProductosAdminPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Productos</h2>
-          <Link href={`/dashboard/productos/atributos?marcaId=${marcaId}`}>
-            <Button variant="outline" size="sm">
-              Gestionar Atributos
-            </Button>
-          </Link>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Productos</h2>
+            <Link href={`/dashboard/productos/atributos?marcaId=${marcaId}`}>
+              <Button variant="outline" size="sm">
+                Gestionar Atributos
+              </Button>
+            </Link>
+          </div>
+
+          {/* Selector de marca para super_admin */}
+          {userRole === 'super_admin' && (
+            <div className="mb-4 max-w-xs">
+              <Label htmlFor="marca-select" className="mb-2 block">Selecciona una marca:</Label>
+              {marcasLoading ? (
+                <p className="text-sm text-muted-foreground">Cargando marcas...</p>
+              ) : (
+                <Select value={marcaId?.toString() || ''} onValueChange={(value) => {
+                  const id = parseInt(value, 10)
+                  setMarcaId(id)
+                  fetchProductos(id)
+                }}>
+                  <SelectTrigger id="marca-select">
+                    <SelectValue placeholder="Selecciona una marca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {marcas.map((marca) => (
+                      <SelectItem key={marca.id} value={marca.id.toString()}>
+                        {marca.nombre_marca}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-4 items-center mt-2">
           <label className="inline-flex items-center">
@@ -390,8 +463,6 @@ export default function ProductosAdminPage() {
           </div>
 
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
-          {/* display current marcaId for debugging */}
-          {marcaId !== null && <p className="text-xs text-muted-foreground mt-1">marcaId: {marcaId}</p>}
 
           {importResult && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">

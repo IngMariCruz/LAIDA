@@ -16,6 +16,17 @@ services:
     env_file:
       - .env
 
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./openapi.yaml:/openapi/openapi.yaml:ro
+    environment:
+      SWAGGER_JSON: /openapi/openapi.yaml
+    depends_on:
+      - web
+
   bot:
     profiles:
       - bot

@@ -1,0 +1,2541 @@
+openapi: 3.0.3
+info:
+  title: LAIDA API
+  description: |
+    API REST del sistema LAIDA — plataforma multitenant de bots de ventas vía Telegram.
+
+    ## Autenticación
+    La mayoría de endpoints requieren un token Bearer obtenido al hacer login.
+    El token se envía en el header `Authorization: Bearer <token>`.
+
+    ## Roles
+    - `super_admin`: acceso total al sistema
+    - `manager`: acceso limitado a sus bots y datos asignados
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Desarrollo local
+
+tags:
+  - name: Auth
+    description: Login y registro
+  - name: Usuarios
+    description: Gestión de usuarios del sistema
+  - name: Bots
+    description: Gestión de bots de Telegram
+  - name: Accesos
+    description: Asignación de bots a managers
+  - name: Leads
+    description: Gestión de leads captados por los bots
+  - name: Campañas
+    description: Campañas de mensajería masiva
+  - name: Clientes
+    description: Base de datos de clientes
+  - name: Productos
+    description: Catálogo de productos por marca/bot
+  - name: Esencia
+    description: Identidad de marca (valores, historia, diferencial)
+  - name: Config Bot
+    description: Configuración general y de flujo de conversación del bot
+  - name: Analytics
+    description: Métricas y estadísticas del dashboard
+  - name: Notificaciones
+    description: Sistema de notificaciones internas
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token Base64 obtenido al iniciar sesión
+
+  schemas:
+    # ─── Auth ───────────────────────────────────────────────────────────────
+    LoginRequest:
+      type: object
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          format: email
+          example: admin@laida.com
+        password:
+          type: string
+          example: "123456"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        token:
+          type: string
+          example: "MToyOnN1cGVyX2FkbWluOjE3MDAwMDAwMDA="
+        usuario:
+          $ref: '#/components/schemas/UsuarioPublico'
+
+    RegistroRequest:
+      type: object
+      required: [nombreMarca, correoEmpresa, nombreRepresentante, numero, correoPersonal, password]
+      properties:
+        nombreMarca:
+          type: string
+          example: "Paloma Estampados"
+        correoEmpresa:
+          type: string
+          format: email
+          example: "info@paloma.com"
+        nombreRepresentante:
+          type: string
+          example: "María García"
+        numero:
+          type: string
+          example: "+573001234567"
+        correoPersonal:
+          type: string
+          format: email
+          example: "maria@gmail.com"
+        password:
+          type: string
+          minLength: 6
+
+    # ─── Usuarios ───────────────────────────────────────────────────────────
+    UsuarioPublico:
+      type: object
+      properties:
+        id:
+          type: integer
+        correo:
+          type: string
+          format: email
+        rol:
+          type: string
+          enum: [super_admin, manager]
+        nombre:
+          type: string
+        botsAsignados:
+          type: array
+          items:
+            $ref: '#/components/schemas/BotResumen'
+
+    UsuarioCreateRequest:
+      type: object
+      required: [correo, password, rol]
+      properties:
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+        rol:
+          type: string
+          enum: [super_admin, manager]
+          description: El super_admin puede crear usuarios con rol super_admin o manager
+        nombre:
+          type: string
+
+    UsuarioUpdateRequest:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        correo:
+          type: string
+          format: email
+        nombre:
+          type: string
+        password:
+          type: string
+        rol:
+          type: string
+          enum: [super_admin, manager]
+
+    # ─── Bots ───────────────────────────────────────────────────────────────
+    Bot:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        slug:
+          type: string
+          pattern: '^[a-z0-9\-_]+$'
+        telegram_token:
+          type: string
+        openai_key:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [activo, inactivo]
+        manager_id:
+          type: integer
+          nullable: true
+        marca_id:
+          type: integer
+          nullable: true
+
+    BotResumen:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        slug:
+          type: string
+        estado:
+          type: string
+
+    BotCreateRequest:
+      type: object
+      required: [nombre, slug, telegram_token]
+      properties:
+        nombre:
+          type: string
+          example: "Bot Paloma"
+        slug:
+          type: string
+          example: "bot-paloma"
+        telegram_token:
+          type: string
+        openai_key:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [activo, inactivo]
+          default: activo
+        manager_id:
+          type: integer
+          nullable: true
+
+    BotUpdateRequest:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        slug:
+          type: string
+        telegram_token:
+          type: string
+        openai_key:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [activo, inactivo]
+        manager_id:
+          type: integer
+          nullable: true
+
+    # ─── Leads ──────────────────────────────────────────────────────────────
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          nullable: true
+        bot_id:
+          type: integer
+          nullable: true
+        bot_slug:
+          type: string
+          nullable: true
+        bot_nombre:
+          type: string
+          nullable: true
+        interes:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        telegram_user_id:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [nuevo, contactado, cerrado]
+        categoria:
+          type: string
+          nullable: true
+        producto_id:
+          type: integer
+          nullable: true
+        detalles_compra:
+          type: string
+          nullable: true
+        notas:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    LeadCreateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          nullable: true
+        bot_id:
+          type: integer
+          nullable: true
+        bot_slug:
+          type: string
+          nullable: true
+        bot_nombre:
+          type: string
+          nullable: true
+        interes:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        telegram_user_id:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [nuevo, contactado, cerrado]
+          default: nuevo
+        categoria:
+          type: string
+          nullable: true
+        producto_id:
+          type: integer
+          nullable: true
+        detalles_compra:
+          type: string
+          nullable: true
+        notas:
+          type: string
+          nullable: true
+
+    LeadUpdateRequest:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum: [nuevo, contactado, cerrado]
+        interes:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+
+    # ─── Campañas ────────────────────────────────────────────────────────────
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        mensaje:
+          type: string
+        categoria_filter:
+          type: string
+          nullable: true
+        bot_id:
+          type: integer
+          nullable: true
+        programada_para:
+          type: string
+          format: date-time
+          nullable: true
+        ejecutada:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: string
+          format: date-time
+
+    CampaignCreateRequest:
+      type: object
+      required: [nombre, mensaje]
+      properties:
+        nombre:
+          type: string
+          example: "Promo Mayo"
+        mensaje:
+          type: string
+          example: "¡Hola! Tenemos ofertas especiales para ti esta semana."
+        categoria_filter:
+          type: string
+          nullable: true
+          description: Filtrar leads por categoría al enviar
+        bot_id:
+          type: integer
+          nullable: true
+          description: Requerido para managers
+        programada_para:
+          type: string
+          format: date-time
+          nullable: true
+
+    CampaignUpdateRequest:
+      type: object
+      required: [nombre, mensaje]
+      properties:
+        nombre:
+          type: string
+        mensaje:
+          type: string
+        categoria_filter:
+          type: string
+          nullable: true
+        bot_id:
+          type: integer
+          nullable: true
+        programada_para:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ─── Clientes ────────────────────────────────────────────────────────────
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: integer
+        cedula:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        correo:
+          type: string
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        marca_id:
+          type: integer
+
+    ClienteCreateRequest:
+      type: object
+      required: [cedula, nombre, apellido, marcaId]
+      properties:
+        cedula:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        correo:
+          type: string
+          format: email
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        marcaId:
+          type: integer
+
+    ClienteUpdateRequest:
+      type: object
+      required: [id, marcaId]
+      properties:
+        id:
+          type: integer
+        marcaId:
+          type: integer
+        cedula:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        correo:
+          type: string
+          format: email
+        telefono:
+          type: string
+
+    # ─── Productos ───────────────────────────────────────────────────────────
+    Producto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        precio:
+          type: number
+        descripcion:
+          type: string
+          nullable: true
+        imagen_url:
+          type: string
+          nullable: true
+        activo:
+          type: integer
+          enum: [0, 1]
+        marca_id:
+          type: integer
+
+    ProductoCreateRequest:
+      type: object
+      required: [nombre, precio, marca_id]
+      properties:
+        nombre:
+          type: string
+        precio:
+          type: number
+          example: 25000
+        marca_id:
+          type: integer
+        descripcion:
+          type: string
+          nullable: true
+        imagen_url:
+          type: string
+          nullable: true
+        activo:
+          type: integer
+          enum: [0, 1]
+          default: 1
+
+    ProductoUpdateRequest:
+      type: object
+      required: [id, marca_id]
+      properties:
+        id:
+          type: integer
+        marca_id:
+          type: integer
+        nombre:
+          type: string
+        precio:
+          type: number
+        descripcion:
+          type: string
+        imagen_url:
+          type: string
+        activo:
+          type: integer
+          enum: [0, 1]
+
+    ProductoImportRequest:
+      type: object
+      required: [filename, data, marcaId]
+      properties:
+        filename:
+          type: string
+          description: Nombre del archivo con extensión (.pdf, .xlsx, .xls, .docx, .doc, .txt, .csv)
+          example: "catalogo.pdf"
+        data:
+          type: string
+          format: byte
+          description: Contenido del archivo codificado en Base64
+        marcaId:
+          type: integer
+        replaceExisting:
+          type: boolean
+          default: false
+          description: Si true, elimina todos los productos existentes antes de insertar los nuevos
+
+    # ─── Atributos ───────────────────────────────────────────────────────────
+    Atributo:
+      type: object
+      properties:
+        id:
+          type: integer
+        producto_id:
+          type: integer
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum: [text, number, select, color]
+        opciones:
+          type: string
+          nullable: true
+          description: JSON string con opciones para tipo "select"
+        requerido:
+          type: integer
+          enum: [0, 1]
+        orden:
+          type: integer
+
+    AtributoCreateRequest:
+      type: object
+      required: [producto_id, nombre, tipo]
+      properties:
+        producto_id:
+          type: integer
+        nombre:
+          type: string
+          example: "Color"
+        tipo:
+          type: string
+          enum: [text, number, select, color]
+        opciones:
+          type: string
+          nullable: true
+          example: '["Rojo","Azul","Verde"]'
+        requerido:
+          type: integer
+          enum: [0, 1]
+          default: 0
+        orden:
+          type: integer
+          default: 0
+
+    # ─── Esencia ─────────────────────────────────────────────────────────────
+    Esencia:
+      type: object
+      properties:
+        id:
+          type: integer
+        valores:
+          type: string
+        diferencia:
+          type: string
+        historia:
+          type: string
+        marca_id:
+          type: integer
+
+    EsenciaCreateRequest:
+      type: object
+      required: [valores, diferencia, marcaId]
+      properties:
+        valores:
+          type: string
+          example: "Calidad, compromiso, innovación"
+        diferencia:
+          type: string
+          example: "Personalización en 24 horas con los mejores materiales"
+        historia:
+          type: string
+          example: "Fundada en 2018 por una diseñadora apasionada..."
+        marcaId:
+          type: integer
+
+    # ─── Config Bot ──────────────────────────────────────────────────────────
+    ConfigBot:
+      type: object
+      properties:
+        id:
+          type: integer
+        marca_id:
+          type: integer
+        mensaje_bienvenida:
+          type: string
+
+    ConfigBotRequest:
+      type: object
+      required: [marca_id, mensaje_bienvenida]
+      properties:
+        marca_id:
+          type: integer
+        mensaje_bienvenida:
+          type: string
+          example: "¡Hola! Bienvenido al bot de Paloma Estampados. ¿En qué te puedo ayudar?"
+
+    ConfigBotFlow:
+      type: object
+      properties:
+        bot_id:
+          type: integer
+        mensaje_bienvenida:
+          type: string
+        mensaje_sin_interes:
+          type: string
+        mensaje_productos:
+          type: string
+        mensaje_caracteristicas:
+          type: string
+        mensaje_confirmacion:
+          type: string
+        mensaje_agradecimiento:
+          type: string
+        mostrar_productos_inicio:
+          type: integer
+          enum: [0, 1]
+        max_productos_mostrar:
+          type: integer
+        permitir_recomendaciones:
+          type: integer
+          enum: [0, 1]
+
+    # ─── Analytics ───────────────────────────────────────────────────────────
+    AnalyticsOverview:
+      type: object
+      properties:
+        totalLeads:
+          type: integer
+        leadsByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              categoria:
+                type: string
+              count:
+                type: integer
+        leadsByBot:
+          type: array
+          items:
+            type: object
+            properties:
+              bot_nombre:
+                type: string
+              count:
+                type: integer
+        leadsByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+        popularProducts:
+          type: array
+          items:
+            type: object
+            properties:
+              nombre:
+                type: string
+              count:
+                type: integer
+
+    # ─── Notificaciones ──────────────────────────────────────────────────────
+    Notificacion:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuario_id:
+          type: integer
+          nullable: true
+        tipo:
+          type: string
+          enum: [nuevo_lead, sistema]
+        titulo:
+          type: string
+        mensaje:
+          type: string
+        lead_id:
+          type: integer
+          nullable: true
+        bot_id:
+          type: integer
+          nullable: true
+        leida:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: string
+          format: date-time
+
+    # ─── Errores ─────────────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ══════════════════════════════════════════════════════════════════
+  # AUTH
+  # ══════════════════════════════════════════════════════════════════
+  /login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Correo o contraseña faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Credenciales incorrectas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /registro:
+    post:
+      tags: [Auth]
+      summary: Registro de nueva marca (crea usuario manager)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+      responses:
+        '201':
+          description: Registro completado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  marcaId:
+                    type: integer
+                  usuarioId:
+                    type: integer
+        '400':
+          description: Campos inválidos o faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: El correo ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # USUARIOS
+  # ══════════════════════════════════════════════════════════════════
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios (solo super_admin)
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          description: Si se envía, retorna solo ese usuario
+      responses:
+        '200':
+          description: Lista de usuarios sin contraseñas
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/UsuarioPublico'
+                  - $ref: '#/components/schemas/UsuarioPublico'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreateRequest'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  usuario:
+                    $ref: '#/components/schemas/UsuarioPublico'
+        '400':
+          description: Campos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioUpdateRequest'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  usuario:
+                    $ref: '#/components/schemas/UsuarioPublico'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Usuarios]
+      summary: Eliminar usuario (solo super_admin)
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Resultado de la eliminación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /usuarios/{id}/bots:
+    get:
+      tags: [Usuarios]
+      summary: Obtener bots asignados a un usuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario
+      responses:
+        '200':
+          description: Lista de bots asignados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BotResumen'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Prohibido (solo el propio usuario o super_admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # BOTS
+  # ══════════════════════════════════════════════════════════════════
+  /bots:
+    get:
+      tags: [Bots]
+      summary: Listar bots
+      description: |
+        - super_admin ve todos los bots
+        - manager ve solo los bots asignados a él
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          description: Obtener un bot por ID
+        - name: slug
+          in: query
+          schema:
+            type: string
+          description: Obtener un bot por slug
+        - name: managerId
+          in: query
+          schema:
+            type: integer
+          description: Filtrar bots de un manager específico (solo super_admin puede consultar otros managers)
+      responses:
+        '200':
+          description: Bot(s) encontrado(s)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Bot'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Bot'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Bot no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Bots]
+      summary: Crear bot (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotCreateRequest'
+      responses:
+        '201':
+          description: Bot creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  bot:
+                    $ref: '#/components/schemas/Bot'
+        '400':
+          description: Campos inválidos o slug duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Bots]
+      summary: Actualizar bot (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotUpdateRequest'
+      responses:
+        '200':
+          description: Bot actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  bot:
+                    $ref: '#/components/schemas/Bot'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Bot no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Bots]
+      summary: Eliminar bot (solo super_admin)
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Resultado de la eliminación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Bot no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # ACCESOS
+  # ══════════════════════════════════════════════════════════════════
+  /accesos:
+    get:
+      tags: [Accesos]
+      summary: Obtener accesos (bots de un usuario o usuarios de un bot)
+      parameters:
+        - name: usuarioId
+          in: query
+          schema:
+            type: integer
+          description: Devuelve los bots asignados al usuario
+        - name: botId
+          in: query
+          schema:
+            type: integer
+          description: Devuelve los usuarios asignados al bot
+      responses:
+        '200':
+          description: Accesos encontrados
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      bots:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Bot'
+                  - type: object
+                    properties:
+                      usuarios:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UsuarioPublico'
+        '400':
+          description: Parámetro requerido faltante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Accesos]
+      summary: Asignar bot a usuario manager (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usuarioId, botId]
+              properties:
+                usuarioId:
+                  type: integer
+                botId:
+                  type: integer
+      responses:
+        '200':
+          description: Bot asignado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Usuario no es manager o parámetros faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuario o bot no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Accesos]
+      summary: Remover bot de usuario (solo super_admin)
+      parameters:
+        - name: usuarioId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: botId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Acceso removido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # LEADS
+  # ══════════════════════════════════════════════════════════════════
+  /leads:
+    get:
+      tags: [Leads]
+      summary: Listar leads
+      description: super_admin ve todos; manager ve solo leads de sus bots
+      parameters:
+        - name: botId
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por bot
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [nuevo, contactado, cerrado]
+          description: Filtrar por estado
+      responses:
+        '200':
+          description: Lista de leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lead'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Leads]
+      summary: Crear lead (usado principalmente por el bot de Telegram)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadCreateRequest'
+      responses:
+        '201':
+          description: Lead creado. También genera notificaciones automáticas para admins y managers del bot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '400':
+          description: Email inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leads/{id}:
+    patch:
+      tags: [Leads]
+      summary: Actualizar estado/datos de un lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadUpdateRequest'
+      responses:
+        '200':
+          description: Lead actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '400':
+          description: Estado no válido o ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Lead no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Leads]
+      summary: Eliminar lead (solo super_admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lead eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Solo super_admin puede eliminar leads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # CAMPAÑAS
+  # ══════════════════════════════════════════════════════════════════
+  /campaigns:
+    get:
+      tags: [Campañas]
+      summary: Listar campañas
+      parameters:
+        - name: botId
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por bot
+      responses:
+        '200':
+          description: Lista de campañas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campaign'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Campañas]
+      summary: Crear campaña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreateRequest'
+      responses:
+        '201':
+          description: Campaña creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags: [Campañas]
+      summary: Ejecutar campañas pendientes (solo super_admin)
+      description: Marca como ejecutadas todas las campañas no ejecutadas cuya fecha programada ya pasó o sin fecha
+      responses:
+        '200':
+          description: Campañas procesadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  processed:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Campaign'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /campaigns/{id}:
+    get:
+      tags: [Campañas]
+      summary: Obtener una campaña por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Campaña encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado para este bot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Campaña no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Campañas]
+      summary: Actualizar campaña
+      description: Managers solo pueden editar campañas no ejecutadas de sus bots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdateRequest'
+      responses:
+        '200':
+          description: Campaña actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado o campaña ya ejecutada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Campaña no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Campañas]
+      summary: Eliminar campaña
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Campaña eliminada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado para este bot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Campaña no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # CLIENTES
+  # ══════════════════════════════════════════════════════════════════
+  /clientes:
+    get:
+      tags: [Clientes]
+      summary: Listar clientes de una marca
+      parameters:
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: query
+          schema:
+            type: integer
+          description: Si se envía, retorna solo ese cliente
+      responses:
+        '200':
+          description: Cliente(s) encontrado(s)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Cliente'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Cliente'
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Clientes]
+      summary: Crear cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteCreateRequest'
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Clientes]
+      summary: Actualizar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteUpdateRequest'
+      responses:
+        '200':
+          description: Cliente actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          description: id y marcaId requeridos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Clientes]
+      summary: Eliminar cliente
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cliente eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: id y marcaId requeridos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /clientes/import:
+    post:
+      tags: [Clientes]
+      summary: Importar clientes desde Excel (.xlsx)
+      description: |
+        Acepta un archivo Excel en Base64. Las columnas reconocidas son:
+        cedula/dni/id, nombre, apellido, correo/email, telefono/telephone/phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, marcaId]
+              properties:
+                filename:
+                  type: string
+                  example: "clientes.xlsx"
+                data:
+                  type: string
+                  format: byte
+                  description: Archivo Excel codificado en Base64
+                marcaId:
+                  type: integer
+      responses:
+        '200':
+          description: Importación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Datos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error procesando el archivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # PRODUCTOS
+  # ══════════════════════════════════════════════════════════════════
+  /productos:
+    get:
+      tags: [Productos]
+      summary: Listar productos de una marca/bot
+      parameters:
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: query
+          schema:
+            type: integer
+          description: Si se envía, retorna solo ese producto
+      responses:
+        '200':
+          description: Producto(s) encontrado(s)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Producto'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Producto'
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Productos]
+      summary: Crear producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoCreateRequest'
+      responses:
+        '201':
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Productos]
+      summary: Actualizar producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoUpdateRequest'
+      responses:
+        '200':
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        '400':
+          description: id y marca_id requeridos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Productos]
+      summary: Eliminar producto
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Producto eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: id y marcaId requeridos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /productos/import:
+    post:
+      tags: [Productos]
+      summary: Importar catálogo de productos con IA (GPT-4o)
+      description: |
+        Extrae productos de un documento (PDF, Excel, Word, TXT, CSV) usando GPT-4o.
+        Requiere que el bot tenga una `openai_key` configurada.
+        Soporta archivos grandes dividiéndolos en chunks de 12.000 caracteres.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoImportRequest'
+      responses:
+        '200':
+          description: Importación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Parámetros faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No se encontró un bot activo para el marcaId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Sin texto extraíble, sin productos encontrados, o sin clave OpenAI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Clave de OpenAI inválida o error al procesar el archivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /productos/atributos:
+    get:
+      tags: [Productos]
+      summary: Listar atributos de un producto
+      parameters:
+        - name: productoId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de atributos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Atributo'
+        '400':
+          description: productoId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Productos]
+      summary: Crear atributo de producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtributoCreateRequest'
+      responses:
+        '201':
+          description: Atributo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Atributo'
+        '400':
+          description: Campos requeridos faltantes o tipo inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Sin permisos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Productos]
+      summary: Eliminar atributo de producto
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Atributo eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Sin permisos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Atributo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # ESENCIA DE MARCA
+  # ══════════════════════════════════════════════════════════════════
+  /esencia:
+    get:
+      tags: [Esencia]
+      summary: Obtener esencia de una marca
+      parameters:
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Esencia de la marca (null si no existe)
+          content:
+            application/json:
+              schema:
+                nullable: true
+                oneOf:
+                  - $ref: '#/components/schemas/Esencia'
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Esencia]
+      summary: Crear esencia de marca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EsenciaCreateRequest'
+      responses:
+        '201':
+          description: Esencia guardada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Esencia'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Esencia]
+      summary: Actualizar esencia de marca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [marcaId]
+              properties:
+                marcaId:
+                  type: integer
+                valores:
+                  type: string
+                diferencia:
+                  type: string
+                historia:
+                  type: string
+      responses:
+        '200':
+          description: Esencia actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Esencia'
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Esencia no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Esencia]
+      summary: Eliminar esencia de marca
+      parameters:
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Esencia eliminada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Esencia no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # CONFIG BOT
+  # ══════════════════════════════════════════════════════════════════
+  /config-bot:
+    get:
+      tags: [Config Bot]
+      summary: Obtener configuración general del bot (mensaje de bienvenida)
+      parameters:
+        - name: marcaId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Configuración del bot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    nullable: true
+                    oneOf:
+                      - $ref: '#/components/schemas/ConfigBot'
+        '400':
+          description: marcaId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Config Bot]
+      summary: Guardar configuración general del bot
+      description: También genera un archivo flag para que el bot recargue su configuración
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigBotRequest'
+      responses:
+        '201':
+          description: Configuración guardada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ConfigBot'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Marca no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /config-bot/flow:
+    get:
+      tags: [Config Bot]
+      summary: Obtener configuración de flujo de conversación del bot
+      description: Retorna valores por defecto si no existe configuración guardada
+      parameters:
+        - name: botId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Configuración de flujo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigBotFlow'
+        '400':
+          description: botId requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Config Bot]
+      summary: Guardar configuración de flujo de conversación del bot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigBotFlow'
+      responses:
+        '200':
+          description: Configuración guardada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigBotFlow'
+        '400':
+          description: bot_id requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Sin permisos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # ANALYTICS
+  # ══════════════════════════════════════════════════════════════════
+  /analytics/overview:
+    get:
+      tags: [Analytics]
+      summary: Obtener métricas del dashboard
+      description: |
+        - Total de leads
+        - Leads por categoría
+        - Leads por bot
+        - Leads de los últimos 7 días
+        - Top 10 productos más consultados
+      responses:
+        '200':
+          description: Métricas del sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsOverview'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ══════════════════════════════════════════════════════════════════
+  # NOTIFICACIONES
+  # ══════════════════════════════════════════════════════════════════
+  /notificaciones:
+    get:
+      tags: [Notificaciones]
+      summary: Obtener notificaciones del usuario autenticado
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [count, unread]
+          description: |
+            - `count`: retorna `{ count: number }` con el total no leído
+            - `unread`: retorna solo notificaciones no leídas
+            - (sin parámetro): retorna todas las notificaciones
+      responses:
+        '200':
+          description: Notificaciones
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Notificacion'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Notificaciones]
+      summary: Crear notificación / marcar todas leídas / solicitar ejecución de campañas
+      description: |
+        Según el campo `action`:
+        - `mark_all_read`: marca todas las notificaciones del usuario como leídas
+        - `request_run_campaigns`: notifica a los super_admins para que ejecuten campañas pendientes (solo managers)
+        - (sin action): crea una notificación manual (solo super_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [mark_all_read, request_run_campaigns]
+                tipo:
+                  type: string
+                  enum: [nuevo_lead, sistema]
+                  description: Requerido si no hay action
+                titulo:
+                  type: string
+                  description: Requerido si no hay action
+                mensaje:
+                  type: string
+                  description: Requerido si no hay action
+                lead_id:
+                  type: integer
+                  nullable: true
+                bot_id:
+                  type: integer
+                  nullable: true
+                from:
+                  type: string
+                  description: Nombre del solicitante para `request_run_campaigns`
+      responses:
+        '200':
+          description: Acción ejecutada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notified:
+                    type: integer
+                    description: Solo para request_run_campaigns
+        '201':
+          description: Notificación creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notificacion'
+        '400':
+          description: Campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notificaciones/{id}:
+    patch:
+      tags: [Notificaciones]
+      summary: Marcar notificación como leída
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notificación marcada como leída
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notificacion'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Notificaciones]
+      summary: Eliminar notificación (solo super_admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notificación eliminada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '403':
+          description: Solo super_admin puede eliminar notificaciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
