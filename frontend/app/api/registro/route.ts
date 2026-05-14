@@ -1,83 +1,53 @@
 import { NextRequest, NextResponse } from "next/server"
 import db from "@/db/init"
-import { createUsuario, getUsuarioByCorreo } from "@/db/utils"
+import { createUsuario, createMarca, getUsuarioByCorreo } from "@/db/utils"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { nombre_marca, nombre, correo, password } = body
 
-    const { nombreMarca, correoEmpresa, nombreRepresentante, numero, correoPersonal, password } = body
-
-    // Validar que todos los campos estén presentes
-    if (!nombreMarca || !correoEmpresa || !nombreRepresentante || !numero || !correoPersonal || !password) {
+    if (!nombre_marca || !correo || !password) {
       return NextResponse.json(
-        { error: "Todos los campos son requeridos" },
+        { error: "nombre_marca, correo y password son requeridos" },
         { status: 400 }
       )
     }
 
-    // Validar emails
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(correoEmpresa) || !emailRegex.test(correoPersonal)) {
-      return NextResponse.json(
-        { error: "Correos inválidos" },
-        { status: 400 }
-      )
+    if (!emailRegex.test(String(correo).trim())) {
+      return NextResponse.json({ error: "Correo inválido" }, { status: 400 })
     }
 
-    // Validar longitud de contraseña
-    if (password.length < 6) {
+    if (String(password).length < 6) {
       return NextResponse.json(
         { error: "La contraseña debe tener al menos 6 caracteres" },
         { status: 400 }
       )
     }
 
-    // Crear usuario manager (la marca opera con su cuenta de manager)
-    const existingUser = getUsuarioByCorreo(String(correoPersonal).trim())
+    const existingUser = getUsuarioByCorreo(String(correo).trim())
     if (existingUser) {
       return NextResponse.json(
-        { error: "Ya existe un usuario con ese correo personal" },
+        { error: "Ya existe un usuario con ese correo" },
         { status: 409 }
       )
     }
 
-    // Transacción simple
     const tx = db.transaction(() => {
-      // Insertar en marcas (legacy / datos de negocio)
-      const stmt = db.prepare(`
-        INSERT INTO marcas (
-          nombre_marca,
-          correo_empresa,
-          nombre_representante,
-          numero,
-          correo_personal,
-          password
-        ) VALUES (?, ?, ?, ?, ?, ?)
-      `)
-
-      const result = stmt.run(
-        nombreMarca,
-        correoEmpresa,
-        nombreRepresentante,
-        numero,
-        correoPersonal,
-        password
-      )
-
-      // Insertar en usuarios como manager (marca)
       const nuevoUsuario = createUsuario({
-        correo: String(correoPersonal).trim(),
+        correo: String(correo).trim(),
         password: String(password),
         rol: "manager",
-        // Guardar nombre de marca para usarlo como contexto en bot/dashboard
-        nombre: String(nombreMarca).trim(),
+        nombre: nombre ? String(nombre).trim() : null,
       })
 
-      return {
-        marcaId: result.lastInsertRowid,
-        usuarioId: nuevoUsuario.id,
-      }
+      const nuevaMarca = createMarca({
+        usuario_id: nuevoUsuario.id,
+        nombre_marca: String(nombre_marca).trim(),
+      })
+
+      return { usuario: nuevoUsuario, marca: nuevaMarca }
     })
 
     const result = tx()
@@ -86,18 +56,17 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Registro completado exitosamente",
-        marcaId: result.marcaId,
-        usuarioId: result.usuarioId,
+        usuarioId: result.usuario.id,
+        marcaId: result.marca.id,
       },
       { status: 201 }
     )
   } catch (error) {
     console.error("Error en registro:", error)
 
-    // Manejar error de correo duplicate
     if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
       return NextResponse.json(
-        { error: "El correo de empresa ya está registrado" },
+        { error: "El correo ya está registrado" },
         { status: 409 }
       )
     }

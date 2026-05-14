@@ -8,7 +8,6 @@ let db: DatabaseType | null = null
 function getDb(): DatabaseType {
   if (db) return db
 
-  // Mantener consistencia con docker-compose (volumen ./bd) cuando no hay DB_PATH.
   const dbPath = process.env.DB_PATH ?? path.join(process.cwd(), "bd", "laida.db")
   const dbDir = path.dirname(dbPath)
 
@@ -26,7 +25,6 @@ function getDb(): DatabaseType {
 function initTables(database: DatabaseType): void {
   // ==================== SISTEMA DE USUARIOS Y ROLES ====================
 
-  // Tabla de usuarios (super_admin y managers)
   database.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +37,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de bots
   database.exec(`
     CREATE TABLE IF NOT EXISTS bots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,14 +53,12 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Migración suave: agregar marca_id si la tabla bots ya existía
   try {
     database.exec("ALTER TABLE bots ADD COLUMN marca_id INTEGER")
   } catch {
     // ya existe
   }
 
-  // Tabla de relación usuarios-bots
   database.exec(`
     CREATE TABLE IF NOT EXISTS usuario_bots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,8 +71,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de leads capturados por bots
-  // Nota: para poder visualizar clasificación desde el primer mensaje, email/telefono/interes pueden ser NULL.
   database.exec(`
     CREATE TABLE IF NOT EXISTS leads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,8 +95,7 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Migración: si la tabla leads fue creada con NOT NULL en email/telefono/interes, recrearla.
-  // Se conserva el último registro (mayor id) por (bot_id, telegram_user_id) para mantener unicidad.
+  // Migración: si leads tiene campos NOT NULL que deben ser nullable, o le falta actualizado_en
   try {
     const leadsInfo = database.prepare("PRAGMA table_info(leads)").all() as Array<{ name: string; notnull: number }>
     const emailInfo = leadsInfo.find((c) => c.name === "email")
@@ -135,8 +127,6 @@ function initTables(database: DatabaseType): void {
           UNIQUE(bot_id, telegram_user_id)
         )
       `)
-
-      // Copiar: último por (bot_id, telegram_user_id). Si telegram_user_id es NULL, se conserva por id.
       database.exec(`
         INSERT INTO leads_new (
           id, nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
@@ -161,20 +151,16 @@ function initTables(database: DatabaseType): void {
         ) t
         ON l.id = t.max_id
       `)
-
       database.exec("DROP TABLE leads")
       database.exec("ALTER TABLE leads_new RENAME TO leads")
       database.exec("PRAGMA foreign_keys = ON")
     }
   } catch {
-    // Si algo falla, no bloquear inicialización. El sistema seguirá con el esquema existente.
     try { database.exec("PRAGMA foreign_keys = ON") } catch {}
   }
 
-  // Migración suave: añadir nombre a leads si no existe
   try { database.exec("ALTER TABLE leads ADD COLUMN nombre TEXT") } catch {}
 
-  // Tabla de notificaciones
   database.exec(`
     CREATE TABLE IF NOT EXISTS notificaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -205,31 +191,120 @@ function initTables(database: DatabaseType): void {
     console.log('✅ Usuario super admin creado: admin@laida.com / admin123')
   }
 
-  // ==================== TABLAS LEGACY (MANTENER COMPATIBILIDAD) ====================
+  // ==================== MARCAS (schema nuevo: usuario_id + nombre_marca) ====================
 
-  // Tabla de marcas
   database.exec(`
     CREATE TABLE IF NOT EXISTS marcas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id INTEGER NOT NULL UNIQUE,
       nombre_marca TEXT NOT NULL,
-      correo_empresa TEXT NOT NULL UNIQUE,
-      nombre_representante TEXT NOT NULL,
-      numero TEXT NOT NULL,
-      correo_personal TEXT NOT NULL,
-      password TEXT NOT NULL,
-      fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )
   `)
 
-  // Migraciones
+  // Migración: si marcas tiene schema antiguo (correo_empresa), reconstruir
   try {
-    database.exec("ALTER TABLE marcas ADD COLUMN password TEXT DEFAULT 'password123'")
-  } catch {
-    // La columna ya existe
+    const marcasInfo = database.prepare("PRAGMA table_info(marcas)").all() as Array<{ name: string }>
+    const hasCorreoEmpresa = marcasInfo.some(c => c.name === "correo_empresa")
+
+    if (hasCorreoEmpresa) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      const oldMarcas = database.prepare("SELECT * FROM marcas").all() as Array<{
+        id: number
+        nombre_marca: string
+        correo_empresa: string
+        nombre_representante: string
+        numero?: string
+        correo_personal?: string
+        password?: string
+        fecha_registro?: string
+        actualizado_en?: string
+      }>
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS marcas_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          usuario_id INTEGER NOT NULL UNIQUE,
+          nombre_marca TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        )
+      `)
+
+      const insertMarcaNew = database.prepare(`
+        INSERT OR IGNORE INTO marcas_new (id, usuario_id, nombre_marca, created_at, actualizado_en)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+
+      for (const oldMarca of oldMarcas) {
+        let usuario = database.prepare("SELECT id FROM usuarios WHERE correo = ?")
+          .get(oldMarca.correo_empresa) as { id: number } | undefined
+
+        if (!usuario) {
+          const res = database.prepare(
+            "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+          ).run(
+            oldMarca.correo_empresa,
+            oldMarca.password || 'password123',
+            'manager',
+            oldMarca.nombre_representante || oldMarca.nombre_marca
+          )
+          usuario = { id: Number(res.lastInsertRowid) }
+        }
+
+        insertMarcaNew.run(
+          oldMarca.id,
+          usuario.id,
+          oldMarca.nombre_marca,
+          oldMarca.fecha_registro || new Date().toISOString().replace('T', ' ').slice(0, 19),
+          oldMarca.actualizado_en || new Date().toISOString().replace('T', ' ').slice(0, 19)
+        )
+      }
+
+      // Managers sin marca → crear marca
+      const managers = database.prepare(
+        "SELECT id, nombre FROM usuarios WHERE rol = 'manager'"
+      ).all() as Array<{ id: number; nombre: string | null }>
+
+      for (const manager of managers) {
+        const existing = database.prepare("SELECT id FROM marcas_new WHERE usuario_id = ?")
+          .get(manager.id) as { id: number } | undefined
+        if (!existing) {
+          database.prepare("INSERT INTO marcas_new (usuario_id, nombre_marca) VALUES (?, ?)")
+            .run(manager.id, manager.nombre || 'Mi Marca')
+        }
+      }
+
+      database.exec("DROP TABLE marcas")
+      database.exec("ALTER TABLE marcas_new RENAME TO marcas")
+      database.exec("PRAGMA foreign_keys = ON")
+      console.log("✅ Migración de marcas completada (schema nuevo)")
+    } else {
+      // Schema nuevo: asegurar que todos los managers tengan marca
+      const managers = database.prepare(
+        "SELECT id, nombre FROM usuarios WHERE rol = 'manager'"
+      ).all() as Array<{ id: number; nombre: string | null }>
+
+      for (const manager of managers) {
+        const existing = database.prepare("SELECT id FROM marcas WHERE usuario_id = ?")
+          .get(manager.id) as { id: number } | undefined
+        if (!existing) {
+          database.prepare("INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)")
+            .run(manager.id, manager.nombre || 'Mi Marca')
+        }
+      }
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+    console.error("Error migrando tabla marcas:", e)
   }
 
-  // Tabla de clientes
+  // ==================== TABLAS ASOCIADAS A MARCAS ====================
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS clientes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -244,7 +319,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de productos
   database.exec(`
     CREATE TABLE IF NOT EXISTS productos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -255,11 +329,50 @@ function initTables(database: DatabaseType): void {
       imagen_url TEXT,
       activo INTEGER DEFAULT 1,
       fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE SET NULL
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
     )
   `)
 
-  // Tabla de atributos de productos
+  // Migración: si productos FK referencia usuarios (schema viejo), remap valores y reconstruir
+  try {
+    const fks = database.prepare("PRAGMA foreign_key_list(productos)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
+
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      // Remap marca_id: usuario_id → marca.id
+      database.exec(`
+        UPDATE productos
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = productos.marca_id)
+        WHERE marca_id IS NOT NULL
+      `)
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS productos_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          precio REAL NOT NULL,
+          marca_id INTEGER,
+          descripcion TEXT,
+          imagen_url TEXT,
+          activo INTEGER DEFAULT 1,
+          fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
+        )
+      `)
+      database.exec(`
+        INSERT INTO productos_new (id, nombre, precio, marca_id, descripcion, imagen_url, activo, fecha_registro)
+        SELECT id, nombre, precio, marca_id, descripcion, imagen_url, activo, fecha_registro FROM productos
+      `)
+      database.exec("DROP TABLE productos")
+      database.exec("ALTER TABLE productos_new RENAME TO productos")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS producto_atributos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -273,7 +386,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de configuración de flujo del bot
   database.exec(`
     CREATE TABLE IF NOT EXISTS bot_flow_config (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -292,7 +404,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de interacciones del bot (para análisis)
   database.exec(`
     CREATE TABLE IF NOT EXISTS bot_interacciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -307,7 +418,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de campañas automatizadas
   database.exec(`
     CREATE TABLE IF NOT EXISTS campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -322,7 +432,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de esencia
   database.exec(`
     CREATE TABLE IF NOT EXISTS esencia (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -331,32 +440,106 @@ function initTables(database: DatabaseType): void {
       historia TEXT NOT NULL,
       marca_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
     )
   `)
 
-  // Tabla de config_bot
+  // Migraciones suaves de esencia (antes del FK migration para garantizar columnas)
+  try { database.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''") } catch {}
+  try { database.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP") } catch {}
+
+  // Migración: si esencia FK referencia usuarios, remap y reconstruir
+  try {
+    const fks = database.prepare("PRAGMA foreign_key_list(esencia)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
+
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      database.exec(`
+        UPDATE esencia
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = esencia.marca_id)
+        WHERE marca_id IS NOT NULL
+      `)
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS esencia_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          valores TEXT NOT NULL,
+          diferencia TEXT NOT NULL,
+          historia TEXT NOT NULL,
+          marca_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+        )
+      `)
+      database.exec(`
+        INSERT INTO esencia_new (id, valores, diferencia, historia, marca_id, created_at)
+        SELECT id, valores, diferencia, historia, marca_id, created_at FROM esencia
+      `)
+      database.exec("DROP TABLE esencia")
+      database.exec("ALTER TABLE esencia_new RENAME TO esencia")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS config_bot (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       marca_id INTEGER NOT NULL UNIQUE,
       mensaje_bienvenida TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
     )
   `)
 
-  // Migraciones adicionales
+  // Migración: si config_bot FK referencia usuarios, remap y reconstruir
   try {
-    database.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''")
-  } catch {
-    // La columna ya existe
+    const fks = database.prepare("PRAGMA foreign_key_list(config_bot)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
+
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      database.exec(`
+        UPDATE config_bot
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = config_bot.marca_id)
+        WHERE marca_id IS NOT NULL
+      `)
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS config_bot_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          marca_id INTEGER NOT NULL UNIQUE,
+          mensaje_bienvenida TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+        )
+      `)
+      database.exec(`
+        INSERT INTO config_bot_new (id, marca_id, mensaje_bienvenida, created_at)
+        SELECT id, marca_id, mensaje_bienvenida, created_at FROM config_bot
+      `)
+      database.exec("DROP TABLE config_bot")
+      database.exec("ALTER TABLE config_bot_new RENAME TO config_bot")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
   }
 
+  // Migración: remap bots.marca_id (de usuario_id a marca.id donde no apunte ya a una marca válida)
   try {
-    database.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
+    database.exec(`
+      UPDATE bots
+      SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = bots.marca_id)
+      WHERE marca_id IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM marcas WHERE id = bots.marca_id)
+    `)
   } catch {
-    // La columna ya existe
+    // ignore
   }
 
   seedDemoData(database)
@@ -364,7 +547,6 @@ function initTables(database: DatabaseType): void {
 }
 
 function seedDemoData(database: DatabaseType): void {
-  // Seed mínimo e idempotente para entornos nuevos (evita que la app arranque "vacía")
   try {
     const hasAnyBot = database.prepare("SELECT 1 FROM bots LIMIT 1").get()
     const hasAnyProduct = database.prepare("SELECT 1 FROM productos LIMIT 1").get()
@@ -373,7 +555,6 @@ function seedDemoData(database: DatabaseType): void {
 
     if (hasAnyBot || hasAnyProduct || hasAnyEssence || hasAnyConfig) return
 
-    // Crear manager demo si no existe
     const managerEmail = "demo@laida.com"
     const existingManager = database
       .prepare("SELECT id FROM usuarios WHERE correo = ?")
@@ -383,11 +564,26 @@ function seedDemoData(database: DatabaseType): void {
     if (!managerId) {
       const result = database.prepare(
         "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
-      ).run(managerEmail, "demo123", "manager", "Marca Demo")
+      ).run(managerEmail, "demo123", "manager", "Demo Manager")
       managerId = Number(result.lastInsertRowid)
     }
 
-    // Crear bot demo (inactivo, token placeholder)
+    // Crear marca demo
+    let marcaId: number
+    const existingMarca = database
+      .prepare("SELECT id FROM marcas WHERE usuario_id = ?")
+      .get(managerId) as { id: number } | undefined
+
+    if (!existingMarca) {
+      const result = database.prepare(
+        "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
+      ).run(managerId, "Marca Demo")
+      marcaId = Number(result.lastInsertRowid)
+    } else {
+      marcaId = existingMarca.id
+    }
+
+    // Crear bot demo
     const botSlug = "bot-demo"
     const existingBot = database
       .prepare("SELECT id FROM bots WHERE slug = ?")
@@ -405,12 +601,11 @@ function seedDemoData(database: DatabaseType): void {
         null,
         "inactivo",
         managerId,
-        managerId
+        marcaId
       )
       botId = Number(result.lastInsertRowid)
     }
 
-    // Asignación usuario_bots
     try {
       database
         .prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
@@ -419,34 +614,26 @@ function seedDemoData(database: DatabaseType): void {
       // ignore
     }
 
-    // Config bot y esencia demo para la marca (manager)
     database
-      .prepare(
-        "INSERT OR IGNORE INTO config_bot (marca_id, mensaje_bienvenida) VALUES (?, ?)"
-      )
-      .run(managerId, "¡Hola! Soy tu asistente. ¿Qué estás buscando hoy?")
+      .prepare("INSERT OR IGNORE INTO config_bot (marca_id, mensaje_bienvenida) VALUES (?, ?)")
+      .run(marcaId, "¡Hola! Soy tu asistente. ¿Qué estás buscando hoy?")
 
     database
-      .prepare(
-        "INSERT OR IGNORE INTO esencia (valores, diferencia, historia, marca_id) VALUES (?, ?, ?, ?)"
-      )
+      .prepare("INSERT OR IGNORE INTO esencia (valores, diferencia, historia, marca_id) VALUES (?, ?, ?, ?)")
       .run(
         "Calidad, confianza, cercanía",
         "Atención personalizada y respuesta rápida",
         "Somos una marca enfocada en ayudarte a elegir mejor.",
-        managerId
+        marcaId
       )
 
-    // Productos demo
     const insertProducto = database.prepare(
-      `INSERT INTO productos (nombre, precio, marca_id, descripcion, activo)
-       VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO productos (nombre, precio, marca_id, descripcion, activo) VALUES (?, ?, ?, ?, ?)`
     )
-    insertProducto.run("Producto Demo A", 10000, managerId, "Descripción demo del producto A", 1)
-    insertProducto.run("Producto Demo B", 25000, managerId, "Descripción demo del producto B", 1)
-    insertProducto.run("Producto Demo C", 0, managerId, "Precio a consultar", 1)
+    insertProducto.run("Producto Demo A", 10000, marcaId, "Descripción demo del producto A", 1)
+    insertProducto.run("Producto Demo B", 25000, marcaId, "Descripción demo del producto B", 1)
+    insertProducto.run("Producto Demo C", 0, marcaId, "Precio a consultar", 1)
 
-    // Flow config demo (opcional)
     database
       .prepare(
         `INSERT OR IGNORE INTO bot_flow_config (
@@ -475,7 +662,6 @@ function seedDemoData(database: DatabaseType): void {
 }
 
 function ensureDemoLeads(database: DatabaseType): void {
-  // Seed específico de leads para el usuario demo. Idempotente: solo asegura un mínimo.
   try {
     if (process.env.NODE_ENV === "production") return
 
@@ -484,6 +670,10 @@ function ensureDemoLeads(database: DatabaseType): void {
       .prepare("SELECT id FROM usuarios WHERE correo = ?")
       .get(managerEmail) as { id: number } | undefined
     if (!manager) return
+
+    const marca = database
+      .prepare("SELECT id FROM marcas WHERE usuario_id = ?")
+      .get(manager.id) as { id: number } | undefined
 
     const bot = database
       .prepare("SELECT id, slug, nombre FROM bots WHERE slug = ?")
@@ -543,12 +733,10 @@ function ensureDemoLeads(database: DatabaseType): void {
           )
         }
       })
-
       tx()
     }
 
-    // Ajustar fechas (created_at/actualizado_en) para que analytics (últimos 7 días) se vea bien.
-    // Se actualizan los últimos N leads del bot demo (N = min(total, target)).
+    // Ajustar fechas para que analytics (últimos 7 días) se vea bien
     try {
       const leadRows = database
         .prepare("SELECT id FROM leads WHERE bot_id = ? ORDER BY id ASC")
@@ -561,53 +749,46 @@ function ensureDemoLeads(database: DatabaseType): void {
         const update = database.prepare(
           "UPDATE leads SET created_at = ?, actualizado_en = ? WHERE id = ?"
         )
-
         const now = new Date()
-
         const toSqliteDateTime = (d: Date) =>
           d.toISOString().replace("T", " ").slice(0, 19)
 
         const txUpdate = database.transaction(() => {
           for (let idx = 0; idx < ids.length; idx++) {
-            // Los más nuevos quedan más cerca de "hoy".
             const dayOffset = (ids.length - 1 - idx) % 7
             const d = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
-
-            // Variación de hora para que no queden todos iguales
             const hour = 9 + (idx % 9)
             const minute = (idx * 13) % 60
             const second = (idx * 7) % 60
             d.setUTCHours(hour, minute, second, 0)
-
             const ts = toSqliteDateTime(d)
             update.run(ts, ts, ids[idx])
           }
         })
-
         txUpdate()
       }
     } catch {
       // ignore
     }
 
-    // Backfill: si el lead tiene interes == nombre de producto y producto_id es NULL,
-    // asignar producto_id para que filtros/analytics funcionen.
+    // Backfill producto_id usando marca.id (no manager.id)
     try {
-      const backfillStmt = database.prepare(`
-        UPDATE leads
-        SET producto_id = (
-          SELECT p.id
-          FROM productos p
-          WHERE p.marca_id = ?
-            AND p.nombre = leads.interes
-          LIMIT 1
-        )
-        WHERE bot_id = ?
-          AND producto_id IS NULL
-          AND interes IS NOT NULL
-      `)
-
-      backfillStmt.run(manager.id, bot.id)
+      if (marca) {
+        const backfillStmt = database.prepare(`
+          UPDATE leads
+          SET producto_id = (
+            SELECT p.id
+            FROM productos p
+            WHERE p.marca_id = ?
+              AND p.nombre = leads.interes
+            LIMIT 1
+          )
+          WHERE bot_id = ?
+            AND producto_id IS NULL
+            AND interes IS NOT NULL
+        `)
+        backfillStmt.run(marca.id, bot.id)
+      }
     } catch {
       // ignore
     }
@@ -616,7 +797,6 @@ function ensureDemoLeads(database: DatabaseType): void {
   }
 }
 
-// Export a proxy that lazily initializes the database
 const dbProxy = new Proxy({} as DatabaseType, {
   get(_, prop: keyof DatabaseType) {
     const database = getDb()

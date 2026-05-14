@@ -68,14 +68,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!["super_admin", "manager"].includes(rol)) {
+    if (rol !== "super_admin") {
       return NextResponse.json(
-        { error: "Rol inválido" },
+        { error: "Este endpoint solo permite crear usuarios super_admin. Para managers usa POST /api/registro" },
         { status: 400 }
       )
     }
-
-    // TODO: Hashear contraseña con bcrypt
 
     const nuevoUsuario = createUsuario({
       correo,

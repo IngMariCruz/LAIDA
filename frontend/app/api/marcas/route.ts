@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAllMarcas } from "@/db/utils"
-import { getAuthUser, requireSuperAdmin } from "@/lib/auth"
+import { getAllMarcas, getMarcaByUsuarioId } from "@/db/utils"
+import { getAuthUser, requireManager } from "@/lib/auth"
 
-// GET - Obtener todas las marcas (solo super_admin)
+// GET - super_admin: todas las marcas; manager: solo su propia marca
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
 
-    if (!requireSuperAdmin(user)) {
+    if (!requireManager(user)) {
       return NextResponse.json(
-        { error: "No autorizado. Se requiere rol de Super Admin" },
+        { error: "No autorizado" },
         { status: 403 }
       )
     }
 
+    if (user.rol === "manager") {
+      const marca = getMarcaByUsuarioId(user.id)
+      return NextResponse.json(marca ? [marca] : [])
+    }
+
     const marcas = getAllMarcas().map((marca) => ({
       id: marca.id,
+      usuario_id: marca.usuario_id,
       nombre_marca: marca.nombre_marca,
-      correo_empresa: marca.correo_empresa,
-      nombre_representante: marca.nombre_representante,
-      numero: marca.numero,
-      correo_personal: marca.correo_personal,
-      fecha_registro: marca.fecha_registro,
+      created_at: marca.created_at,
       actualizado_en: marca.actualizado_en,
     }))
 

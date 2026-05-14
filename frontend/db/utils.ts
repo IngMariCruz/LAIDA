@@ -2,18 +2,15 @@ import db from "./init"
 
 export interface Marca {
   id: number
+  usuario_id: number
   nombre_marca: string
-  correo_empresa: string
-  nombre_representante: string
-  numero: string
-  correo_personal: string
-  fecha_registro: string
+  created_at: string
   actualizado_en: string
 }
 
 // Obtener todas las marcas
 export function getAllMarcas(): Marca[] {
-  const stmt = db.prepare("SELECT * FROM marcas ORDER BY fecha_registro DESC")
+  const stmt = db.prepare("SELECT * FROM marcas ORDER BY created_at DESC")
   return stmt.all() as Marca[]
 }
 
@@ -23,62 +20,29 @@ export function getMarcaById(id: number): Marca | undefined {
   return stmt.get(id) as Marca | undefined
 }
 
-// Obtener una marca por correo de empresa
-export function getMarcaByCorreoEmpresa(correoEmpresa: string): Marca | undefined {
-  const stmt = db.prepare("SELECT * FROM marcas WHERE correo_empresa = ?")
-  return stmt.get(correoEmpresa) as Marca | undefined
+// Obtener una marca por usuario_id (relación 1-a-1 con manager)
+export function getMarcaByUsuarioId(usuarioId: number): Marca | undefined {
+  const stmt = db.prepare("SELECT * FROM marcas WHERE usuario_id = ?")
+  return stmt.get(usuarioId) as Marca | undefined
 }
 
 // Crear una nueva marca
-export function createMarca(data: Omit<Marca, "id" | "fecha_registro" | "actualizado_en">): Marca {
+export function createMarca(data: { usuario_id: number; nombre_marca: string }): Marca {
   const stmt = db.prepare(`
-    INSERT INTO marcas (
-      nombre_marca,
-      correo_empresa,
-      nombre_representante,
-      numero,
-      correo_personal
-    ) VALUES (?, ?, ?, ?, ?)
+    INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)
   `)
-
-  const result = stmt.run(
-    data.nombre_marca,
-    data.correo_empresa,
-    data.nombre_representante,
-    data.numero,
-    data.correo_personal
-  )
-
+  const result = stmt.run(data.usuario_id, data.nombre_marca)
   return getMarcaById(Number(result.lastInsertRowid)) as Marca
 }
 
-// Actualizar una marca
-export function updateMarca(id: number, data: Partial<Omit<Marca, "id" | "fecha_registro">>): Marca {
-  const updates = []
-  const values = []
-
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      updates.push(`${key} = ?`)
-      values.push(value)
-    }
-  })
-
-  if (updates.length === 0) {
-    return getMarcaById(id) as Marca
-  }
-
-  updates.push("actualizado_en = CURRENT_TIMESTAMP")
-  values.push(id)
+// Actualizar una marca (solo nombre_marca)
+export function updateMarca(id: number, data: { nombre_marca?: string }): Marca {
+  if (!data.nombre_marca) return getMarcaById(id) as Marca
 
   const stmt = db.prepare(`
-    UPDATE marcas
-    SET ${updates.join(", ")}
-    WHERE id = ?
+    UPDATE marcas SET nombre_marca = ?, actualizado_en = CURRENT_TIMESTAMP WHERE id = ?
   `)
-
-  stmt.run(...values)
-
+  stmt.run(data.nombre_marca, id)
   return getMarcaById(id) as Marca
 }
 

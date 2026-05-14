@@ -68,42 +68,22 @@ export default function ProductosAdminPage() {
       const token = localStorage.getItem('token')
       setUserRole(user.rol || null)
 
-      // Si es super_admin, cargar todas las marcas
-      if (user.rol === 'super_admin') {
-        fetch('/api/marcas', { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.ok ? r.json() : [])
-          .then((data: Marca[]) => {
-            setMarcas(data)
+      // Ambos roles usan /api/marcas: super_admin recibe todas, manager recibe solo la suya
+      fetch('/api/marcas', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then((data: Marca[]) => {
+          setMarcas(data)
+          setMarcasLoading(false)
+          if (data.length > 0) {
+            setMarcaId(data[0].id)
+            fetchProductos(data[0].id)
+          } else {
             setMarcasLoading(false)
-            // Seleccionar la primera marca por defecto
-            if (data.length > 0) {
-              setMarcaId(data[0].id)
-              fetchProductos(data[0].id)
-            }
-          })
-          .catch(() => {
-            setMarcasLoading(false)
-          })
-      } else {
-        // Para managers, obtener sus bots/marcas asignadas
-        fetch(`/api/usuarios/${user.id}/bots`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.ok ? r.json() : [])
-          .then((bots: any[]) => {
-            const lista = bots.length > 0 ? bots : (user.botsAsignados ?? [])
-            const id = lista.length > 0 ? lista[0].id : user.id
-            // Actualizar localStorage
-            localStorage.setItem('usuario', JSON.stringify({ ...user, botsAsignados: lista }))
-            setMarcaId(id)
-            fetchProductos(id)
-            setMarcasLoading(false)
-          })
-          .catch(() => {
-            const id = (user.botsAsignados?.[0]?.id) ?? user.id
-            setMarcaId(id)
-            fetchProductos(id)
-            setMarcasLoading(false)
-          })
-      }
+          }
+        })
+        .catch(() => {
+          setMarcasLoading(false)
+        })
     } catch { window.location.href = '/login' }
   }, [])
 
@@ -136,7 +116,7 @@ export default function ProductosAdminPage() {
       const body = { ...form, precio: Number(form.precio), marca_id: marcaId }
       const res = await fetch('/api/productos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
-      await fetchProductos()
+      await fetchProductos(marcaId)
       setForm({})
     } catch (err: any) { setError(err.message || 'Error') }
   }

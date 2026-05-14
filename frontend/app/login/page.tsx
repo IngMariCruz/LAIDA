@@ -113,12 +113,12 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo de la empresa</Label>
+                <Label htmlFor="email">Correo</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="empresa@example.com"
+                  placeholder="correo@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   disabled={loading}
