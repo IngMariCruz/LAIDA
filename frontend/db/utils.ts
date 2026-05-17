@@ -128,6 +128,7 @@ export interface Lead {
   estado: 'nuevo' | 'contactado' | 'cerrado'
   categoria?: 'hot' | 'warm' | 'cold' | null
   producto_id?: number | null
+  marca_id?: number | null
   detalles_compra?: string | null
   notas?: string | null
   actualizado_en?: string | null
@@ -145,6 +146,19 @@ export function getAllLeads(): Lead[] {
   `)
 
   return stmt.all() as Lead[]
+}
+
+export function getLeadsByMarcaId(marcaId: number): Lead[] {
+  const stmt = db.prepare(`
+    SELECT l.*,
+      COALESCE(b.slug, l.bot_slug) AS bot_slug,
+      COALESCE(b.nombre, l.bot_nombre) AS bot_nombre
+    FROM leads l
+    LEFT JOIN bots b ON b.id = l.bot_id
+    WHERE b.marca_id = ? OR l.marca_id = ?
+    ORDER BY COALESCE(l.actualizado_en, l.created_at) DESC
+  `)
+  return stmt.all(marcaId, marcaId) as Lead[]
 }
 
 export function getLeadsByBotId(botId: number): Lead[] {
@@ -182,9 +196,9 @@ export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
   const stmt = db.prepare(`
     INSERT INTO leads (
       nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
-      telegram_user_id, estado, categoria, producto_id, detalles_compra, notas, actualizado_en
+      telegram_user_id, estado, categoria, producto_id, marca_id, detalles_compra, notas, actualizado_en
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   `)
 
   const result = stmt.run(
@@ -199,6 +213,7 @@ export function createLead(data: Omit<Lead, 'id' | 'created_at'>): Lead {
     data.estado || 'nuevo',
     data.categoria || 'cold',
     data.producto_id || null,
+    data.marca_id || null,
     data.detalles_compra || null,
     data.notas || null
   )

@@ -1,10 +1,16 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Cliente {
   id: number
@@ -13,6 +19,11 @@ interface Cliente {
   apellido: string
   correo?: string
   telefono?: string
+}
+
+interface Marca {
+  id: number
+  nombre_marca: string
 }
 
 interface ImportResult {
@@ -30,34 +41,44 @@ export default function ClientesPage() {
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [marcaId, setMarcaId] = useState<number | null>(null)
+  const [marcas, setMarcas] = useState<Marca[]>([])
+  const [marcasLoading, setMarcasLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const u = localStorage.getItem('usuario')
-    if (!u) {
-      window.location.href = '/login'
-      return
-    }
+    if (!u) { globalThis.location.href = '/login'; return }
 
-    let id: number | null = null
-    try { id = JSON.parse(u).id } catch { id = null }
-    if (id === null) {
-      window.location.href = '/login'
-      return
-    }
-    setMarcaId(id)
+    let user: { id?: number; rol?: string } = {}
+    try { user = JSON.parse(u) } catch { globalThis.location.href = '/login'; return }
+    if (!user?.id) { globalThis.location.href = '/login'; return }
+
+    const token = localStorage.getItem('token')
+    setUserRole(user.rol || null)
+
+    fetch('/api/marcas', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Marca[]) => {
+        setMarcas(data)
+        setMarcasLoading(false)
+        if (data.length > 0) {
+          setMarcaId(data[0].id)
+        }
+      })
+      .catch(() => setMarcasLoading(false))
   }, [])
 
-  const fetchClientes = async () => {
-    if (!marcaId) return
+  const fetchClientes = async (id?: number | null) => {
+    if (!id) return
     setLoading(true)
-    const res = await fetch(`/api/clientes?marcaId=${marcaId}`)
+    const res = await fetch(`/api/clientes?marcaId=${id}`)
     const data = await res.json()
-    setClientes(data)
+    setClientes(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 
-  useEffect(() => { if (marcaId !== null) fetchClientes() }, [marcaId])
+  useEffect(() => { if (marcaId !== null) fetchClientes(marcaId) }, [marcaId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -69,7 +90,7 @@ export default function ClientesPage() {
     try {
       const res = await fetch('/api/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, marcaId }) })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
-      await fetchClientes()
+      await fetchClientes(marcaId)
       setForm({})
     } catch (err: any) { setError(err.message || 'Error') }
   }
@@ -82,7 +103,7 @@ export default function ClientesPage() {
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error'); return }
       setEditingId(null)
       setForm({})
-      await fetchClientes()
+      await fetchClientes(marcaId)
     } catch (err: any) { setError(err.message || 'Error') }
   }
 
@@ -93,7 +114,7 @@ export default function ClientesPage() {
 
   const handleDelete = async (id: number) => {
     await fetch(`/api/clientes?id=${id}&marcaId=${marcaId}`, { method: 'DELETE' })
-    await fetchClientes()
+    await fetchClientes(marcaId)
   }
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +127,7 @@ export default function ClientesPage() {
     }
 
     if (!marcaId) {
-      setError('marca_id no disponible')
+      setError('Selecciona una marca primero')
       return
     }
 
@@ -115,62 +136,31 @@ export default function ClientesPage() {
     setImportResult(null)
 
     try {
-      const reader = new FileReader()
-      reader.onload = async (event) => {
-        try {
-          const data = event.target?.result as ArrayBuffer
-          const base64 = Buffer.from(data).toString('base64')
+      const data = await file.arrayBuffer()
+      const base64 = Buffer.from(data).toString('base64')
 
-          const res = await fetch('/api/clientes/import', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename: file.name,
-              data: base64,
-              marcaId: marcaId
-            })
-          })
+      const res = await fetch('/api/clientes/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, data: base64, marcaId })
+      })
 
-          const result = await res.json()
+      const result = await res.json()
 
-          if (!res.ok) {
-            setError(result.error || 'Error al importar')
-            return
-          }
+      if (!res.ok) { setError(result.error || 'Error al importar'); return }
 
-          setImportResult({
-            inserted: result.inserted,
-            skipped: result.skipped,
-            errors: result.errors || []
-          })
+      setImportResult({ inserted: result.inserted, skipped: result.skipped, errors: result.errors || [] })
+      await fetchClientes(marcaId)
 
-          await fetchClientes()
-
-          if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-          }
-        } catch (err: any) {
-          setError(err.message || 'Error procesando archivo')
-        } finally {
-          setImportLoading(false)
-        }
-      }
-
-      reader.onerror = () => {
-        setError('Error al leer el archivo')
-        setImportLoading(false)
-      }
-
-      reader.readAsArrayBuffer(file)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err: any) {
-      setError(err.message || 'Error')
+      setError(err.message || 'Error procesando archivo')
+    } finally {
       setImportLoading(false)
     }
   }
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
-  }
+  const triggerFileInput = () => { fileInputRef.current?.click() }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -185,6 +175,36 @@ export default function ClientesPage() {
             className="hidden"
           />
         </div>
+
+        {/* Selector de marca para super_admin */}
+        {userRole === 'super_admin' && (
+          <div className="mb-6 max-w-xs">
+            <Label htmlFor="marca-select" className="mb-2 block">Selecciona una marca:</Label>
+            {marcasLoading ? (
+              <p className="text-sm text-muted-foreground">Cargando marcas...</p>
+            ) : (
+              <Select
+                value={marcaId?.toString() || ''}
+                onValueChange={(value) => {
+                  const id = Number.parseInt(value, 10)
+                  setMarcaId(id)
+                  fetchClientes(id)
+                }}
+              >
+                <SelectTrigger id="marca-select">
+                  <SelectValue placeholder="Selecciona una marca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {marcas.map((marca) => (
+                    <SelectItem key={marca.id} value={marca.id.toString()}>
+                      {marca.nombre_marca}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
 
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -218,8 +238,8 @@ export default function ClientesPage() {
               </>
             ) : (
               <>
-                <Button onClick={handleCreate}>Agregar cliente</Button>
-                <Button onClick={triggerFileInput} disabled={importLoading} variant="outline">
+                <Button onClick={handleCreate} disabled={!marcaId}>Agregar cliente</Button>
+                <Button onClick={triggerFileInput} disabled={importLoading || !marcaId} variant="outline">
                   {importLoading ? 'Importando...' : 'Importar desde Excel'}
                 </Button>
               </>
@@ -237,8 +257,8 @@ export default function ClientesPage() {
                 <div className="mt-2">
                   <p className="text-sm text-orange-700 font-semibold">Errores detectados:</p>
                   <ul className="text-xs text-orange-700 list-disc list-inside mt-1">
-                    {importResult.errors.slice(0, 5).map((err, i) => (
-                      <li key={i}>{err}</li>
+                    {importResult.errors.slice(0, 5).map((err) => (
+                      <li key={err}>{err}</li>
                     ))}
                     {importResult.errors.length > 5 && <li>... y {importResult.errors.length - 5} más</li>}
                   </ul>

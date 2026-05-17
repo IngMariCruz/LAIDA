@@ -28,8 +28,6 @@ services:
       - web
 
   bot:
-    profiles:
-      - bot
     build:
       context: ./bot
       dockerfile: Dockerfile
@@ -38,4 +36,6 @@ services:
       BOT_CONVERSATIONS_DIR: /app/data/conversations
     volumes:
       - ./bd:/app/data
+    depends_on:
+      - web
     restart: unless-stopped

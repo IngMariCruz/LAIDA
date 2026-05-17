@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
   getAllLeads,
-  getLeadsByBotId,
   getLeadsByBotIds,
+  getLeadsByMarcaId,
   createLead,
   createNotificacion,
   getAllUsuarios,
@@ -29,9 +29,10 @@ export async function GET(request: NextRequest) {
 
     let leads: any[] = []
 
+    const marcaId = searchParams.get("marcaId")
+
     if (user.rol === "super_admin") {
-      // Super admin puede ver todos los leads
-      leads = getAllLeads()
+      leads = marcaId ? getLeadsByMarcaId(Number(marcaId)) : getAllLeads()
     } else if (user.rol === "manager") {
       // Manager solo ve leads de sus bots
       const botsAsignados = getBotsAsignadosAUsuario(user.id)
@@ -113,6 +114,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email no válido" }, { status: 400 })
     }
 
+    // Inferir marca_id desde el bot para que el lead persista aunque se borre el bot
+    let marcaIdFromBot: number | null = null
+    if (bot_id) {
+      const botRow = db
+        .prepare("SELECT marca_id FROM bots WHERE id = ?")
+        .get(Number(bot_id)) as { marca_id: number | null } | undefined
+      marcaIdFromBot = botRow?.marca_id ?? null
+    }
+
     // Crear el lead
     const lead = createLead({
       nombre: nombre ?? null,
@@ -126,6 +136,7 @@ export async function POST(request: NextRequest) {
       estado: estado || "nuevo",
       categoria: categoria || null,
       producto_id: normalizedProductoId,
+      marca_id: marcaIdFromBot,
       detalles_compra: detalles_compra || null,
       notas: notas || null,
     })

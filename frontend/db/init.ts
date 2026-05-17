@@ -161,6 +161,27 @@ function initTables(database: DatabaseType): void {
 
   try { database.exec("ALTER TABLE leads ADD COLUMN nombre TEXT") } catch {}
 
+  // Migración: agregar marca_id a leads para persistir la marca aunque se borre el bot
+  try { database.exec("ALTER TABLE leads ADD COLUMN marca_id INTEGER") } catch {}
+
+  // Backfill: inferir marca_id desde el bot activo (bot_id conocido)
+  try {
+    database.exec(`
+      UPDATE leads
+      SET marca_id = (SELECT marca_id FROM bots WHERE id = leads.bot_id)
+      WHERE marca_id IS NULL AND bot_id IS NOT NULL
+    `)
+  } catch {}
+
+  // Backfill: inferir marca_id por slug (bot_id null por borrado del bot)
+  try {
+    database.exec(`
+      UPDATE leads
+      SET marca_id = (SELECT marca_id FROM bots WHERE slug = leads.bot_slug)
+      WHERE marca_id IS NULL AND bot_slug IS NOT NULL
+    `)
+  } catch {}
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS notificaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

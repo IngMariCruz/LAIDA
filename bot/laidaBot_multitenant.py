@@ -126,6 +126,9 @@ def get_productos(bot_id: int, limit: int = 4, filtro: str = "") -> List[Dict[st
     """Carga productos activos del bot; filtra por nombre/descripción si se indica."""
     try:
         with get_connection() as conn:
+            bot_row = conn.execute("SELECT marca_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+            marca_id = bot_row["marca_id"] if bot_row and bot_row["marca_id"] else bot_id
+
             if filtro:
                 like = f"%{filtro.lower()}%"
                 rows = conn.execute(
@@ -133,14 +136,14 @@ def get_productos(bot_id: int, limit: int = 4, filtro: str = "") -> List[Dict[st
                        WHERE marca_id = ? AND activo = 1
                          AND (LOWER(nombre) LIKE ? OR LOWER(descripcion) LIKE ?)
                        ORDER BY fecha_registro DESC LIMIT ?""",
-                    (bot_id, like, like, limit),
+                    (marca_id, like, like, limit),
                 ).fetchall()
                 if rows:
                     return [dict(r) for r in rows]
 
             rows = conn.execute(
                 "SELECT * FROM productos WHERE marca_id = ? AND activo = 1 ORDER BY fecha_registro DESC LIMIT ?",
-                (bot_id, limit),
+                (marca_id, limit),
             ).fetchall()
             return [dict(r) for r in rows]
     except sqlite3.Error as e:
@@ -152,12 +155,14 @@ def crear_lead_inicial(bot_id: int, telegram_user_id: int, bot_slug: str, bot_no
     """Crea el lead en el primer mensaje con datos temporales. Retorna True si es lead nuevo."""
     try:
         with get_connection() as conn:
+            bot_row = conn.execute("SELECT marca_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+            marca_id = bot_row["marca_id"] if bot_row else None
             cursor = conn.execute(
                 """INSERT OR IGNORE INTO leads
                      (bot_id, bot_slug, bot_nombre, nombre, email, telefono,
-                      telegram_user_id, estado, categoria, actualizado_en)
-                   VALUES (?, ?, ?, 'lead1', 'lead@laida.com', '00000000', ?, 'nuevo', 'cold', CURRENT_TIMESTAMP)""",
-                (bot_id, bot_slug, bot_nombre, telegram_user_id),
+                      telegram_user_id, estado, categoria, marca_id, actualizado_en)
+                   VALUES (?, ?, ?, 'lead1', 'lead@laida.com', '00000000', ?, 'nuevo', 'cold', ?, CURRENT_TIMESTAMP)""",
+                (bot_id, bot_slug, bot_nombre, telegram_user_id, marca_id),
             )
             conn.commit()
             return cursor.rowcount > 0

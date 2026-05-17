@@ -176,10 +176,10 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
     query = """
         INSERT INTO leads (
             bot_id, bot_slug, bot_nombre, interes, email, telefono,
-            telegram_user_id, estado, categoria, producto_id, detalles_compra, notas,
+            telegram_user_id, estado, categoria, producto_id, marca_id, detalles_compra, notas,
             actualizado_en
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(bot_id, telegram_user_id) DO UPDATE SET
             bot_slug = COALESCE(excluded.bot_slug, leads.bot_slug),
             bot_nombre = COALESCE(excluded.bot_nombre, leads.bot_nombre),
@@ -189,12 +189,15 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
             estado = COALESCE(excluded.estado, leads.estado),
             categoria = COALESCE(excluded.categoria, leads.categoria),
             producto_id = COALESCE(excluded.producto_id, leads.producto_id),
+            marca_id = COALESCE(excluded.marca_id, leads.marca_id),
             detalles_compra = COALESCE(excluded.detalles_compra, leads.detalles_compra),
             notas = COALESCE(excluded.notas, leads.notas),
             actualizado_en = CURRENT_TIMESTAMP
     """
-    
+
     with get_connection() as conn:
+        bot_row = conn.execute("SELECT marca_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+        marca_id = bot_row["marca_id"] if bot_row else None
         cursor = conn.cursor()
         cursor.execute(query, (
             bot_id,
@@ -207,6 +210,7 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
             data.get('estado', 'nuevo'),
             data.get('categoria', 'warm'),
             data.get('producto_id'),
+            marca_id,
             data.get('detalles_compra'),
             data.get('notas')
         ))
@@ -260,16 +264,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     raw_args = context.args
 
-    if not raw_args:
-        respuesta = "Uso correcto: /start <bot_id>\nEjemplo: /start 1"
-        await update.message.reply_text(respuesta)
-        return
-
-    try:
-        bot_id = int(raw_args[0])
-    except ValueError:
-        respuesta = "El bot_id debe ser numérico. Ejemplo: /start 1"
-        await update.message.reply_text(respuesta)
+    if raw_args:
+        try:
+            bot_id = int(raw_args[0])
+        except ValueError:
+            await update.message.reply_text("El bot_id debe ser numérico.")
+            return
+    elif BOT_ID:
+        bot_id = int(BOT_ID)
+    else:
+        await update.message.reply_text("⚠️ Bot no configurado. Contacta al administrador.")
         return
 
     # Obtener información del bot

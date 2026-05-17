@@ -60,13 +60,13 @@ def main():
     print("LAIDA Bot Manager - Sistema Multi-Tenant")
     print("=" * 60)
     
-    # Cargar bots activos
-    bots = cargar_bots_activos()
-    
-    if not bots:
-        print("⚠️  No hay bots activos en la base de datos")
-        print("Crea bots desde el panel de Super Admin")
-        return
+    # Esperar hasta que haya bots activos (la BD puede no estar lista al arrancar)
+    bots = []
+    while not bots:
+        bots = cargar_bots_activos()
+        if not bots:
+            print("⏳ No hay bots activos. Reintentando en 10 segundos...")
+            time.sleep(10)
     
     print(f"\n✅ Se encontraron {len(bots)} bot(s) activo(s):")
     for bot in bots:
