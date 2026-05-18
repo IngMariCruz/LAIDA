@@ -64,8 +64,15 @@ docker-compose up --build
 
 ### 4. Registrar un Manager (Marca)
 
-Los **managers se registran** desde la pantalla de registro (el Super Admin no crea managers).
+Los managers pueden crearse de dos formas:
 
+**Opción A — Desde el Dashboard (Super Admin):**
+1. Ir a **Gestión de Usuarios** → **Crear Usuario**
+2. Seleccionar rol **Manager**
+3. Completar correo, contraseña, nombre y **nombre de la marca**
+4. Guardar (crea el usuario manager y su marca en un solo paso)
+
+**Opción B — Auto-registro público:**
 1. Abrir: http://localhost:3000/registro
 2. Completar los datos de la marca (nombre de marca, correos, representante, etc.)
 3. Crear la cuenta
@@ -172,10 +179,10 @@ docker-compose up --build
    - Crear bot para cada área/producto
    - Asignar managers específicos
 
-3. **Personalizar mensajes**
-   - Editar `laidaBot_multitenant.py`
-   - Personalizar mensajes de bienvenida
-   - Agregar lógica de negocio
+3. **Personalizar mensajes del bot**
+   - Ir a **Dashboard > Configuración del Bot**
+   - Editar mensaje de bienvenida, sin interés, productos, etc.
+   - Los cambios aplican al bot en tiempo real desde la BD
 
 4. **Ver leads capturados**
    - Dashboard de Manager

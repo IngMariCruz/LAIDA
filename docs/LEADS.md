@@ -13,6 +13,7 @@ Los leads se almacenan en la tabla `leads`:
 ```sql
 CREATE TABLE leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT,                       -- Nombre del lead (puede ser NULL)
   bot_id INTEGER,                    -- Referencia al bot que capturó el lead
   bot_slug TEXT,                     -- Slug del bot
   bot_nombre TEXT,                   -- Nombre del bot
@@ -28,7 +29,8 @@ CREATE TABLE leads (
   actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(bot_id, telegram_user_id),
-  FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
+  FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
 )
 ```
 
@@ -46,19 +48,27 @@ Retorna una lista de leads según el rol del usuario.
 
 **Parámetros Query**:
 - `botId` (opcional): Filtrar por ID de bot
-- `estado` (opcional): Filtrar por estado (nuevo, contactado, cerrado)
+- `estado` (opcional): Filtrar por estado (`nuevo`, `contactado`, `cerrado`)
+- `categoria` (opcional): Filtrar por categoría (`hot`, `warm`, `cold`)
 
 **Respuesta**:
 ```json
 [
   {
     "id": 1,
+    "nombre": "Juan García",
     "bot_id": 1,
     "bot_nombre": "Mi Bot",
     "interes": "Producto X",
     "email": "usuario@email.com",
     "telefono": "1234567890",
+    "telegram_user_id": 123456789,
     "estado": "nuevo",
+    "categoria": "warm",
+    "producto_id": null,
+    "detalles_compra": null,
+    "notas": null,
+    "actualizado_en": "2026-03-04T10:35:00Z",
     "created_at": "2026-03-04T10:30:00Z"
   }
 ]
@@ -260,12 +270,13 @@ curl -X GET http://localhost:3000/api/leads?estado=nuevo \
 
 ---
 
-## ⚠️ Limitaciones Actuales
+## Limitaciones Actuales
 
-- ⚠️ No hay exportación a CSV/Excel (próximamente)
-- ⚠️ No hay notificaciones en tiempo real
-- ⚠️ No hay búsqueda por fecha
-- ⚠️ No hay etiquetas personalizadas
+- No hay exportación a CSV/Excel (próximamente)
+- No hay búsqueda por fecha
+- No hay etiquetas personalizadas
+
+> Las notificaciones en tiempo real sí están implementadas — ver [NOTIFICACIONES.md](./NOTIFICACIONES.md).
 
 ---
 

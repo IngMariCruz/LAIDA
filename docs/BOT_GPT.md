@@ -373,14 +373,15 @@ Instrucciones adicionales:
 """
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Error: "No se encontró OPENAI_API_KEY"
+### Error: "No se encontró OPENAI_API_KEY" o el bot arranca en modo básico
 
-**Solución:**
-1. Verifica que `.env` contenga: `OPENAI_API_KEY=sk-proj-...`
-2. Reinicia el bot
-3. Si usas un IDE, recarga variables de entorno
+La API Key de OpenAI **no** va en `.env`. Se configura por bot desde el Dashboard:
+
+1. Ve a **Dashboard → Gestión de Bots → Editar Bot**
+2. Pega la key en el campo "OpenAI API Key"
+3. Guarda y reinicia el bot: `python3 bot_launcher.py <bot_id>`
 
 ### Error: "Rate limit exceeded"
 
@@ -501,7 +502,9 @@ Con la integración de GPT, tu bot de LAIDA ahora:
 **¿Listo para probarlo?**
 ```bash
 cd bot
-python3 laidaBot_gpt.py
+python3 bot_launcher.py <bot_id>
 ```
+
+El launcher detecta automáticamente si el bot tiene `openai_key` configurada y arranca la versión GPT.
 
 ¡Tu bot ahora es inteligente! 🧠✨

@@ -9,7 +9,7 @@ En LAIDA, cada **super admin** puede crear múltiples bots, y cada bot:
 - Captura sus propios leads
 
 Además, LAIDA separa la información por **marca (tenant)**:
-- Los **managers se registran** con su marca en `/registro`.
+- Los managers pueden crearse desde el **Dashboard → Gestión de Usuarios** (Super Admin) o mediante auto-registro en `/registro`.
 - Un bot asignado a un manager queda asociado a la marca mediante `marca_id` (normalmente igual al `id` del manager).
 - Productos, esencia y configuración se consultan por `marca_id`.
 

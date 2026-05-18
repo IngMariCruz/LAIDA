@@ -84,6 +84,7 @@ docker-compose up --build
 
 El sistema estará disponible en:
 - Frontend: http://localhost:3000
+- Swagger UI: http://localhost:8080 (documentación interactiva de la API)
 - Bots: Se ejecutan automáticamente según configuración en BD
 
 Si la base de datos está vacía, LAIDA puede aplicar una **precarga demo** (idempotente) con un manager y un bot de ejemplo en estado `inactivo`.
@@ -114,8 +115,13 @@ LAIDA/
 │   │   └── manager/      # Dashboard Manager
 │   └── login/
 ├── bot/
-│   ├── laidaBot_multitenant.py  # Bot individual
-│   ├── bot_manager.py           # Gestor de múltiples bots
+│   ├── bot_manager.py              # Ejecuta todos los bots activos
+│   ├── bot_launcher.py             # Selecciona bot GPT o básico
+│   ├── laidaBot_gpt.py             # Bot con inteligencia GPT
+│   ├── laidaBot_conversacional.py  # Bot básico con flujo guiado
+│   ├── scripts/
+│   │   ├── run_campaigns.py        # Ejecuta campañas programadas
+│   │   └── migrate_leads.py        # Migración de datos
 │   └── requirements.txt
 ├── db/
 │   ├── init.ts           # Inicialización de BD
@@ -165,11 +171,18 @@ id, usuario_id, bot_id, created_at
 
 ### Registrar un Manager (Marca)
 
-Los managers se registran desde la página de registro; el Super Admin **no** crea managers desde el panel.
+Hay dos formas de crear un manager:
 
+**Desde el Dashboard (recomendado para el Super Admin):**
+1. Ir a **Dashboard > Gestión de Usuarios** → **Crear Usuario**
+2. Seleccionar rol **Manager**
+3. Completar correo, contraseña y **nombre de la marca**
+4. Guardar — crea el usuario y su marca automáticamente
+
+**Auto-registro público:**
 1. Abrir `/registro`
 2. Completar los datos de la marca
-3. Crear la cuenta (se creará un usuario con rol `manager`)
+3. Crear la cuenta (se crea el usuario con rol `manager` y su marca)
 
 ### Asignar Bot a Manager
 
@@ -219,54 +232,31 @@ python bot_manager.py
 - ✅ Separación de datos por tenant
 - ✅ Foreign keys en BD
 
-## 📝 API Endpoints
+## API Endpoints
 
-### Autenticación
+Ver la referencia completa en [API.md](./API.md) o en Swagger UI (http://localhost:8080).
 
-```
-POST /api/login
-Body: { correo, password }
-Response: { success, usuario, token }
-```
-
-### Bots (Super Admin)
+### Resumen rápido
 
 ```
-GET    /api/bots              # Listar todos
-GET    /api/bots?id=1         # Uno específico
-GET    /api/bots?slug=default # Por slug
-POST   /api/bots              # Crear
-PUT    /api/bots              # Actualizar
-DELETE /api/bots?id=1         # Eliminar
-```
+POST   /api/login                     # Autenticación
+POST   /api/registro                  # Registro manager + marca (público)
 
-### Usuarios (Super Admin)
-
-```
-GET    /api/usuarios          # Listar todos
-GET    /api/usuarios?id=1     # Uno específico
-POST   /api/usuarios          # Crear (solo super_admin)
-PUT    /api/usuarios          # Actualizar
-DELETE /api/usuarios?id=1     # Eliminar
-
-### Registro (Público)
-
-POST   /api/registro          # Registro de manager + marca
-
-### Leads
-
-GET    /api/leads             # Listar leads (según rol)
-POST   /api/leads             # Crear lead (admite parciales)
-PATCH  /api/leads/{id}        # Actualizar lead (estado/datos básicos)
-```
-
-### Accesos (Super Admin)
-
-```
-GET    /api/accesos?usuarioId=1  # Bots de un usuario
-GET    /api/accesos?botId=1      # Usuarios de un bot
-POST   /api/accesos              # Asignar bot
-DELETE /api/accesos              # Remover acceso
+GET/POST/PUT/DELETE /api/bots         # CRUD de bots
+GET/POST/PUT/DELETE /api/usuarios     # CRUD de usuarios
+GET/POST/DELETE     /api/accesos      # Asignación bot-usuario
+GET/POST/PATCH/DELETE /api/leads      # CRUD de leads
+GET/POST/PUT/DELETE /api/clientes     # CRUD de clientes
+GET                 /api/marcas       # Listar marcas
+GET/POST/PUT/DELETE /api/esencia      # Esencia de marca
+GET/POST/PUT/DELETE /api/productos    # CRUD de productos
+GET/POST/DELETE     /api/productos/atributos
+POST                /api/productos/import
+GET/POST            /api/config-bot   # Config. mensaje bienvenida
+GET/POST            /api/config-bot/flow
+GET/POST/PATCH/DELETE /api/notificaciones
+GET/POST/PATCH      /api/campaigns    # Campañas masivas
+GET                 /api/analytics/overview
 ```
 
 ## 🐛 Troubleshooting

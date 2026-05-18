@@ -184,21 +184,22 @@ El sistema registra todas las interacciones:
 }
 ```
 
-## 💻 Uso del Bot
+## Uso del Bot
 
 ### Ejecutar el Bot Conversacional
 
+Usa siempre `bot_launcher.py` para lanzar el bot. Él lee la configuración desde la base de datos y elige automáticamente entre el bot básico y el GPT:
+
 ```bash
 cd bot
-python3 laidaBot_conversacional.py
+python3 bot_launcher.py <bot_id>
 ```
 
-### Configurar Variables de Entorno
+Los tokens de Telegram y las API Keys de OpenAI **NO** se ponen en `.env`. Se configuran por bot desde el **Dashboard → Gestión de Bots**. Las únicas variables de entorno relevantes son:
 
 ```env
-TELEGRAM_TOKEN=tu_token_de_telegram
-BOT_DB_PATH=../bd/laida.db
-BOT_CONVERSATIONS_DIR=./conversaciones
+BOT_DB_PATH=../bd/laida.db          # Ruta a la base de datos SQLite
+BOT_CONVERSATIONS_DIR=./conversations  # Directorio para guardar conversaciones
 ```
 
 ### Iniciar Conversación
@@ -329,26 +330,23 @@ FROM bot_interacciones
 GROUP BY tipo;
 ```
 
-## 🔄 Migración desde Bot Anterior
+## Ejecución
 
-El bot anterior (`laidaBot.py`) seguirá funcionando. Para migrar:
+Usa siempre `bot_launcher.py` — selecciona automáticamente entre el bot básico y el GPT:
 
-1. **No requiere cambios en la base de datos**: Las nuevas tablas se crean automáticamente
-2. **Cambiar el script ejecutado**:
-   ```bash
-   # Antes
-   python3 laidaBot.py
-   
-   # Ahora
-   python3 laidaBot_conversacional.py
-   ```
-3. **Actualizar enlaces de inicio**: Cambiar `marca_id` por `bot_id` si es necesario
+```bash
+cd bot
+python3 bot_launcher.py <bot_id>
+```
 
-## 🐛 Troubleshooting
+Si el bot tiene `openai_key` configurada en el dashboard → arranca `laidaBot_gpt.py`.
+Si no tiene key → arranca `laidaBot_conversacional.py` (este archivo).
+
+## Troubleshooting
 
 ### El bot no responde
-- Verificar que `TELEGRAM_TOKEN` esté configurado
-- Verificar conexión a base de datos
+- Verificar que el bot esté **activo** en el Dashboard y tenga un token de Telegram válido
+- Verificar conexión a base de datos (`BOT_DB_PATH` apunta al archivo correcto)
 - Revisar logs en consola
 
 ### Los productos no aparecen
@@ -367,14 +365,14 @@ El bot anterior (`laidaBot.py`) seguirá funcionando. Para migrar:
 4. **Webhooks**: Notificaciones inmediatas en lugar de polling
 5. **Reportes avanzados**: Dashboard de analytics con gráficas
 
-## 🤝 Contribuir
+## Contribuir
 
 Para agregar nuevas funcionalidades:
-1. Actualizar base de datos en `db/init.ts`
-2. Agregar funciones de utilidad en `db/utils.ts`
-3. Crear/actualizar APIs en `app/api/`
+1. Actualizar base de datos en `frontend/db/init.ts`
+2. Agregar funciones de utilidad en `frontend/db/utils.ts`
+3. Crear/actualizar APIs en `frontend/app/api/`
 4. Actualizar bot en `bot/laidaBot_conversacional.py`
-5. Documentar cambios en este README
+5. Documentar cambios en `docs/`
 
 ---
 

@@ -517,3 +517,56 @@ estado: WELCOME
 mensaje_usuario: /start 2
 respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si buscas algo en particular o necesitas recomendaciones, estaré encantado de ayudarte.
 
+====================================
+Fecha: 2026-05-18 19:40:06
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algo en particular o tienes alguna pregunta sobre nuestros productos, no dudes en decírmelo.
+
+====================================
+Fecha: 2026-05-18 19:40:34
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Vi un vaso rosado con una cuchara si es de ustedes?
+respuesta_bot: ¡Sí! Ese vaso es nuestro Mug Cuchara en color rosado. Es un mug de cerámica que viene con una cuchara, perfecto para disfrutar de tus bebidas favoritas. ¿Te gustaría saber más sobre este producto o quizás ver otras opciones?
+
+====================================
+Fecha: 2026-05-18 19:41:02
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: Luz
+respuesta_bot: Mucho gusto, Luz! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-18 19:41:14
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: luz@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-18 19:41:19
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 312446576
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+
+====================================
+Fecha: 2026-05-18 19:41:26
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3184623351
+respuesta_bot: ¡Hola, Luz! Gracias por tu interés en el Mug Cuchara, un asesor se pondrá en contacto contigo muy pronto. 😊
+
+✅ *Tus datos:*
+📦 Mug Cuchara
+📧 luz@gmail.com
+📞 3184623351
+
