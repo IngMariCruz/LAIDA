@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 
 const stats = [
-  { value: 2500, suffix: "+", label: "PyMEs Activas", color: "text-primary" },
+  { value: 2500, suffix: "+", label: "Negocios Activos", color: "text-primary" },
   { value: 1.2, suffix: "M+", label: "Leads Gestionados", color: "text-secondary-foreground" },
   { value: 34, suffix: "%", label: "Más Conversiones", color: "text-accent" },
   { value: 98, suffix: "%", label: "Satisfacción", color: "text-secondary-foreground" },

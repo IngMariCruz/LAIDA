@@ -312,6 +312,8 @@ def get_conversation_context(user_id: int, productos: List[Dict[str, Any]], esen
     
     if esencia:
         context += f"Información de la marca:\n"
+        if get_esencia_marca(esencia.get("marca_id")):
+            context += f"- Marca: {get_esencia_marca(esencia['marca_id']).get('marca_nombre', '')}\n"
         if esencia.get("valores"):
             context += f"- Valores: {esencia['valores']}\n"
         if esencia.get("diferencia"):
@@ -335,7 +337,6 @@ def get_conversation_context(user_id: int, productos: List[Dict[str, Any]], esen
     context += "- Haz preguntas para entender las necesidades del cliente\n"
     context += "- Recomienda productos basándote en lo que el cliente menciona\n"
     context += "- No inventes información sobre productos que no existen\n"
-    context += "- Sé breve y directo (máximo 2-3 oraciones)\n"
     
     return context
 
@@ -864,8 +865,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             save_interaccion(bot_id, user_id, "compra", producto_seleccionado["id"] if producto_seleccionado else None, detalles_compra)
         
         # Mensaje de confirmación final personalizado con GPT
-        contexto_final = f"Genera un mensaje de agradecimiento personalizado para un cliente que acaba de dejar sus datos. Producto: {producto_seleccionado['nombre'] if producto_seleccionado else 'varios'}"
-        
+        nombre_cliente = data.get("nombre", "")
+        producto_nombre = producto_seleccionado['nombre'] if producto_seleccionado else 'varios'
+        contexto_final = (
+            f"Genera un mensaje de agradecimiento MUY CORTO (máximo 2 oraciones) para un chat de ventas. "
+            f"Dirígete al cliente por su nombre: {nombre_cliente}. "
+            f"Producto de interés: {producto_nombre}. "
+            f"Menciona que un asesor lo contactará pronto. "
+            f"Tono: amigable y directo, como un mensaje de chat, NO como un correo formal."
+        )
+
         try:
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -873,17 +882,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     {"role": "user", "content": contexto_final}
                 ],
                 temperature=0.8,
-                max_tokens=150
+                max_tokens=80
             )
-            
+
             respuesta = response.choices[0].message.content.strip()
         except:
-            respuesta = flow_config.get("mensaje_agradecimiento", "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊")
-        
-        if producto_seleccionado:
-            respuesta += f"\n\n📦 Producto: {producto_seleccionado['nombre']}"
-        
-        respuesta += f"\n📧 Email: {data['email']}\n📞 Teléfono: {data['phone']}"
+            respuesta = flow_config.get("mensaje_agradecimiento", f"¡Gracias{', ' + nombre_cliente if nombre_cliente else ''}! Un asesor se pondrá en contacto contigo pronto. 😊")
+
+        confirmacion = f"\n\n✅ *Tus datos:*\n📦 {producto_nombre}\n📧 {data['email']}\n📞 {data['phone']}"
+        respuesta += confirmacion
         
         await update.message.reply_text(respuesta)
         guardar_conversacion(bot_id, user_id, state, text, respuesta)

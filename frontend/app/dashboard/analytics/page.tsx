@@ -23,6 +23,11 @@ interface Marca {
   nombre_marca: string
 }
 
+interface Producto {
+  id: number
+  nombre: string
+}
+
 interface AnalyticsData {
   totalLeads: number
   leadsByCategory: { categoria: string; count: number }[]
@@ -41,15 +46,18 @@ export default function AnalyticsPage() {
   const [marcasLoading, setMarcasLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [productPage, setProductPage] = useState(0)
+  const [productos, setProductos] = useState<Producto[]>([])
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
 
-  const fetchAnalytics = async (marcaIdParam: number | null) => {
+  const fetchAnalytics = async (marcaIdParam: number | null, productoIdParam: number | null = null) => {
     setLoading(true)
     setError('')
     try {
       const token = localStorage.getItem('token')
       if (!token) { router.push('/login'); return }
 
-      const qs = marcaIdParam ? `?marcaId=${marcaIdParam}` : ''
+      let qs = marcaIdParam ? `?marcaId=${marcaIdParam}` : ''
+      if (productoIdParam) qs += `${qs ? '&' : '?'}productoId=${productoIdParam}`
       const res = await fetch(`/api/analytics/overview${qs}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -83,9 +91,9 @@ export default function AnalyticsPage() {
         setMarcasLoading(false)
         if (rol !== 'super_admin' && list.length > 0) {
           setMarcaId(list[0].id)
-          fetchAnalytics(list[0].id)
+          fetchAnalytics(list[0].id, null)
         } else {
-          fetchAnalytics(null)
+          fetchAnalytics(null, null)
         }
       })
       .catch(() => {
@@ -93,6 +101,15 @@ export default function AnalyticsPage() {
         fetchAnalytics(null)
       })
   }, [router])
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!marcaId) { setProductos([]); setSelectedProductId(null); return }
+    fetch(`/api/productos?marcaId=${marcaId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then((list: Producto[]) => setProductos(list.filter(p => p.nombre)))
+      .catch(() => setProductos([]))
+  }, [marcaId])
 
   const totalPages = Math.ceil((data?.popularProducts.length ?? 0) / PRODUCTS_PER_PAGE)
   const pagedProducts = data?.popularProducts.slice(
@@ -122,7 +139,8 @@ export default function AnalyticsPage() {
                 onValueChange={(value) => {
                   const id = value === "todas" ? null : Number.parseInt(value, 10)
                   setMarcaId(id)
-                  fetchAnalytics(id)
+                  setSelectedProductId(null)
+                  fetchAnalytics(id, null)
                 }}
               >
                 <SelectTrigger>
@@ -152,8 +170,28 @@ export default function AnalyticsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle>Leads por categoría</CardTitle>
+              {productos.length > 0 && (
+                <Select
+                  value={selectedProductId?.toString() ?? "todos"}
+                  onValueChange={(value: string) => {
+                    const pid = value === "todos" ? null : Number.parseInt(value, 10)
+                    setSelectedProductId(pid)
+                    fetchAnalytics(marcaId, pid)
+                  }}
+                >
+                  <SelectTrigger className="w-44">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos los productos</SelectItem>
+                    {productos.map((p: Producto) => (
+                      <SelectItem key={p.id} value={p.id.toString()}>{p.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </CardHeader>
             <CardContent>
               {data?.leadsByCategory && (

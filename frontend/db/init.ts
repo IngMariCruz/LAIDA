@@ -623,7 +623,13 @@ function seedInitialData(database: DatabaseType): void {
 
     // 50 Leads PADIA
     const estados = ['nuevo', 'contactado', 'cerrado'] as const
-    const categorias = ['cold', 'warm', 'hot'] as const
+    // Básico (25): 41% hot=10, 34% warm=9, 25% cold=6 | Intermedio (26): 76% warm=20, 24% cold=6 | Avanzado (25): 68% hot=17, 32% warm=8
+    const catPorProducto: string[][] = [
+      [...Array(10).fill('hot'), ...Array(9).fill('warm'), ...Array(6).fill('cold')],
+      [...Array(20).fill('warm'), ...Array(6).fill('cold')],
+      [...Array(17).fill('hot'), ...Array(8).fill('warm')],
+    ]
+    const catContadores: number[] = [0, 0, 0]
     const nombresSeed = [
       'Andrés García', 'María Rodríguez', 'Carlos López', 'Laura Martínez', 'Juan Pérez',
       'Sofía Torres', 'Diego Herrera', 'Valentina Castro', 'Felipe Morales', 'Camila Vargas',
@@ -638,10 +644,10 @@ function seedInitialData(database: DatabaseType): void {
     `)
 
     const leadTx = database.transaction(() => {
-      for (let i = 1; i <= 50; i++) {
+      for (let i = 1; i <= 76; i++) {
         const estado = estados[i % estados.length]
-        const categoria = categorias[i % categorias.length]
         const prodIndex = i % productoIds.length
+        const categoria = catPorProducto[prodIndex][catContadores[prodIndex]++]
         insertLead.run(
           nombresSeed[i % nombresSeed.length],
           padiaBotId,

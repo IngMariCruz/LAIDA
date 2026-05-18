@@ -24,7 +24,7 @@ export default function Sidebar() {
   const items = useMemo(() => [
     { label: "Dashboard", href: "/dashboard", icon: FileText },
     { label: "Leads", href: "/dashboard/leads", icon: FileText },
-    { label: "Analytics", href: "/dashboard/analytics", icon: Star },
+    { label: "Análisis", href: "/dashboard/analytics", icon: Star },
     { label: "Clientes", href: "/dashboard/clientes", icon: Users },
     { label: "Productos", href: "/dashboard/productos", icon: Package },
     { label: "Campañas", href: "/dashboard/campaigns", icon: Star },

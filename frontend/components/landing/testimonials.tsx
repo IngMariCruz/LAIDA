@@ -25,7 +25,7 @@ const testimonials = [
     avatar: "AM",
     avatarBg: "bg-accent",
     quote:
-      "Como PyME, necesitábamos algo simple pero poderoso. LAIDA es exactamente eso. El lead scoring nos cambió el juego completamente.",
+      "Somos un negocio pequeño y necesitábamos algo simple pero poderoso. LAIDA es exactamente eso. El bot de IA nos cambió el juego completamente.",
     stars: 5,
   },
 ]

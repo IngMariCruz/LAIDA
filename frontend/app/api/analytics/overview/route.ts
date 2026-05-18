@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const marcaIdParam = searchParams.get('marcaId')
     const marcaId = marcaIdParam ? Number(marcaIdParam) : null
+    const productoIdParam = searchParams.get('productoId')
+    const productoId = productoIdParam ? Number(productoIdParam) : null
 
     let botFilter = ''
     let botFilterAliasL = ''
@@ -38,10 +40,15 @@ export async function GET(request: NextRequest) {
     const totalLeads = db.prepare(`SELECT COUNT(*) as count FROM leads ${botFilter}`)
       .get(...params)?.count ?? 0
 
-    // leads by category
+    // leads by category (con filtro opcional por producto)
+    let catProductoFilter = ''
+    if (productoId) {
+      catProductoFilter = botFilter ? ` AND producto_id = ?` : ` WHERE producto_id = ?`
+    }
+    const catParams = productoId ? [...params, productoId] : params
     const leadsByCategory = db.prepare(
-      `SELECT categoria, COUNT(*) as count FROM leads ${botFilter} GROUP BY categoria`
-    ).all(...params)
+      `SELECT categoria, COUNT(*) as count FROM leads ${botFilter}${catProductoFilter} GROUP BY categoria`
+    ).all(...catParams)
 
     // leads by bot
     const leadsByBot = db.prepare(`
@@ -70,8 +77,10 @@ export async function GET(request: NextRequest) {
     let prodParams: any[] = []
 
     if (user.rol === 'manager') {
-      prodJoinExtra = ` AND l.bot_id IN (${params.map(() => '?').join(',')})`
-      prodParams = params
+      const placeholders = params.map(() => '?').join(',')
+      prodJoinExtra = ` AND l.bot_id IN (${placeholders})`
+      prodWhere = `WHERE p.marca_id IN (SELECT DISTINCT marca_id FROM bots WHERE id IN (${placeholders}))`
+      prodParams = [...params, ...params]
     } else if (marcaId) {
       prodWhere = `WHERE p.marca_id = ?`
       prodParams = [marcaId]

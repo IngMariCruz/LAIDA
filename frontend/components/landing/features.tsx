@@ -71,7 +71,7 @@ export function Features() {
             <span className="text-secondary">crecer</span>
           </h2>
           <p className="mt-4 text-pretty text-lg leading-relaxed text-muted-foreground">
-            Herramientas poderosas diseñadas específicamente para PyMEs que quieren escalar su negocio sin complicaciones.
+            Herramientas poderosas diseñadas para micro y pequeñas empresas que quieren crecer su negocio sin complicaciones.
           </p>
         </div>
 

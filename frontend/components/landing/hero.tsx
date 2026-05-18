@@ -17,7 +17,7 @@ export function Hero() {
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border-2 border-secondary/40 bg-secondary/10 px-5 py-2">
             <Sparkles className="h-4 w-4 text-secondary" />
             <span className="text-sm font-semibold text-secondary-foreground">
-              Plataforma #1 para PyMEs
+              Plataforma para micro y pequeñas empresas
             </span>
           </div>
 
@@ -75,7 +75,7 @@ export function Hero() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              <span className="font-bold text-foreground">+2,500 PyMEs</span> ya gestionan sus leads con LAIDA
+              <span className="font-bold text-foreground">+2,500 negocios</span> ya gestionan sus leads con LAIDA
             </p>
           </div>
 
