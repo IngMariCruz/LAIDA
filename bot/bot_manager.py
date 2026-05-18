@@ -42,15 +42,15 @@ def cargar_bots_activos() -> List[Dict]:
         return []
 
 
-def ejecutar_bot(bot_slug: str):
+def ejecutar_bot(bot_id: int):
     """Ejecuta un bot en un proceso separado"""
-    print(f"🚀 Iniciando proceso para bot: {bot_slug}")
-    
-    # Ejecutar el script del bot con el slug como argumento
+    print(f"🚀 Iniciando proceso para bot id: {bot_id}")
+
+    # bot_launcher decide si usar GPT o modo básico según la openai_key en BD
     subprocess.run([
         sys.executable,
-        "laidaBot_multitenant.py",
-        bot_slug
+        "bot_launcher.py",
+        str(bot_id)
     ])
 
 
@@ -76,10 +76,10 @@ def main():
     procesos = []
     
     for bot in bots:
-        proceso = Process(target=ejecutar_bot, args=(bot['slug'],))
+        proceso = Process(target=ejecutar_bot, args=(bot['id'],))
         proceso.start()
         procesos.append(proceso)
-        print(f"✓ Proceso iniciado para '{bot['nombre']}'")
+        print(f"✓ Proceso iniciado para '{bot['nombre']}' (id={bot['id']})")
     
     print(f"\n🤖 {len(procesos)} bot(s) en ejecución...")
     print("Presiona Ctrl+C para detener todos los bots\n")

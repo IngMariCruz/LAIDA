@@ -331,14 +331,23 @@ export default function CampaignsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="categoria_filter">Filtrar por categoría (hot/warm/cold)</Label>
-                <Input
-                  id="categoria_filter"
-                  value={form.categoria_filter}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setForm({ ...form, categoria_filter: e.target.value })
+                <Label htmlFor="categoria_filter">Filtrar por categoría</Label>
+                <Select
+                  value={form.categoria_filter || "todas"}
+                  onValueChange={(val: string) =>
+                    setForm({ ...form, categoria_filter: val === "todas" ? "" : val })
                   }
-                />
+                >
+                  <SelectTrigger id="categoria_filter">
+                    <SelectValue placeholder="Todas las categorías" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas las categorías</SelectItem>
+                    <SelectItem value="cold">Frío</SelectItem>
+                    <SelectItem value="warm">Tibio</SelectItem>
+                    <SelectItem value="hot">Caliente</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="bot_id">Bot</Label>
@@ -459,12 +468,22 @@ export default function CampaignsPage() {
                             </Select>
                           </td>
                           <td className="px-2 py-1">
-                            <Input
-                              value={editForm.categoria_filter}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setEditForm({ ...editForm, categoria_filter: e.target.value })
+                            <Select
+                              value={editForm.categoria_filter || "todas"}
+                              onValueChange={(val: string) =>
+                                setEditForm({ ...editForm, categoria_filter: val === "todas" ? "" : val })
                               }
-                            />
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Todas las categorías" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="todas">Todas las categorías</SelectItem>
+                                <SelectItem value="cold">Frío</SelectItem>
+                                <SelectItem value="warm">Tibio</SelectItem>
+                                <SelectItem value="hot">Caliente</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </td>
                           <td className="px-2 py-1">
                             <Input

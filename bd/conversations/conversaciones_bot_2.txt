@@ -50,3 +50,213 @@ respuesta_bot: ¡Gracias! 🎉 Hemos confirmado tus datos:
 
 En breve alguien del equipo te contactará.
 
+[2026-05-17 23:04:38] bot=2 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Soy el asistente de *Bot Paloma*. Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-05-17 23:04:38] bot=2 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *CARAMAÑOLAS*
+  1. Caramañola #0023 — $50.000
+
+🔹 *MUGS*
+  2. Mug Corazón Color — $25.000
+  3. Mug Mágico — $27.000
+  4. Mug Blanco — $22.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-05-17 23:05:05] bot=2 user=1578862237 estado=WAIT_INTEREST
+  >>> Ver todos los
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Color — $20.000
+  3. Mug Mágico — $27.000
+  4. Mug con Cuchara — $27.000
+  5. Mug con Tapa de Caucho — $31.000
+  6. Mug Corazón Color — $25.000
+
+🔹 *CARAMAÑOLAS*
+  7. Caramañola #0023 — $50.000
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-05-17 23:05:28] bot=2 user=1578862237 estado=WAIT_SELECTION
+  >>> Que es el muy de tapa caucho?
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Color — $20.000
+  3. Mug Mágico — $27.000
+  4. Mug con Cuchara — $27.000
+  5. Mug con Tapa de Caucho — $31.000
+  6. Mug Corazón Color — $25.000
+
+🔹 *CARAMAÑOLAS*
+  7. Caramañola #0023 — $50.000
+
+[2026-05-17 23:05:39] bot=2 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> 5
+  <<< Aquí tienes los detalles:
+
+🏷️ *Mug con Tapa de Caucho*
+💰 Precio: *$31.000*
+
+Mug con tapa de caucho, marca Liceria.
+• *Categoría:* MUGS
+• *Brand:* Liceria
+• *Material:* Wood
+• *Dimension:* 20 CM x 30 CM
+• *Colores:* No especificado
+
+¿Te gustaría adquirir *Mug con Tapa de Caucho*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-05-17 23:05:41] bot=2 user=1578862237 estado=GET_NOMBRE_TRIGGER
+  >>> 
+  <<< ¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?
+
+[2026-05-17 23:05:49] bot=2 user=1578862237 estado=GET_NOMBRE
+  >>> Mariana
+  <<< Gracias, *Mariana*! ¿Cuál es tu *correo electrónico*?
+
+[2026-05-17 23:06:01] bot=2 user=1578862237 estado=GET_EMAIL
+  >>> Mari@gmail.con
+  <<< Gracias. Ahora comparte tu *número de teléfono* (10 dígitos).
+
+[2026-05-17 23:06:08] bot=2 user=1578862237 estado=GET_PHONE
+  >>> 3175428852
+  <<< ¡Listo! 🎉 Nuestro equipo te contactará pronto.
+
+📋 *Resumen de tu registro:*
+• Nombre: Mariana
+• Interés: Ver todos los
+• Correo: Mari@gmail.con
+• Teléfono: 3175428852
+
+Escribe /start si deseas hacer otra consulta.
+
+====================================
+Fecha: 2026-05-17 23:18:19
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o algún otro producto, estaré encantado de ayudarte a encontrar lo que necesitas.
+
+====================================
+Fecha: 2026-05-17 23:18:53
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Vi un mug como con una cuchara
+respuesta_bot: ¡Claro! Tenemos el Mug con Cuchara, que es de la marca Liceria y está hecho de madera. Cuesta $27,000. ¿Te gustaría saber más sobre él o necesitas ayuda con otra cosa?
+
+====================================
+Fecha: 2026-05-17 23:20:58
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Ho@jfos.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 23:21:10
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 27482478325
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+
+====================================
+Fecha: 2026-05-17 23:21:20
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3173742248
+respuesta_bot: Asunto: ¡Gracias por tu interés en nuestro Mug con Cuchara!
+
+Hola [Nombre del Cliente],
+
+¡Esperamos que estés teniendo un día maravilloso! Queremos agradecerte sinceramente por dejar tus datos y mostrar interés en nuestro exclusivo Mug con Cuchara. 
+
+Estamos emocionados de que estés considerando darle un toque especial a tus momentos de café o té con este práctico y elegante producto. Ya sea para disfrutar de tus bebidas favoritas o como un regalo único, estamos seguros de que te encantará.
+
+Si tienes alguna pregunta o necesitas más información sobre el Mug con Cuchara, no dudes en contactarnos. Estamos aquí para ayudarte.
+
+¡Gracias nuevamente y esperamos verte pronto!
+
+Saludos cordiales,
+
+[Tu Nombre]  
+[Tu Puesto
+
+📦 Producto: Mug con Cuchara
+📧 Email: Ho@jfos.com
+📞 Teléfono: 3173742248
+
+====================================
+Fecha: 2026-05-17 23:28:04
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o tienes alguna pregunta en particular, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-17 23:28:15
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Quiero un mug cuchara
+respuesta_bot: ¡Excelente elección! El mug con cuchara, de la marca Liceria, tiene un diseño práctico y funcional. Su precio es de $27,000. ¿Te gustaría que te ayude con la compra o necesitas más información?
+
+====================================
+Fecha: 2026-05-17 23:28:26
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: Mariana Cruz
+respuesta_bot: Mucho gusto, Mariana Cruz! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-17 23:28:36
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Hangon@jfjd.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 23:28:45
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3172945524
+respuesta_bot: ¡Hola [Nombre del Cliente]!
+
+Queremos agradecerte sinceramente por dejar tus datos y mostrar interés en nuestro Mug con Cuchara. Tu apoyo significa mucho para nosotros y estamos emocionados de que estés considerando añadir este elegante y práctico producto a tu colección.
+
+Nuestro Mug con Cuchara está diseñado no solo para disfrutar de tus bebidas favoritas, sino también para ofrecerte comodidad y estilo en cada sorbo. Estamos seguros de que te encantará tanto como a nosotros.
+
+Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos. Estamos aquí para ayudarte.
+
+¡Gracias de nuevo y esperamos verte pronto!
+
+Saludos cordiales,
+
+[Tu Nombre]  
+[Tu Empresa]  
+[Tu Información de Contacto]
+
+📦 Producto: Mug con Cuchara
+📧 Email: Hangon@jfjd.com
+📞 Teléfono: 3172945524
+

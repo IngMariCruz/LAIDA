@@ -563,258 +563,148 @@ function initTables(database: DatabaseType): void {
     // ignore
   }
 
-  seedDemoData(database)
-  ensureDemoLeads(database)
+  seedInitialData(database)
 }
 
-function seedDemoData(database: DatabaseType): void {
+function seedInitialData(database: DatabaseType): void {
   try {
-    const hasAnyBot = database.prepare("SELECT 1 FROM bots LIMIT 1").get()
-    const hasAnyProduct = database.prepare("SELECT 1 FROM productos LIMIT 1").get()
-    const hasAnyEssence = database.prepare("SELECT 1 FROM esencia LIMIT 1").get()
-    const hasAnyConfig = database.prepare("SELECT 1 FROM config_bot LIMIT 1").get()
+    const managerCount = database.prepare(
+      "SELECT COUNT(1) AS cnt FROM usuarios WHERE rol = 'manager'"
+    ).get() as { cnt: number }
 
-    if (hasAnyBot || hasAnyProduct || hasAnyEssence || hasAnyConfig) return
+    if (Number(managerCount.cnt) > 0) return
 
-    const managerEmail = "demo@laida.com"
-    const existingManager = database
-      .prepare("SELECT id FROM usuarios WHERE correo = ?")
-      .get(managerEmail) as { id: number } | undefined
+    const toSqlite = (d: Date) => d.toISOString().replace('T', ' ').slice(0, 19)
+    const now = new Date()
 
-    let managerId = existingManager?.id
-    if (!managerId) {
-      const result = database.prepare(
-        "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
-      ).run(managerEmail, "demo123", "manager", "Demo Manager")
-      managerId = Number(result.lastInsertRowid)
-    }
+    // ---- Manager PALOMA (sin leads ni productos) ----
+    const palomaResult = database.prepare(
+      "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+    ).run('paloma@laida.com', 'paloma123', 'manager', 'Manager Paloma')
+    const palomaId = Number(palomaResult.lastInsertRowid)
 
-    // Crear marca demo
-    let marcaId: number
-    const existingMarca = database
-      .prepare("SELECT id FROM marcas WHERE usuario_id = ?")
-      .get(managerId) as { id: number } | undefined
+    database.prepare(
+      "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
+    ).run(palomaId, 'PALOMA')
 
-    if (!existingMarca) {
-      const result = database.prepare(
-        "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
-      ).run(managerId, "Marca Demo")
-      marcaId = Number(result.lastInsertRowid)
-    } else {
-      marcaId = existingMarca.id
-    }
+    // ---- Manager PADIA ----
+    const padiaResult = database.prepare(
+      "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+    ).run('padia@laida.com', 'padia123', 'manager', 'Manager Padia')
+    const padiaManagerId = Number(padiaResult.lastInsertRowid)
 
-    // Crear bot demo
-    const botSlug = "bot-demo"
-    const existingBot = database
-      .prepare("SELECT id FROM bots WHERE slug = ?")
-      .get(botSlug) as { id: number } | undefined
+    const padiaMarcaResult = database.prepare(
+      "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
+    ).run(padiaManagerId, 'PADIA')
+    const padiaMarcaId = Number(padiaMarcaResult.lastInsertRowid)
 
-    let botId = existingBot?.id
-    if (!botId) {
-      const result = database.prepare(
-        `INSERT INTO bots (nombre, slug, telegram_token, openai_key, estado, manager_id, marca_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).run(
-        "Bot Demo",
-        botSlug,
-        "000000:demo-token",
-        null,
-        "inactivo",
-        managerId,
-        marcaId
-      )
-      botId = Number(result.lastInsertRowid)
-    }
-
-    try {
-      database
-        .prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
-        .run(managerId, botId)
-    } catch {
-      // ignore
-    }
-
-    database
-      .prepare("INSERT OR IGNORE INTO config_bot (marca_id, mensaje_bienvenida) VALUES (?, ?)")
-      .run(marcaId, "¡Hola! Soy tu asistente. ¿Qué estás buscando hoy?")
-
-    database
-      .prepare("INSERT OR IGNORE INTO esencia (valores, diferencia, historia, marca_id) VALUES (?, ?, ?, ?)")
-      .run(
-        "Calidad, confianza, cercanía",
-        "Atención personalizada y respuesta rápida",
-        "Somos una marca enfocada en ayudarte a elegir mejor.",
-        marcaId
-      )
-
+    // Productos PADIA
     const insertProducto = database.prepare(
-      `INSERT INTO productos (nombre, precio, marca_id, descripcion, activo) VALUES (?, ?, ?, ?, ?)`
+      "INSERT INTO productos (nombre, precio, marca_id, descripcion, activo) VALUES (?, ?, ?, ?, ?)"
     )
-    insertProducto.run("Producto Demo A", 10000, marcaId, "Descripción demo del producto A", 1)
-    insertProducto.run("Producto Demo B", 25000, marcaId, "Descripción demo del producto B", 1)
-    insertProducto.run("Producto Demo C", 0, marcaId, "Precio a consultar", 1)
+    const prod1 = insertProducto.run('Curso IA Básico', 150000, padiaMarcaId, 'Introducción a la inteligencia artificial y sus aplicaciones prácticas.', 1)
+    const prod2 = insertProducto.run('Curso IA Intermedio', 280000, padiaMarcaId, 'Modelos de aprendizaje automático y procesamiento de datos avanzado.', 1)
+    const prod3 = insertProducto.run('Curso IA Avanzado', 450000, padiaMarcaId, 'Deep learning, redes neuronales y proyectos de IA aplicada.', 1)
+    const productoIds = [
+      Number(prod1.lastInsertRowid),
+      Number(prod2.lastInsertRowid),
+      Number(prod3.lastInsertRowid),
+    ]
+    const productoNombres = ['Curso IA Básico', 'Curso IA Intermedio', 'Curso IA Avanzado']
 
-    database
-      .prepare(
-        `INSERT OR IGNORE INTO bot_flow_config (
-           bot_id, mensaje_bienvenida, mensaje_sin_interes, mensaje_productos,
-           mensaje_caracteristicas, mensaje_confirmacion, mensaje_agradecimiento,
-           mostrar_productos_inicio, max_productos_mostrar, permitir_recomendaciones
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .run(
-        botId,
-        "¡Hola! 👋 Bienvenido a nuestra tienda.",
-        "Entiendo. Antes de irte, ¿quieres que te muestre algunos productos?",
-        "¿Te gustaría ver nuestros productos disponibles?",
-        "¿Qué características te interesan?",
-        "¿Deseas confirmar tu interés en este producto?",
-        "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊",
-        1,
-        5,
-        1
-      )
+    // Bot demo PADIA (inactivo)
+    const botResult = database.prepare(
+      "INSERT INTO bots (nombre, slug, telegram_token, estado, manager_id, marca_id) VALUES (?, ?, ?, ?, ?, ?)"
+    ).run('Bot PADIA', 'bot-padia', '000000:padia-token', 'inactivo', padiaManagerId, padiaMarcaId)
+    const padiaBotId = Number(botResult.lastInsertRowid)
 
-    console.log("✅ Precarga demo aplicada (BD vacía)")
-  } catch {
-    // No bloquear arranque si el seed falla
-  }
-}
+    database.prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
+      .run(padiaManagerId, padiaBotId)
 
-function ensureDemoLeads(database: DatabaseType): void {
-  try {
-    if (process.env.NODE_ENV === "production") return
-
-    const managerEmail = "demo@laida.com"
-    const manager = database
-      .prepare("SELECT id FROM usuarios WHERE correo = ?")
-      .get(managerEmail) as { id: number } | undefined
-    if (!manager) return
-
-    const marca = database
-      .prepare("SELECT id FROM marcas WHERE usuario_id = ?")
-      .get(manager.id) as { id: number } | undefined
-
-    const bot = database
-      .prepare("SELECT id, slug, nombre FROM bots WHERE slug = ?")
-      .get("bot-demo") as { id: number; slug: string; nombre: string } | undefined
-    if (!bot) return
-
-    const row = database
-      .prepare("SELECT COUNT(1) AS cnt FROM leads WHERE bot_id = ?")
-      .get(bot.id) as { cnt: number } | undefined
-
-    const current = Number(row?.cnt ?? 0)
-    const target = 52
-
-    const estados = ["nuevo", "contactado", "cerrado"] as const
-    const categorias = ["cold", "warm", "hot"] as const
-    const intereses = [
-      "Producto Demo A",
-      "Producto Demo B",
-      "Producto Demo C",
-      "Consulta general",
-      "Cotización",
-      "Disponibilidad",
+    // 50 Leads PADIA
+    const estados = ['nuevo', 'contactado', 'cerrado'] as const
+    const categorias = ['cold', 'warm', 'hot'] as const
+    const nombresSeed = [
+      'Andrés García', 'María Rodríguez', 'Carlos López', 'Laura Martínez', 'Juan Pérez',
+      'Sofía Torres', 'Diego Herrera', 'Valentina Castro', 'Felipe Morales', 'Camila Vargas',
+      'Sebastián Ruiz', 'Isabella Sánchez', 'David Jiménez', 'Lucía Gómez', 'Mateo Díaz',
     ]
 
-    const insert = database.prepare(`
-      INSERT OR IGNORE INTO leads (
+    const insertLead = database.prepare(`
+      INSERT INTO leads (
         nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
-        telegram_user_id, estado, categoria, notas, actualizado_en
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        telegram_user_id, estado, categoria, producto_id, marca_id, notas
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
-    if (current < target) {
-      const tx = database.transaction(() => {
-        for (let i = 1; i <= target; i++) {
-          const telegramUserId = 9100000000 + i
-          const estado = estados[i % estados.length]
-          const categoria = categorias[i % categorias.length]
-          const interes = intereses[i % intereses.length]
-
-          const isPlaceholder = i % 10 === 0
-          const nombre = i % 5 === 0 ? null : `Lead Demo ${i}`
-          const email = isPlaceholder ? "lead@laida.com" : `lead${i}@example.com`
-          const telefono = isPlaceholder ? "00000000" : `300${String(telegramUserId).slice(-7)}`
-
-          insert.run(
-            nombre,
-            bot.id,
-            bot.slug,
-            bot.nombre,
-            interes,
-            email,
-            telefono,
-            telegramUserId,
-            estado,
-            categoria,
-            `Seed demo (${categoria}/${estado})`
-          )
-        }
-      })
-      tx()
-    }
-
-    // Ajustar fechas para que analytics (últimos 7 días) se vea bien
-    try {
-      const leadRows = database
-        .prepare("SELECT id FROM leads WHERE bot_id = ? ORDER BY id ASC")
-        .all(bot.id) as Array<{ id: number }>
-
-      const total = leadRows.length
-      const n = Math.min(total, target)
-      if (n > 0) {
-        const ids = leadRows.slice(-n).map((r) => r.id)
-        const update = database.prepare(
-          "UPDATE leads SET created_at = ?, actualizado_en = ? WHERE id = ?"
+    const leadTx = database.transaction(() => {
+      for (let i = 1; i <= 50; i++) {
+        const estado = estados[i % estados.length]
+        const categoria = categorias[i % categorias.length]
+        const prodIndex = i % productoIds.length
+        insertLead.run(
+          nombresSeed[i % nombresSeed.length],
+          padiaBotId,
+          'bot-padia',
+          'Bot PADIA',
+          productoNombres[prodIndex],
+          `lead${i}@padia-seed.com`,
+          `316${String(8200000000 + i).slice(-7)}`,
+          8200000000 + i,
+          estado,
+          categoria,
+          productoIds[prodIndex],
+          padiaMarcaId,
+          `Seed PADIA (${categoria}/${estado})`
         )
-        const now = new Date()
-        const toSqliteDateTime = (d: Date) =>
-          d.toISOString().replace("T", " ").slice(0, 19)
-
-        const txUpdate = database.transaction(() => {
-          for (let idx = 0; idx < ids.length; idx++) {
-            const dayOffset = (ids.length - 1 - idx) % 7
-            const d = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
-            const hour = 9 + (idx % 9)
-            const minute = (idx * 13) % 60
-            const second = (idx * 7) % 60
-            d.setUTCHours(hour, minute, second, 0)
-            const ts = toSqliteDateTime(d)
-            update.run(ts, ts, ids[idx])
-          }
-        })
-        txUpdate()
       }
-    } catch {
-      // ignore
-    }
+    })
+    leadTx()
 
-    // Backfill producto_id usando marca.id (no manager.id)
-    try {
-      if (marca) {
-        const backfillStmt = database.prepare(`
-          UPDATE leads
-          SET producto_id = (
-            SELECT p.id
-            FROM productos p
-            WHERE p.marca_id = ?
-              AND p.nombre = leads.interes
-            LIMIT 1
-          )
-          WHERE bot_id = ?
-            AND producto_id IS NULL
-            AND interes IS NOT NULL
-        `)
-        backfillStmt.run(marca.id, bot.id)
+    // Distribuir fechas de leads en los últimos 30 días
+    const leadRows = database.prepare(
+      "SELECT id FROM leads WHERE marca_id = ? ORDER BY id ASC"
+    ).all(padiaMarcaId) as Array<{ id: number }>
+
+    const updateDate = database.prepare("UPDATE leads SET created_at = ?, actualizado_en = ? WHERE id = ?")
+    const dateTx = database.transaction(() => {
+      leadRows.forEach((row, idx) => {
+        const dayOffset = Math.floor(idx * 30 / leadRows.length)
+        const d = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
+        d.setUTCHours(9 + (idx % 9), (idx * 13) % 60, (idx * 7) % 60, 0)
+        const ts = toSqlite(d)
+        updateDate.run(ts, ts, row.id)
+      })
+    })
+    dateTx()
+
+    // 10 Clientes PADIA
+    const clientes = [
+      { cedula: '1012345678', nombre: 'Daniela',  apellido: 'Ospina',    correo: 'daniela.ospina@email.com',  telefono: '3101234567' },
+      { cedula: '1023456789', nombre: 'Camilo',   apellido: 'Restrepo',  correo: 'camilo.r@email.com',        telefono: '3112345678' },
+      { cedula: '1034567890', nombre: 'Natalia',  apellido: 'Henao',     correo: 'natalia.h@email.com',       telefono: '3123456789' },
+      { cedula: '1045678901', nombre: 'Andrés',   apellido: 'Cárdenas',  correo: 'andres.c@email.com',        telefono: '3134567890' },
+      { cedula: '1056789012', nombre: 'Marcela',  apellido: 'Zuluaga',   correo: 'marcela.z@email.com',       telefono: '3145678901' },
+      { cedula: '1067890123', nombre: 'Ricardo',  apellido: 'Montoya',   correo: 'ricardo.m@email.com',       telefono: '3156789012' },
+      { cedula: '1078901234', nombre: 'Juliana',  apellido: 'Ríos',      correo: 'juliana.r@email.com',       telefono: '3167890123' },
+      { cedula: '1089012345', nombre: 'Santiago', apellido: 'Bedoya',    correo: 'santiago.b@email.com',      telefono: '3178901234' },
+      { cedula: '1090123456', nombre: 'Valeria',  apellido: 'Arango',    correo: 'valeria.a@email.com',       telefono: '3189012345' },
+      { cedula: '1001234567', nombre: 'Felipe',   apellido: 'Salazar',   correo: 'felipe.s@email.com',        telefono: '3190123456' },
+    ]
+
+    const insertCliente = database.prepare(
+      "INSERT INTO clientes (cedula, nombre, apellido, correo, telefono, marca_id) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    const clienteTx = database.transaction(() => {
+      for (const c of clientes) {
+        insertCliente.run(c.cedula, c.nombre, c.apellido, c.correo, c.telefono, padiaMarcaId)
       }
-    } catch {
-      // ignore
-    }
-  } catch {
-    // No bloquear arranque si el seed falla
+    })
+    clienteTx()
+
+    console.log('✅ Seed inicial aplicado: PALOMA y PADIA creadas')
+  } catch (e) {
+    console.error('Error en seedInitialData:', e)
   }
 }
 

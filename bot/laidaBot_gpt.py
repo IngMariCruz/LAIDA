@@ -53,6 +53,7 @@ STATE_SHOW_PRODUCTS = "SHOW_PRODUCTS"
 STATE_SELECT_PRODUCT = "SELECT_PRODUCT"
 STATE_COLLECT_ATTRIBUTES = "COLLECT_ATTRIBUTES"
 STATE_CONFIRM_PURCHASE = "CONFIRM_PURCHASE"
+STATE_GET_NAME = "GET_NAME"
 STATE_GET_EMAIL = "GET_EMAIL"
 STATE_GET_PHONE = "GET_PHONE"
 STATE_COLD_REENGAGEMENT = "COLD_REENGAGEMENT"
@@ -210,14 +211,15 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
     """Guardar lead en la base de datos"""
     query = """
         INSERT INTO leads (
-            bot_id, bot_slug, bot_nombre, interes, email, telefono,
+            bot_id, bot_slug, bot_nombre, nombre, interes, email, telefono,
             telegram_user_id, estado, categoria, producto_id, marca_id, detalles_compra, notas,
             actualizado_en
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(bot_id, telegram_user_id) DO UPDATE SET
             bot_slug = COALESCE(excluded.bot_slug, leads.bot_slug),
             bot_nombre = COALESCE(excluded.bot_nombre, leads.bot_nombre),
+            nombre = COALESCE(excluded.nombre, leads.nombre),
             interes = COALESCE(NULLIF(excluded.interes, ''), leads.interes),
             email = COALESCE(excluded.email, leads.email),
             telefono = COALESCE(excluded.telefono, leads.telefono),
@@ -238,6 +240,7 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
             bot_id,
             data.get('bot_slug'),
             data.get('bot_nombre'),
+            data.get('nombre'),
             data.get('interes', ''),
             data.get('email'),
             data.get('telefono'),
@@ -552,6 +555,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "marca_id": marca_id,
         "selected_product": None,
         "product_attributes": {},
+        "nombre": None,
         "email": None,
         "phone": None,
         "interes": "",
@@ -765,6 +769,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         
         guardar_conversacion(bot_id, user_id, state, text, respuesta)
     
+    # ===== ESTADO: Obtener nombre =====
+    elif state == STATE_GET_NAME:
+        nombre = text.strip()
+        if len(nombre) < 2:
+            respuesta = "Por favor ingresa tu nombre completo."
+            await update.message.reply_text(respuesta)
+            guardar_conversacion(bot_id, user_id, state, text, respuesta)
+            return
+
+        data["nombre"] = nombre
+        user_state[user_id] = STATE_GET_EMAIL
+
+        respuesta = f"Mucho gusto, {nombre}! 😊 ¿Cuál es tu correo electrónico?"
+        await update.message.reply_text(respuesta)
+        guardar_conversacion(bot_id, user_id, state, text, respuesta)
+
     # ===== ESTADO: Obtener email =====
     elif state == STATE_GET_EMAIL:
         # Intentar extraer email del mensaje con GPT
@@ -828,6 +848,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         lead_id = save_lead(bot_id, user_id, {
             "bot_slug": data["bot_info"].get("slug"),
             "bot_nombre": data["bot_info"].get("nombre"),
+            "nombre": data.get("nombre"),
             "interes": data.get("interes", ""),
             "email": data["email"],
             "telefono": data["phone"],
@@ -1153,9 +1174,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # ===== Confirmación de compra: SÍ =====
     elif callback_data == "confirmar_si":
         data["categoria"] = "hot"
-        user_state[user_id] = STATE_GET_EMAIL
-        
-        respuesta = "¡Genial! 🎉 Para finalizar, necesito algunos datos.\n\n¿Cuál es tu correo electrónico?"
+        user_state[user_id] = STATE_GET_NAME
+
+        respuesta = "¡Genial! 🎉 Para finalizar, necesito algunos datos.\n\n¿Cuál es tu nombre?"
         await query.edit_message_text(respuesta)
 
         try:
@@ -1173,9 +1194,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # ===== Confirmación de compra: LUEGO =====
     elif callback_data == "confirmar_luego":
         data["categoria"] = "warm"
-        user_state[user_id] = STATE_GET_EMAIL
-        
-        respuesta = "Entiendo. De todas formas, déjame tus datos para poder contactarte después.\n\n¿Cuál es tu correo electrónico?"
+        user_state[user_id] = STATE_GET_NAME
+
+        respuesta = "Entiendo. De todas formas, déjame tus datos para poder contactarte después.\n\n¿Cuál es tu nombre?"
         await query.edit_message_text(respuesta)
 
         try:
