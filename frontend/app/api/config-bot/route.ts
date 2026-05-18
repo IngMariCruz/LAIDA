@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getUsuarioById, saveConfigBot, getConfigBotByMarcaId } from "@/db/utils"
+import { getMarcaById, saveConfigBot, getConfigBotByMarcaId } from "@/db/utils"
 import fs from "fs"
 import path from "path"
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const marca = getUsuarioById(marca_id)
+    const marca = getMarcaById(marca_id)
     if (!marca) {
       return NextResponse.json(
         {

@@ -1,0 +1,601 @@
+lead_id,chuck_id,mensaje_chuck,intencion,pre_precio,lead_clase
+L00177,CHUCK_08,fue un gusto ayudarte. estoy disponible cuando lo necesites.,despedida,0,frio
+L02836,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L02993,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,tibio
+L00882,CHUCK_01,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,frio
+L00246,CHUCK_08,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L02192,CHUCK_08,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L02700,CHUCK_02,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L01354,CHUCK_08,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L02238,CHUCK_01,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L02558,CHUCK_04,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02677,CHUCK_04,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02926,CHUCK_03,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L02459,CHUCK_05,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L02713,CHUCK_03,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00894,CHUCK_08,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02347,CHUCK_08,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L01917,CHUCK_06,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L00179,CHUCK_06,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00611,CHUCK_09,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L02515,CHUCK_03,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L00232,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01914,CHUCK_10,este producto incluye soporte y configuracion inicial.,consulta_producto,1,tibio
+L00347,CHUCK_05,"hola, un gusto saludarte. en que te asesoro?",saludo,1,frio
+L01061,CHUCK_03,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L00328,CHUCK_02,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,1,frio
+L01712,CHUCK_06,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L02199,CHUCK_07,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L02953,CHUCK_03,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L02869,CHUCK_10,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L02613,CHUCK_05,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00565,CHUCK_07,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00025,CHUCK_05,"es normal tener esa inquietud, revisemos alternativas.",objecion,1,frio
+L02892,CHUCK_06,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,tibio
+L00663,CHUCK_10,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L02933,CHUCK_06,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L00446,CHUCK_07,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L02794,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02592,CHUCK_02,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02520,CHUCK_05,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L02107,CHUCK_02,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00166,CHUCK_01,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00343,CHUCK_04,te escribo para dar seguimiento a tu interes.,seguimiento,1,tibio
+L00022,CHUCK_04,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L00982,CHUCK_01,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L01819,CHUCK_06,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L02269,CHUCK_06,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00825,CHUCK_10,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02285,CHUCK_09,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L01030,CHUCK_08,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L01511,CHUCK_10,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L02066,CHUCK_04,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00745,CHUCK_08,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02966,CHUCK_01,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L00100,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L00476,CHUCK_08,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L01223,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,1,frio
+L02391,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,tibio
+L02701,CHUCK_04,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L01639,CHUCK_08,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02788,CHUCK_07,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00145,CHUCK_09,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01907,CHUCK_04,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01096,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L02146,CHUCK_09,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02762,CHUCK_10,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L01579,CHUCK_07,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L02725,CHUCK_01,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L02468,CHUCK_08,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L02503,CHUCK_05,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L00426,CHUCK_05,te comparto los beneficios para tu caso de uso.,consulta_producto,1,frio
+L02410,CHUCK_07,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02022,CHUCK_02,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L02164,CHUCK_08,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L02695,CHUCK_01,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L00276,CHUCK_04,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00237,CHUCK_02,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L00354,CHUCK_05,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L00539,CHUCK_10,"si quieres, te envio una tabla comparativa clara.",comparacion,1,caliente
+L01356,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02505,CHUCK_03,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,frio
+L00990,CHUCK_09,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02446,CHUCK_10,"si quieres, te envio una tabla comparativa clara.",comparacion,1,caliente
+L00455,CHUCK_05,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,tibio
+L02767,CHUCK_07,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01452,CHUCK_10,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L00585,CHUCK_02,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L02799,CHUCK_06,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L02934,CHUCK_03,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,caliente
+L02273,CHUCK_10,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01842,CHUCK_04,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L01145,CHUCK_08,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L01053,CHUCK_10,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L02908,CHUCK_01,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00037,CHUCK_04,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02591,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01958,CHUCK_05,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L00852,CHUCK_02,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L02569,CHUCK_02,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,tibio
+L01889,CHUCK_02,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L00448,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00918,CHUCK_09,retomo la conversacion para ayudarte con la decision.,seguimiento,1,frio
+L02074,CHUCK_06,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00689,CHUCK_07,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L02656,CHUCK_03,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L02954,CHUCK_09,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02215,CHUCK_08,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02999,CHUCK_07,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01829,CHUCK_08,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,caliente
+L01229,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00162,CHUCK_09,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L01481,CHUCK_06,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L02901,CHUCK_10,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L02698,CHUCK_04,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01094,CHUCK_07,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L01151,CHUCK_05,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00303,CHUCK_01,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L01576,CHUCK_06,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02295,CHUCK_06,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L02110,CHUCK_03,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L00394,CHUCK_04,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L01653,CHUCK_04,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L01047,CHUCK_06,fue un gusto ayudarte. estoy disponible cuando lo necesites.,despedida,0,frio
+L01514,CHUCK_05,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,frio
+L01270,CHUCK_02,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L00589,CHUCK_08,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L00950,CHUCK_10,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00038,CHUCK_10,este producto incluye soporte y configuracion inicial.,consulta_producto,1,tibio
+L02633,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L01711,CHUCK_02,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,tibio
+L01493,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01959,CHUCK_10,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L00229,CHUCK_03,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00685,CHUCK_08,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L01913,CHUCK_10,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L00418,CHUCK_07,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00341,CHUCK_04,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00256,CHUCK_05,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L01949,CHUCK_09,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L02333,CHUCK_04,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L01816,CHUCK_01,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L00746,CHUCK_10,"si quieres, te envio una tabla comparativa clara.",comparacion,0,caliente
+L01012,CHUCK_06,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,caliente
+L01310,CHUCK_08,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L01562,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L00806,CHUCK_06,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L00287,CHUCK_05,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00691,CHUCK_02,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L02557,CHUCK_08,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L02262,CHUCK_08,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01466,CHUCK_08,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,caliente
+L00752,CHUCK_07,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L00101,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L02815,CHUCK_03,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,frio
+L00003,CHUCK_01,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01591,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00400,CHUCK_07,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L01872,CHUCK_03,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02302,CHUCK_04,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,frio
+L02841,CHUCK_03,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00469,CHUCK_05,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,tibio
+L00881,CHUCK_10,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L00617,CHUCK_03,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00043,CHUCK_10,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L02183,CHUCK_05,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02736,CHUCK_08,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L00245,CHUCK_09,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00269,CHUCK_02,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,1,caliente
+L00586,CHUCK_01,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01727,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L02053,CHUCK_10,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,caliente
+L02005,CHUCK_04,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02348,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,tibio
+L00080,CHUCK_05,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L00337,CHUCK_03,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L01153,CHUCK_04,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,tibio
+L02612,CHUCK_08,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L01325,CHUCK_05,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L01311,CHUCK_03,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01541,CHUCK_02,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L00679,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L00721,CHUCK_02,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00020,CHUCK_09,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02349,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L02283,CHUCK_07,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L01834,CHUCK_03,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00257,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L00382,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02615,CHUCK_09,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L02226,CHUCK_10,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L02604,CHUCK_02,puedo guiarte para solucionar el problema ahora mismo.,soporte,1,frio
+L00810,CHUCK_10,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,caliente
+L02812,CHUCK_04,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,0,frio
+L00812,CHUCK_10,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L02181,CHUCK_10,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L00216,CHUCK_01,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L00573,CHUCK_04,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00615,CHUCK_10,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L02230,CHUCK_01,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,frio
+L00142,CHUCK_06,retomo la conversacion para ayudarte con la decision.,seguimiento,1,frio
+L01228,CHUCK_02,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L02065,CHUCK_10,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02593,CHUCK_01,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01529,CHUCK_10,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L02413,CHUCK_07,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L01073,CHUCK_09,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02091,CHUCK_04,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,caliente
+L01590,CHUCK_07,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02937,CHUCK_08,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,frio
+L01280,CHUCK_01,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L00569,CHUCK_08,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L01813,CHUCK_10,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L02905,CHUCK_10,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00146,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00273,CHUCK_02,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L02095,CHUCK_02,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L01275,CHUCK_10,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L00658,CHUCK_03,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L01920,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02012,CHUCK_08,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L00315,CHUCK_01,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,tibio
+L01593,CHUCK_08,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L01909,CHUCK_04,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L02247,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L00897,CHUCK_03,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L01903,CHUCK_07,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L02158,CHUCK_10,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L00091,CHUCK_07,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L00523,CHUCK_07,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L02919,CHUCK_04,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L01585,CHUCK_02,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L02114,CHUCK_07,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01800,CHUCK_02,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L00625,CHUCK_06,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,caliente
+L00840,CHUCK_09,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L00361,CHUCK_09,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02741,CHUCK_06,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,tibio
+L02313,CHUCK_05,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L01135,CHUCK_06,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01719,CHUCK_07,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00666,CHUCK_07,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L00332,CHUCK_07,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00159,CHUCK_07,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L01107,CHUCK_06,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L01478,CHUCK_04,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L00757,CHUCK_02,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L02642,CHUCK_05,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L01598,CHUCK_04,te ayudo con soporte tecnico paso a paso.,soporte,1,frio
+L01037,CHUCK_05,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L02291,CHUCK_03,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L01546,CHUCK_02,"si quieres, te envio una tabla comparativa clara.",comparacion,0,tibio
+L01543,CHUCK_03,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L02397,CHUCK_03,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01623,CHUCK_03,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01749,CHUCK_04,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L02842,CHUCK_02,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L00486,CHUCK_09,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L02443,CHUCK_05,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,0,frio
+L01370,CHUCK_01,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01475,CHUCK_03,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02753,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00938,CHUCK_07,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00404,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00802,CHUCK_10,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L02955,CHUCK_05,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02287,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02084,CHUCK_03,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,caliente
+L00046,CHUCK_08,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02415,CHUCK_08,fue un gusto ayudarte. estoy disponible cuando lo necesites.,despedida,0,frio
+L01011,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00458,CHUCK_07,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01680,CHUCK_04,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L02457,CHUCK_07,puedo guiarte para solucionar el problema ahora mismo.,soporte,1,frio
+L02543,CHUCK_02,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02044,CHUCK_04,"si quieres, te envio una tabla comparativa clara.",comparacion,1,tibio
+L01584,CHUCK_03,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L01335,CHUCK_05,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L01264,CHUCK_06,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00058,CHUCK_06,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L01850,CHUCK_10,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L00079,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L01713,CHUCK_01,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L02368,CHUCK_02,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L00223,CHUCK_09,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01117,CHUCK_10,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L00057,CHUCK_04,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L02956,CHUCK_09,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02650,CHUCK_03,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L01611,CHUCK_08,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00017,CHUCK_04,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L02611,CHUCK_04,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01659,CHUCK_02,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00357,CHUCK_10,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L00006,CHUCK_07,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00688,CHUCK_07,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L00441,CHUCK_07,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L01199,CHUCK_01,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L02941,CHUCK_08,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02008,CHUCK_02,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,0,frio
+L02135,CHUCK_06,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L00661,CHUCK_04,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,frio
+L01376,CHUCK_04,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L01016,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00620,CHUCK_07,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L00069,CHUCK_05,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L02748,CHUCK_01,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L00755,CHUCK_06,puedo guiarte para solucionar el problema ahora mismo.,soporte,1,frio
+L00975,CHUCK_09,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00141,CHUCK_01,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L01883,CHUCK_10,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L01536,CHUCK_10,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L02228,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01869,CHUCK_01,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00907,CHUCK_05,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01276,CHUCK_02,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01972,CHUCK_09,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L02752,CHUCK_02,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L00773,CHUCK_01,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,frio
+L02976,CHUCK_01,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L01095,CHUCK_03,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00270,CHUCK_03,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L01253,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00462,CHUCK_06,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,caliente
+L00669,CHUCK_04,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L01886,CHUCK_01,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,1,frio
+L00437,CHUCK_04,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L01255,CHUCK_08,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L01938,CHUCK_03,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01931,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L02969,CHUCK_01,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L00828,CHUCK_06,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L02300,CHUCK_10,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L02009,CHUCK_10,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,tibio
+L02719,CHUCK_08,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L01645,CHUCK_05,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L01759,CHUCK_10,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L02942,CHUCK_08,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L01982,CHUCK_04,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L01559,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00013,CHUCK_07,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,1,tibio
+L02211,CHUCK_09,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L02254,CHUCK_07,"si quieres, te envio una tabla comparativa clara.",comparacion,0,tibio
+L01518,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,tibio
+L02297,CHUCK_10,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02674,CHUCK_02,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01231,CHUCK_09,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L01825,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L01087,CHUCK_04,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01570,CHUCK_04,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L01634,CHUCK_02,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L02590,CHUCK_10,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L02838,CHUCK_02,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02882,CHUCK_04,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,1,tibio
+L01632,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02929,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00529,CHUCK_02,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L01134,CHUCK_07,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01875,CHUCK_03,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,tibio
+L00027,CHUCK_05,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L00937,CHUCK_04,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00074,CHUCK_02,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L00147,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00653,CHUCK_09,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L02017,CHUCK_08,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01993,CHUCK_01,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L01372,CHUCK_09,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,tibio
+L00703,CHUCK_08,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,caliente
+L00014,CHUCK_05,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01984,CHUCK_03,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L01621,CHUCK_06,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L02988,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,caliente
+L01188,CHUCK_10,te explico las caracteristicas principales del producto.,consulta_producto,1,tibio
+L00664,CHUCK_04,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L02045,CHUCK_03,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02124,CHUCK_04,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L01923,CHUCK_01,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L01113,CHUCK_08,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L00606,CHUCK_04,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L01888,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L01815,CHUCK_07,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L01812,CHUCK_06,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L00759,CHUCK_03,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L02990,CHUCK_06,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,tibio
+L01975,CHUCK_08,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L01352,CHUCK_06,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L01415,CHUCK_07,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L02724,CHUCK_02,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,0,frio
+L00138,CHUCK_07,"si quieres, te envio una tabla comparativa clara.",comparacion,1,caliente
+L01873,CHUCK_05,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02646,CHUCK_01,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L01123,CHUCK_10,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L01743,CHUCK_04,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01499,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L02419,CHUCK_05,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01305,CHUCK_08,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,frio
+L00187,CHUCK_03,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01377,CHUCK_08,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02129,CHUCK_07,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L01136,CHUCK_03,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00112,CHUCK_08,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L02802,CHUCK_05,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L00423,CHUCK_01,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L01990,CHUCK_06,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L00917,CHUCK_07,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L00484,CHUCK_08,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00019,CHUCK_04,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L00309,CHUCK_01,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02821,CHUCK_04,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L02029,CHUCK_08,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L00846,CHUCK_04,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,tibio
+L01433,CHUCK_03,"si quieres, te envio una tabla comparativa clara.",comparacion,0,tibio
+L01918,CHUCK_10,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L02900,CHUCK_03,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L00816,CHUCK_09,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L00457,CHUCK_10,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L00877,CHUCK_09,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01638,CHUCK_04,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L02576,CHUCK_06,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,tibio
+L02293,CHUCK_08,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02028,CHUCK_06,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L02784,CHUCK_03,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L01893,CHUCK_04,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L02765,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L02496,CHUCK_06,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02550,CHUCK_08,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02417,CHUCK_09,podemos resolver esa objecion con una opcion mas flexible.,objecion,1,tibio
+L02170,CHUCK_07,retomo la conversacion para ayudarte con la decision.,seguimiento,1,tibio
+L00075,CHUCK_05,retomo la conversacion para ayudarte con la decision.,seguimiento,1,tibio
+L02160,CHUCK_02,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02924,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L01160,CHUCK_09,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L00696,CHUCK_01,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,0,frio
+L00409,CHUCK_05,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L00861,CHUCK_02,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L01042,CHUCK_02,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01597,CHUCK_01,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L00676,CHUCK_02,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L00782,CHUCK_01,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L02578,CHUCK_09,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L01267,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L00850,CHUCK_04,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,1,tibio
+L01735,CHUCK_05,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L01671,CHUCK_01,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L00151,CHUCK_10,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L02940,CHUCK_08,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02970,CHUCK_10,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,tibio
+L01766,CHUCK_06,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00191,CHUCK_02,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L01147,CHUCK_05,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02556,CHUCK_02,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,caliente
+L02461,CHUCK_03,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,caliente
+L01924,CHUCK_06,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00133,CHUCK_10,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L02904,CHUCK_04,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L02522,CHUCK_08,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L01971,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00410,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00218,CHUCK_07,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L01955,CHUCK_01,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L01402,CHUCK_05,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L00406,CHUCK_05,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01863,CHUCK_01,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02453,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,tibio
+L02559,CHUCK_03,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00618,CHUCK_01,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L02981,CHUCK_07,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02715,CHUCK_07,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L00824,CHUCK_07,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02064,CHUCK_01,"perfecto, hablamos pronto. que tengas excelente dia.",despedida,1,frio
+L01244,CHUCK_03,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01779,CHUCK_08,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00306,CHUCK_07,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L01345,CHUCK_09,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L02655,CHUCK_09,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02294,CHUCK_10,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L01946,CHUCK_05,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L01491,CHUCK_03,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L01604,CHUCK_06,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L02268,CHUCK_02,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00255,CHUCK_09,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L01537,CHUCK_03,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L02309,CHUCK_05,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L02610,CHUCK_03,"hola, gracias por contactarnos. como puedo ayudarte hoy?",saludo,0,frio
+L00550,CHUCK_02,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L00168,CHUCK_05,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L01075,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00898,CHUCK_07,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L01115,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L01362,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00958,CHUCK_03,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L02553,CHUCK_05,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L00291,CHUCK_10,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L02385,CHUCK_03,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L01313,CHUCK_09,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L02723,CHUCK_05,puedo guiarte para solucionar el problema ahora mismo.,soporte,0,frio
+L01013,CHUCK_02,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00478,CHUCK_01,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00820,CHUCK_05,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00677,CHUCK_07,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,tibio
+L00989,CHUCK_06,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,1,tibio
+L01020,CHUCK_10,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01032,CHUCK_03,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00207,CHUCK_10,"excelente decision, te ayudo a completar tu compra ahora.",compra,0,caliente
+L00202,CHUCK_03,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,tibio
+L01091,CHUCK_01,"entiendo tu duda, te aclaro ese punto para que decidas con confianza.",objecion,0,tibio
+L00790,CHUCK_04,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L00339,CHUCK_04,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L02565,CHUCK_05,te escribo para dar seguimiento a tu interes.,seguimiento,0,tibio
+L00720,CHUCK_03,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,1,tibio
+L02221,CHUCK_01,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L00660,CHUCK_03,te escribo para dar seguimiento a tu interes.,seguimiento,1,tibio
+L01847,CHUCK_10,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L00504,CHUCK_01,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L02166,CHUCK_09,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L02106,CHUCK_08,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L00443,CHUCK_06,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02014,CHUCK_09,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,tibio
+L01968,CHUCK_04,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00600,CHUCK_04,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,tibio
+L02795,CHUCK_04,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L00087,CHUCK_01,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L01295,CHUCK_10,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L02659,CHUCK_08,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02974,CHUCK_08,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L01467,CHUCK_06,"bienvenido, estoy para ayudarte con toda la informacion.",saludo,0,frio
+L01616,CHUCK_05,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02814,CHUCK_09,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01544,CHUCK_08,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,caliente
+L02334,CHUCK_10,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02600,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L01939,CHUCK_06,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L02043,CHUCK_08,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L00338,CHUCK_02,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L01746,CHUCK_01,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02588,CHUCK_04,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L00648,CHUCK_04,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L01845,CHUCK_05,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L00454,CHUCK_03,retomo la conversacion para ayudarte con la decision.,seguimiento,0,frio
+L01849,CHUCK_03,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,0,caliente
+L01865,CHUCK_04,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L02866,CHUCK_02,te comparo este plan frente a otras alternativas del mercado.,comparacion,0,tibio
+L00722,CHUCK_07,quedo atento para continuar cuando te venga bien.,seguimiento,0,tibio
+L01740,CHUCK_06,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L01273,CHUCK_02,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,tibio
+L02860,CHUCK_08,"si quieres, te envio una tabla comparativa clara.",comparacion,0,tibio
+L00253,CHUCK_05,podemos resolver esa objecion con una opcion mas flexible.,objecion,0,tibio
+L01406,CHUCK_08,vamos a revisar ese inconveniente para resolverlo rapido.,soporte,0,frio
+L01978,CHUCK_10,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L02824,CHUCK_02,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L00932,CHUCK_03,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L00152,CHUCK_08,"excelente decision, te ayudo a completar tu compra ahora.",compra,1,caliente
+L02387,CHUCK_06,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L01833,CHUCK_06,"si quieres, te envio una tabla comparativa clara.",comparacion,1,caliente
+L02687,CHUCK_05,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L00199,CHUCK_02,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L02965,CHUCK_10,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L00709,CHUCK_08,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,caliente
+L00832,CHUCK_05,te explico las caracteristicas principales del producto.,consulta_producto,0,frio
+L02888,CHUCK_04,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02835,CHUCK_06,este producto incluye soporte y configuracion inicial.,consulta_producto,0,frio
+L02517,CHUCK_04,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00595,CHUCK_07,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,tibio
+L00638,CHUCK_06,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L00916,CHUCK_03,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00123,CHUCK_10,te escribo para dar seguimiento a tu interes.,seguimiento,0,frio
+L01688,CHUCK_02,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,tibio
+L02594,CHUCK_09,te explico las caracteristicas principales del producto.,consulta_producto,0,tibio
+L01202,CHUCK_05,quedo atento para continuar cuando te venga bien.,seguimiento,0,frio
+L00352,CHUCK_03,te comparo este plan frente a otras alternativas del mercado.,comparacion,1,tibio
+L01882,CHUCK_04,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,1,caliente
+L01033,CHUCK_01,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L00297,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L02382,CHUCK_01,quedo atento para continuar cuando te venga bien.,seguimiento,1,tibio
+L02194,CHUCK_01,"en relacion calidad-precio, esta opcion destaca por soporte y resultados.",comparacion,1,tibio
+L02481,CHUCK_09,"es normal tener esa inquietud, revisemos alternativas.",objecion,0,frio
+L00072,CHUCK_02,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,tibio
+L00925,CHUCK_04,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L00194,CHUCK_01,"si te parece, coordinamos una demostracion personalizada.",agendar_demo,0,tibio
+L01256,CHUCK_01,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L01692,CHUCK_02,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,caliente
+L02727,CHUCK_05,"perfecto, te comparto el link de pago para cerrar la compra.",compra,1,caliente
+L02635,CHUCK_02,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L01239,CHUCK_04,este producto incluye soporte y configuracion inicial.,consulta_producto,0,tibio
+L01589,CHUCK_03,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01965,CHUCK_05,"si, te puedo detallar precios y promociones vigentes.",consulta_precio,1,tibio
+L00236,CHUCK_02,"gracias por tu tiempo, quedo atento a cualquier consulta.",despedida,0,frio
+L02365,CHUCK_06,"tengo disponibilidad para demo, te paso horarios.",agendar_demo,0,tibio
+L00726,CHUCK_09,retomo la conversacion para ayudarte con la decision.,seguimiento,0,tibio
+L01142,CHUCK_04,te comparto los beneficios para tu caso de uso.,consulta_producto,0,tibio
+L00912,CHUCK_01,"claro, te comparto el precio actualizado del plan.",consulta_precio,1,caliente
+L00841,CHUCK_09,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,tibio
+L01144,CHUCK_07,"perfecto, te comparto el link de pago para cerrar la compra.",compra,0,tibio
+L02338,CHUCK_06,te comparto los beneficios para tu caso de uso.,consulta_producto,1,frio
+L02493,CHUCK_09,te ayudo con soporte tecnico paso a paso.,soporte,1,frio
+L00221,CHUCK_10,te ayudo con soporte tecnico paso a paso.,soporte,0,frio
+L00023,CHUCK_03,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente
+L00198,CHUCK_03,"hola, un gusto saludarte. en que te asesoro?",saludo,0,frio
+L01164,CHUCK_02,"el costo depende del paquete, te paso las opciones de precio.",consulta_precio,1,caliente
+L01185,CHUCK_07,podemos agendar una demo de 20 minutos esta semana.,agendar_demo,0,caliente
+L01373,CHUCK_10,te comparto los beneficios para tu caso de uso.,consulta_producto,0,frio
+L00708,CHUCK_05,"tenemos stock disponible, puedo procesar tu compra en este momento.",compra,0,caliente

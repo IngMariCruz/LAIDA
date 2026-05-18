@@ -11,10 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function RegistroPage() {
   const [formData, setFormData] = useState({
     nombreMarca: "",
-    correoEmpresa: "",
-    nombreRepresentante: "",
-    numero: "",
-    correoPersonal: "",
+    nombre: "",
+    correo: "",
     password: "",
     confirmPassword: "",
   })
@@ -26,10 +24,7 @@ export default function RegistroPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,55 +33,38 @@ export default function RegistroPage() {
     setError("")
 
     try {
-      // Validar que todos los campos estén completos
-      if (
-        !formData.nombreMarca ||
-        !formData.correoEmpresa ||
-        !formData.nombreRepresentante ||
-        !formData.numero ||
-        !formData.correoPersonal ||
-        !formData.password ||
-        !formData.confirmPassword
-      ) {
-        setError("Por favor, completa todos los campos")
+      if (!formData.nombreMarca || !formData.correo || !formData.password || !formData.confirmPassword) {
+        setError("Por favor, completa todos los campos obligatorios")
         setLoading(false)
         return
       }
 
-      // Validar que los emails sean válidos
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(formData.correoEmpresa) || !emailRegex.test(formData.correoPersonal)) {
-        setError("Por favor, ingresa correos válidos")
+      if (!emailRegex.test(formData.correo)) {
+        setError("Por favor, ingresa un correo válido")
         setLoading(false)
         return
       }
 
-      // Validar que las contraseñas coincidan
       if (formData.password !== formData.confirmPassword) {
         setError("Las contraseñas no coinciden")
         setLoading(false)
         return
       }
 
-      // Validar longitud de contraseña
       if (formData.password.length < 6) {
         setError("La contraseña debe tener al menos 6 caracteres")
         setLoading(false)
         return
       }
 
-      // Hacer llamada a la API
       const response = await fetch("/api/registro", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombreMarca: formData.nombreMarca,
-          correoEmpresa: formData.correoEmpresa,
-          nombreRepresentante: formData.nombreRepresentante,
-          numero: formData.numero,
-          correoPersonal: formData.correoPersonal,
+          nombre_marca: formData.nombreMarca,
+          nombre: formData.nombre || undefined,
+          correo: formData.correo,
           password: formData.password,
         }),
       })
@@ -100,21 +78,12 @@ export default function RegistroPage() {
       }
 
       setSuccess(true)
-      setFormData({
-        nombreMarca: "",
-        correoEmpresa: "",
-        nombreRepresentante: "",
-        numero: "",
-        correoPersonal: "",
-        password: "",
-        confirmPassword: "",
-      })
+      setFormData({ nombreMarca: "", nombre: "", correo: "", password: "", confirmPassword: "" })
 
-      // Redirigir después de 2 segundos
       setTimeout(() => {
         window.location.href = "/login"
       }, 2000)
-    } catch (err) {
+    } catch {
       setError("Error al registrar. Por favor, intenta de nuevo.")
     } finally {
       setLoading(false)
@@ -123,7 +92,6 @@ export default function RegistroPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Navbar simplificado */}
       <header className="border-b border-secondary/30 bg-background/80 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -139,7 +107,6 @@ export default function RegistroPage() {
         </nav>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-2">
@@ -173,7 +140,7 @@ export default function RegistroPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nombreMarca">Nombre de la marca</Label>
+                  <Label htmlFor="nombreMarca">Nombre de la marca *</Label>
                   <Input
                     id="nombreMarca"
                     name="nombreMarca"
@@ -186,59 +153,33 @@ export default function RegistroPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="correoEmpresa">Correo de la empresa</Label>
+                  <Label htmlFor="nombre">Nombre del representante</Label>
                   <Input
-                    id="correoEmpresa"
-                    name="correoEmpresa"
-                    type="email"
-                    placeholder="empresa@example.com"
-                    value={formData.correoEmpresa}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nombreRepresentante">Nombre del representante</Label>
-                  <Input
-                    id="nombreRepresentante"
-                    name="nombreRepresentante"
+                    id="nombre"
+                    name="nombre"
                     type="text"
                     placeholder="Ej: Juan Pérez"
-                    value={formData.nombreRepresentante}
+                    value={formData.nombre}
                     onChange={handleChange}
                     disabled={loading}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="numero">Número de teléfono</Label>
+                  <Label htmlFor="correo">Correo *</Label>
                   <Input
-                    id="numero"
-                    name="numero"
-                    type="tel"
-                    placeholder="Ej: +54 1234567890"
-                    value={formData.numero}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="correoPersonal">Correo personal</Label>
-                  <Input
-                    id="correoPersonal"
-                    name="correoPersonal"
+                    id="correo"
+                    name="correo"
                     type="email"
-                    placeholder="tubuscorreo@example.com"
-                    value={formData.correoPersonal}
+                    placeholder="correo@example.com"
+                    value={formData.correo}
                     onChange={handleChange}
                     disabled={loading}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
+                  <Label htmlFor="password">Contraseña *</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -261,7 +202,7 @@ export default function RegistroPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                  <Label htmlFor="confirmPassword">Confirmar contraseña *</Label>
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"

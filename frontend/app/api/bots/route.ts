@@ -8,6 +8,7 @@ import {
   updateBot,
   deleteBot,
   asignarBotAUsuario,
+  getMarcaByUsuarioId,
 } from "@/db/utils"
 import { getAuthUser, requireSuperAdmin, requireManager } from "@/lib/auth"
 
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
       openai_key: openai_key || null,
       estado: estado || "activo",
       manager_id: manager_id || null,
-      marca_id: manager_id || null,
+      marca_id: manager_id ? (getMarcaByUsuarioId(Number(manager_id))?.id ?? null) : null,
     })
 
     // Si se asignó un manager, crear la relación en usuario_bots

@@ -50,3 +50,523 @@ respuesta_bot: ¡Gracias! 🎉 Hemos confirmado tus datos:
 
 En breve alguien del equipo te contactará.
 
+[2026-05-17 23:04:38] bot=2 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Soy el asistente de *Bot Paloma*. Estoy aquí para ayudarte.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-05-17 23:04:38] bot=2 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *CARAMAÑOLAS*
+  1. Caramañola #0023 — $50.000
+
+🔹 *MUGS*
+  2. Mug Corazón Color — $25.000
+  3. Mug Mágico — $27.000
+  4. Mug Blanco — $22.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-05-17 23:05:05] bot=2 user=1578862237 estado=WAIT_INTEREST
+  >>> Ver todos los
+  <<< Basado en lo que buscas, te recomiendo:
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Color — $20.000
+  3. Mug Mágico — $27.000
+  4. Mug con Cuchara — $27.000
+  5. Mug con Tapa de Caucho — $31.000
+  6. Mug Corazón Color — $25.000
+
+🔹 *CARAMAÑOLAS*
+  7. Caramañola #0023 — $50.000
+
+Escribe el *número* o el *nombre* del producto para ver más detalles, o dime si prefieres algo diferente. 😊
+
+[2026-05-17 23:05:28] bot=2 user=1578862237 estado=WAIT_SELECTION
+  >>> Que es el muy de tapa caucho?
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *MUGS*
+  1. Mug Blanco — $22.000
+  2. Mug Color — $20.000
+  3. Mug Mágico — $27.000
+  4. Mug con Cuchara — $27.000
+  5. Mug con Tapa de Caucho — $31.000
+  6. Mug Corazón Color — $25.000
+
+🔹 *CARAMAÑOLAS*
+  7. Caramañola #0023 — $50.000
+
+[2026-05-17 23:05:39] bot=2 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> 5
+  <<< Aquí tienes los detalles:
+
+🏷️ *Mug con Tapa de Caucho*
+💰 Precio: *$31.000*
+
+Mug con tapa de caucho, marca Liceria.
+• *Categoría:* MUGS
+• *Brand:* Liceria
+• *Material:* Wood
+• *Dimension:* 20 CM x 30 CM
+• *Colores:* No especificado
+
+¿Te gustaría adquirir *Mug con Tapa de Caucho*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-05-17 23:05:41] bot=2 user=1578862237 estado=GET_NOMBRE_TRIGGER
+  >>> 
+  <<< ¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?
+
+[2026-05-17 23:05:49] bot=2 user=1578862237 estado=GET_NOMBRE
+  >>> Mariana
+  <<< Gracias, *Mariana*! ¿Cuál es tu *correo electrónico*?
+
+[2026-05-17 23:06:01] bot=2 user=1578862237 estado=GET_EMAIL
+  >>> Mari@gmail.con
+  <<< Gracias. Ahora comparte tu *número de teléfono* (10 dígitos).
+
+[2026-05-17 23:06:08] bot=2 user=1578862237 estado=GET_PHONE
+  >>> 3175428852
+  <<< ¡Listo! 🎉 Nuestro equipo te contactará pronto.
+
+📋 *Resumen de tu registro:*
+• Nombre: Mariana
+• Interés: Ver todos los
+• Correo: Mari@gmail.con
+• Teléfono: 3175428852
+
+Escribe /start si deseas hacer otra consulta.
+
+====================================
+Fecha: 2026-05-17 23:18:19
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o algún otro producto, estaré encantado de ayudarte a encontrar lo que necesitas.
+
+====================================
+Fecha: 2026-05-17 23:18:53
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Vi un mug como con una cuchara
+respuesta_bot: ¡Claro! Tenemos el Mug con Cuchara, que es de la marca Liceria y está hecho de madera. Cuesta $27,000. ¿Te gustaría saber más sobre él o necesitas ayuda con otra cosa?
+
+====================================
+Fecha: 2026-05-17 23:20:58
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Ho@jfos.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 23:21:10
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 27482478325
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+
+====================================
+Fecha: 2026-05-17 23:21:20
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3173742248
+respuesta_bot: Asunto: ¡Gracias por tu interés en nuestro Mug con Cuchara!
+
+Hola [Nombre del Cliente],
+
+¡Esperamos que estés teniendo un día maravilloso! Queremos agradecerte sinceramente por dejar tus datos y mostrar interés en nuestro exclusivo Mug con Cuchara. 
+
+Estamos emocionados de que estés considerando darle un toque especial a tus momentos de café o té con este práctico y elegante producto. Ya sea para disfrutar de tus bebidas favoritas o como un regalo único, estamos seguros de que te encantará.
+
+Si tienes alguna pregunta o necesitas más información sobre el Mug con Cuchara, no dudes en contactarnos. Estamos aquí para ayudarte.
+
+¡Gracias nuevamente y esperamos verte pronto!
+
+Saludos cordiales,
+
+[Tu Nombre]  
+[Tu Puesto
+
+📦 Producto: Mug con Cuchara
+📧 Email: Ho@jfos.com
+📞 Teléfono: 3173742248
+
+====================================
+Fecha: 2026-05-17 23:28:04
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o tienes alguna pregunta en particular, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-17 23:28:15
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Quiero un mug cuchara
+respuesta_bot: ¡Excelente elección! El mug con cuchara, de la marca Liceria, tiene un diseño práctico y funcional. Su precio es de $27,000. ¿Te gustaría que te ayude con la compra o necesitas más información?
+
+====================================
+Fecha: 2026-05-17 23:28:26
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: Mariana Cruz
+respuesta_bot: Mucho gusto, Mariana Cruz! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-17 23:28:36
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Hangon@jfjd.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 23:28:45
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3172945524
+respuesta_bot: ¡Hola [Nombre del Cliente]!
+
+Queremos agradecerte sinceramente por dejar tus datos y mostrar interés en nuestro Mug con Cuchara. Tu apoyo significa mucho para nosotros y estamos emocionados de que estés considerando añadir este elegante y práctico producto a tu colección.
+
+Nuestro Mug con Cuchara está diseñado no solo para disfrutar de tus bebidas favoritas, sino también para ofrecerte comodidad y estilo en cada sorbo. Estamos seguros de que te encantará tanto como a nosotros.
+
+Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos. Estamos aquí para ayudarte.
+
+¡Gracias de nuevo y esperamos verte pronto!
+
+Saludos cordiales,
+
+[Tu Nombre]  
+[Tu Empresa]  
+[Tu Información de Contacto]
+
+📦 Producto: Mug con Cuchara
+📧 Email: Hangon@jfjd.com
+📞 Teléfono: 3172945524
+
+====================================
+Fecha: 2026-05-18 16:18:04
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿En qué puedo ayudarte hoy? Si estás buscando un mug o tienes alguna otra consulta, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-18 17:46:22
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿En qué puedo ayudarte hoy?
+
+====================================
+Fecha: 2026-05-18 17:46:37
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Qué productos tienes?
+respuesta_bot: Tenemos una amplia variedad de productos, desde electrónica y accesorios hasta artículos para el hogar y moda. ¿Hay alguna categoría específica que te interese?
+
+====================================
+Fecha: 2026-05-18 17:46:53
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Qué marca es esta?
+respuesta_bot: Para poder ayudarte mejor, ¿podrías decirme a qué producto o categoría te refieres? Así puedo proporcionarte la información correcta sobre la marca.
+
+====================================
+Fecha: 2026-05-18 17:47:10
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Que empresa es esta?
+respuesta_bot: Para poder asistirte de manera efectiva, necesitaría saber a qué empresa te refieres. ¿Podrías darme más detalles o el nombre de la empresa?
+
+====================================
+Fecha: 2026-05-18 17:49:10
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy?
+
+====================================
+Fecha: 2026-05-18 17:49:31
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Vi un producto en instagram que me gusto
+respuesta_bot: ¡Qué bien! ¿Podrías decirme qué producto era o describirlo un poco para que pueda ayudarte mejor?
+
+====================================
+Fecha: 2026-05-18 17:49:46
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: era un vaso blanco con un cuchara
+respuesta_bot: Perfecto, parece un vaso ideal para disfrutar de tus bebidas. ¿Te gustaría saber más sobre los diseños que ofrecemos para ese vaso, o hay algo específico que te gustaría personalizar?
+
+====================================
+Fecha: 2026-05-18 17:50:04
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Si, cuentame como es el proceso
+respuesta_bot: Claro, el proceso es sencillo. Primero eliges el diseño que te gusta o nos puedes proporcionar una idea propia. Luego, lo sublimamos en el vaso blanco que mencionaste. Finalmente, lo empaquetamos con amor y honestidad para que te llegue en perfectas condiciones. ¿Te gustaría ver algunos diseños disponibles?
+
+====================================
+Fecha: 2026-05-18 17:50:21
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Si
+respuesta_bot: Genial, aquí tienes algunos ejemplos de diseños que ofrecemos: frases inspiradoras, ilustraciones personalizadas y motivos florales. También podemos crear algo único basado en tus ideas. ¿Hay algún estilo o tema específico que te interese?
+
+====================================
+Fecha: 2026-05-18 17:57:04
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy?
+
+====================================
+Fecha: 2026-05-18 17:57:26
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Estoy buscando un vaso que vi en instagram, tenia en la oreja forma de corazón
+respuesta_bot: Parece que estás buscando un mug especial. Sin embargo, en nuestra línea actual no tenemos mugs con forma de corazón en la oreja. Pero, ¿te gustaría ver alguno de nuestros mugs disponibles? Puedo ayudarte a encontrar algo que te encante.
+
+====================================
+Fecha: 2026-05-18 17:57:41
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Si
+respuesta_bot: Genial. Tenemos varios mugs de cerámica. Aquí te muestro algunas opciones:
+
+1. **Mug Blanco** - $20,000
+2. **Mug Color** - $22,000 (disponible en rojo, rosado, azul oscuro, naranja y negro)
+3. **Mug Cuchara** - $27,000 (con cuchara en varios colores)
+4. **Mug Mágico** - $25,000 (cambia de color con el calor)
+5. **Mug Tapa Caucho** - $30,000 (con tapa de caucho en varios colores)
+
+¿Hay algún color o tipo de mug que te llame más la atención?
+
+====================================
+Fecha: 2026-05-18 17:58:27
+bot_id: 2
+user_id: 1578862237
+estado: COLD_REENGAGEMENT
+mensaje_usuario: El magico
+respuesta_bot: ¡Excelente elección! El **Mug Mágico** cuesta $25,000 y cambia de color con el calor, volviéndose blanco al calentarse. Es una opción divertida y sorprendente. ¿Te gustaría saber más sobre el proceso de compra o tienes alguna otra pregunta?
+
+====================================
+Fecha: 2026-05-18 17:58:43
+bot_id: 2
+user_id: 1578862237
+estado: COLD_REENGAGEMENT
+mensaje_usuario: Quiero comprarlo
+respuesta_bot: ¡Perfecto! Para proceder con la compra del **Mug Mágico**, necesitaré algunos detalles. ¿Cómo te gustaría realizar el pago y a qué dirección te gustaría que lo enviemos?
+
+====================================
+Fecha: 2026-05-18 17:59:00
+bot_id: 2
+user_id: 1578862237
+estado: COLD_REENGAGEMENT
+mensaje_usuario: calle 54
+respuesta_bot: ¡Gracias! Solo necesito saber cómo deseas realizar el pago. ¿Prefieres pagar en efectivo, con tarjeta o algún otro método? Además, si puedes proporcionarme el número de contacto o correo electrónico, será útil para coordinar la entrega.
+
+====================================
+Fecha: 2026-05-18 17:59:25
+bot_id: 2
+user_id: 1578862237
+estado: COLD_REENGAGEMENT
+mensaje_usuario: efectivo
+de@gmail.com
+3147359938
+respuesta_bot: ¡Perfecto! Entonces, procederemos con el pago en efectivo y la entrega a la dirección en Calle 54. Te hemos registrado con el correo de gmail.com y el número 3147359938.
+
+Te contactaremos pronto para coordinar la entrega. ¡Muchas gracias por tu compra y tu confianza en nosotros! Si tienes alguna otra pregunta, no dudes en preguntar.
+
+====================================
+Fecha: 2026-05-18 18:00:09
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy?
+
+====================================
+Fecha: 2026-05-18 18:00:27
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Muestrame los productos
+respuesta_bot: Claro, aquí tienes nuestros productos disponibles en la categoría de Mugs:
+
+1. **Mug Blanco**: $20,000 - Cerámica color blanco.
+2. **Mug Color**: $22,000 - Cerámica en varios colores (rojo, rosado, azul oscuro, naranja, negro).
+3. **Mug Cuchara**: $27,000 - Cerámica con cuchara en varios colores.
+4. **Mug Mágico**: $25,000 - Cerámica que cambia de color con el calor (negro y al calentarse blanco).
+5. **Mug Tapa Caucho**: $30,000 - Cerámica con tapa de caucho en varios colores.
+
+¿Hay algún producto que te interese o alguna característica que estés buscando?
+
+====================================
+Fecha: 2026-05-18 18:00:37
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: 4
+respuesta_bot: ¡Excelente elección! El **Mug Mágico** cuesta $25,000 y es de cerámica que cambia de color con el calor, pasando de negro a blanco al calentarse. ¿Te gustaría saber más sobre este producto o necesitas ayuda con algo más?
+
+====================================
+Fecha: 2026-05-18 18:00:56
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: mariana
+respuesta_bot: Mucho gusto, mariana! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-18 18:01:03
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: mariana@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-18 18:01:08
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 315678846
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+
+====================================
+Fecha: 2026-05-18 18:01:16
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3185745563
+respuesta_bot: ¡Hola, Mariana! Gracias por tu interés en el Mug Mágico, un asesor se estará contactando contigo pronto. 😊
+
+✅ *Tus datos:*
+📦 Mug Mágico
+📧 mariana@gmail.com
+📞 3185745563
+
+====================================
+Fecha: 2026-05-18 18:01:46
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algo en particular, no dudes en decírmelo.
+
+====================================
+Fecha: 2026-05-18 18:08:45
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algún producto en particular o tienes alguna pregunta, no dudes en decírmelo.
+
+====================================
+Fecha: 2026-05-18 18:08:46
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algo en particular, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-18 18:08:56
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o algún producto en particular, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-18 18:09:19
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si buscas algo en particular o necesitas recomendaciones, estaré encantado de ayudarte.
+
+====================================
+Fecha: 2026-05-18 19:40:06
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algo en particular o tienes alguna pregunta sobre nuestros productos, no dudes en decírmelo.
+
+====================================
+Fecha: 2026-05-18 19:40:34
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Vi un vaso rosado con una cuchara si es de ustedes?
+respuesta_bot: ¡Sí! Ese vaso es nuestro Mug Cuchara en color rosado. Es un mug de cerámica que viene con una cuchara, perfecto para disfrutar de tus bebidas favoritas. ¿Te gustaría saber más sobre este producto o quizás ver otras opciones?
+
+====================================
+Fecha: 2026-05-18 19:41:02
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: Luz
+respuesta_bot: Mucho gusto, Luz! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-18 19:41:14
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: luz@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-18 19:41:19
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 312446576
+respuesta_bot: No pude validar el teléfono. Debe tener 10 dígitos numéricos.
+
+====================================
+Fecha: 2026-05-18 19:41:26
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3184623351
+respuesta_bot: ¡Hola, Luz! Gracias por tu interés en el Mug Cuchara, un asesor se pondrá en contacto contigo muy pronto. 😊
+
+✅ *Tus datos:*
+📦 Mug Cuchara
+📧 luz@gmail.com
+📞 3184623351
+

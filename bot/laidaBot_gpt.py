@@ -53,6 +53,7 @@ STATE_SHOW_PRODUCTS = "SHOW_PRODUCTS"
 STATE_SELECT_PRODUCT = "SELECT_PRODUCT"
 STATE_COLLECT_ATTRIBUTES = "COLLECT_ATTRIBUTES"
 STATE_CONFIRM_PURCHASE = "CONFIRM_PURCHASE"
+STATE_GET_NAME = "GET_NAME"
 STATE_GET_EMAIL = "GET_EMAIL"
 STATE_GET_PHONE = "GET_PHONE"
 STATE_COLD_REENGAGEMENT = "COLD_REENGAGEMENT"
@@ -210,31 +211,36 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
     """Guardar lead en la base de datos"""
     query = """
         INSERT INTO leads (
-            bot_id, bot_slug, bot_nombre, interes, email, telefono,
-            telegram_user_id, estado, categoria, producto_id, detalles_compra, notas,
+            bot_id, bot_slug, bot_nombre, nombre, interes, email, telefono,
+            telegram_user_id, estado, categoria, producto_id, marca_id, detalles_compra, notas,
             actualizado_en
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(bot_id, telegram_user_id) DO UPDATE SET
             bot_slug = COALESCE(excluded.bot_slug, leads.bot_slug),
             bot_nombre = COALESCE(excluded.bot_nombre, leads.bot_nombre),
+            nombre = COALESCE(excluded.nombre, leads.nombre),
             interes = COALESCE(NULLIF(excluded.interes, ''), leads.interes),
             email = COALESCE(excluded.email, leads.email),
             telefono = COALESCE(excluded.telefono, leads.telefono),
             estado = COALESCE(excluded.estado, leads.estado),
             categoria = COALESCE(excluded.categoria, leads.categoria),
             producto_id = COALESCE(excluded.producto_id, leads.producto_id),
+            marca_id = COALESCE(excluded.marca_id, leads.marca_id),
             detalles_compra = COALESCE(excluded.detalles_compra, leads.detalles_compra),
             notas = COALESCE(excluded.notas, leads.notas),
             actualizado_en = CURRENT_TIMESTAMP
     """
-    
+
     with get_connection() as conn:
+        bot_row = conn.execute("SELECT marca_id FROM bots WHERE id = ?", (bot_id,)).fetchone()
+        marca_id = bot_row["marca_id"] if bot_row else None
         cursor = conn.cursor()
         cursor.execute(query, (
             bot_id,
             data.get('bot_slug'),
             data.get('bot_nombre'),
+            data.get('nombre'),
             data.get('interes', ''),
             data.get('email'),
             data.get('telefono'),
@@ -242,6 +248,7 @@ def save_lead(bot_id: int, telegram_user_id: int, data: Dict[str, Any]) -> int:
             data.get('estado', 'nuevo'),
             data.get('categoria', 'warm'),
             data.get('producto_id'),
+            marca_id,
             data.get('detalles_compra'),
             data.get('notas')
         ))
@@ -305,6 +312,8 @@ def get_conversation_context(user_id: int, productos: List[Dict[str, Any]], esen
     
     if esencia:
         context += f"Información de la marca:\n"
+        if get_esencia_marca(esencia.get("marca_id")):
+            context += f"- Marca: {get_esencia_marca(esencia['marca_id']).get('marca_nombre', '')}\n"
         if esencia.get("valores"):
             context += f"- Valores: {esencia['valores']}\n"
         if esencia.get("diferencia"):
@@ -328,7 +337,6 @@ def get_conversation_context(user_id: int, productos: List[Dict[str, Any]], esen
     context += "- Haz preguntas para entender las necesidades del cliente\n"
     context += "- Recomienda productos basándote en lo que el cliente menciona\n"
     context += "- No inventes información sobre productos que no existen\n"
-    context += "- Sé breve y directo (máximo 2-3 oraciones)\n"
     
     return context
 
@@ -503,16 +511,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     raw_args = context.args
 
-    if not raw_args:
-        respuesta = "Uso correcto: /start <bot_id>\nEjemplo: /start 1"
-        await update.message.reply_text(respuesta)
-        return
-
-    try:
-        bot_id = int(raw_args[0])
-    except ValueError:
-        respuesta = "El bot_id debe ser numérico. Ejemplo: /start 1"
-        await update.message.reply_text(respuesta)
+    if raw_args:
+        try:
+            bot_id = int(raw_args[0])
+        except ValueError:
+            await update.message.reply_text("El bot_id debe ser numérico.")
+            return
+    elif BOT_ID:
+        bot_id = int(BOT_ID)
+    else:
+        await update.message.reply_text("⚠️ Bot no configurado. Contacta al administrador.")
         return
 
     # Obtener información del bot
@@ -548,6 +556,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "marca_id": marca_id,
         "selected_product": None,
         "product_attributes": {},
+        "nombre": None,
         "email": None,
         "phone": None,
         "interes": "",
@@ -761,6 +770,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         
         guardar_conversacion(bot_id, user_id, state, text, respuesta)
     
+    # ===== ESTADO: Obtener nombre =====
+    elif state == STATE_GET_NAME:
+        nombre = text.strip()
+        if len(nombre) < 2:
+            respuesta = "Por favor ingresa tu nombre completo."
+            await update.message.reply_text(respuesta)
+            guardar_conversacion(bot_id, user_id, state, text, respuesta)
+            return
+
+        data["nombre"] = nombre
+        user_state[user_id] = STATE_GET_EMAIL
+
+        respuesta = f"Mucho gusto, {nombre}! 😊 ¿Cuál es tu correo electrónico?"
+        await update.message.reply_text(respuesta)
+        guardar_conversacion(bot_id, user_id, state, text, respuesta)
+
     # ===== ESTADO: Obtener email =====
     elif state == STATE_GET_EMAIL:
         # Intentar extraer email del mensaje con GPT
@@ -824,6 +849,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         lead_id = save_lead(bot_id, user_id, {
             "bot_slug": data["bot_info"].get("slug"),
             "bot_nombre": data["bot_info"].get("nombre"),
+            "nombre": data.get("nombre"),
             "interes": data.get("interes", ""),
             "email": data["email"],
             "telefono": data["phone"],
@@ -839,8 +865,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             save_interaccion(bot_id, user_id, "compra", producto_seleccionado["id"] if producto_seleccionado else None, detalles_compra)
         
         # Mensaje de confirmación final personalizado con GPT
-        contexto_final = f"Genera un mensaje de agradecimiento personalizado para un cliente que acaba de dejar sus datos. Producto: {producto_seleccionado['nombre'] if producto_seleccionado else 'varios'}"
-        
+        nombre_cliente = data.get("nombre", "")
+        producto_nombre = producto_seleccionado['nombre'] if producto_seleccionado else 'varios'
+        contexto_final = (
+            f"Genera un mensaje de agradecimiento MUY CORTO (máximo 2 oraciones) para un chat de ventas. "
+            f"Dirígete al cliente por su nombre: {nombre_cliente}. "
+            f"Producto de interés: {producto_nombre}. "
+            f"Menciona que un asesor lo contactará pronto. "
+            f"Tono: amigable y directo, como un mensaje de chat, NO como un correo formal."
+        )
+
         try:
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -848,17 +882,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     {"role": "user", "content": contexto_final}
                 ],
                 temperature=0.8,
-                max_tokens=150
+                max_tokens=80
             )
-            
+
             respuesta = response.choices[0].message.content.strip()
         except:
-            respuesta = flow_config.get("mensaje_agradecimiento", "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊")
-        
-        if producto_seleccionado:
-            respuesta += f"\n\n📦 Producto: {producto_seleccionado['nombre']}"
-        
-        respuesta += f"\n📧 Email: {data['email']}\n📞 Teléfono: {data['phone']}"
+            respuesta = flow_config.get("mensaje_agradecimiento", f"¡Gracias{', ' + nombre_cliente if nombre_cliente else ''}! Un asesor se pondrá en contacto contigo pronto. 😊")
+
+        confirmacion = f"\n\n✅ *Tus datos:*\n📦 {producto_nombre}\n📧 {data['email']}\n📞 {data['phone']}"
+        respuesta += confirmacion
         
         await update.message.reply_text(respuesta)
         guardar_conversacion(bot_id, user_id, state, text, respuesta)
@@ -1149,9 +1181,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # ===== Confirmación de compra: SÍ =====
     elif callback_data == "confirmar_si":
         data["categoria"] = "hot"
-        user_state[user_id] = STATE_GET_EMAIL
-        
-        respuesta = "¡Genial! 🎉 Para finalizar, necesito algunos datos.\n\n¿Cuál es tu correo electrónico?"
+        user_state[user_id] = STATE_GET_NAME
+
+        respuesta = "¡Genial! 🎉 Para finalizar, necesito algunos datos.\n\n¿Cuál es tu nombre?"
         await query.edit_message_text(respuesta)
 
         try:
@@ -1169,9 +1201,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # ===== Confirmación de compra: LUEGO =====
     elif callback_data == "confirmar_luego":
         data["categoria"] = "warm"
-        user_state[user_id] = STATE_GET_EMAIL
-        
-        respuesta = "Entiendo. De todas formas, déjame tus datos para poder contactarte después.\n\n¿Cuál es tu correo electrónico?"
+        user_state[user_id] = STATE_GET_NAME
+
+        respuesta = "Entiendo. De todas formas, déjame tus datos para poder contactarte después.\n\n¿Cuál es tu nombre?"
         await query.edit_message_text(respuesta)
 
         try:

@@ -51,6 +51,7 @@ export default function UsuariosPage() {
     password: "",
     rol: "super_admin" as "super_admin" | "manager",
     nombre: "",
+    nombre_marca: "",
   })
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function UsuariosPage() {
       } else {
         toast.error("Error al cargar usuarios")
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar usuarios")
     } finally {
       setLoading(false)
@@ -99,43 +100,87 @@ export default function UsuariosPage() {
 
     try {
       const token = localStorage.getItem("token")
-      const url = "/api/usuarios"
-      const method = editingUsuario ? "PUT" : "POST"
 
-      const body = editingUsuario
-        ? {
-            id: editingUsuario.id,
+      // Editar: siempre PUT /api/usuarios
+      if (editingUsuario) {
+        const body: Record<string, unknown> = {
+          id: editingUsuario.id,
+          correo: formData.correo,
+          rol: formData.rol,
+          nombre: formData.nombre || null,
+        }
+        if (formData.password) body.password = formData.password
+
+        const response = await fetch("/api/usuarios", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify(body),
+        })
+        const data = await response.json()
+
+        if (response.ok) {
+          toast.success("Usuario actualizado exitosamente")
+          setDialogOpen(false)
+          resetForm()
+          cargarUsuarios()
+        } else {
+          toast.error(data.error || "Error al actualizar usuario")
+        }
+        return
+      }
+
+      // Crear manager: POST /api/registro (crea usuario + marca)
+      if (formData.rol === "manager") {
+        if (!formData.nombre_marca) {
+          toast.error("El nombre de la marca es requerido para managers")
+          return
+        }
+
+        const response = await fetch("/api/registro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            nombre_marca: formData.nombre_marca,
+            nombre: formData.nombre || undefined,
             correo: formData.correo,
-            rol: editingUsuario.rol,
-            nombre: formData.nombre || null,
-            ...(formData.password && { password: formData.password }),
-          }
-        : { ...formData, rol: "super_admin" }
+            password: formData.password,
+          }),
+        })
+        const data = await response.json()
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
+        if (response.ok) {
+          toast.success("Manager y marca creados exitosamente")
+          setDialogOpen(false)
+          resetForm()
+          cargarUsuarios()
+        } else {
+          toast.error(data.error || "Error al crear manager")
+        }
+        return
+      }
+
+      // Crear super_admin: POST /api/usuarios
+      const response = await fetch("/api/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          correo: formData.correo,
+          password: formData.password,
+          rol: formData.rol,
+          nombre: formData.nombre || null,
+        }),
       })
-
       const data = await response.json()
 
       if (response.ok) {
-        toast.success(
-          editingUsuario
-            ? "Usuario actualizado exitosamente"
-            : "Usuario creado exitosamente"
-        )
+        toast.success("Usuario creado exitosamente")
         setDialogOpen(false)
         resetForm()
         cargarUsuarios()
       } else {
-        toast.error(data.error || "Error al guardar usuario")
+        toast.error(data.error || "Error al crear usuario")
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al guardar usuario")
     }
   }
@@ -147,9 +192,7 @@ export default function UsuariosPage() {
       const token = localStorage.getItem("token")
       const response = await fetch(`/api/usuarios?id=${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       const data = await response.json()
@@ -160,7 +203,7 @@ export default function UsuariosPage() {
       } else {
         toast.error(data.error || "Error al eliminar usuario")
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar usuario")
     }
   }
@@ -171,6 +214,7 @@ export default function UsuariosPage() {
       password: "",
       rol: "super_admin",
       nombre: "",
+      nombre_marca: "",
     })
     setEditingUsuario(null)
   }
@@ -182,6 +226,7 @@ export default function UsuariosPage() {
       password: "",
       rol: usuario.rol,
       nombre: usuario.nombre || "",
+      nombre_marca: "",
     })
     setDialogOpen(true)
   }
@@ -200,7 +245,7 @@ export default function UsuariosPage() {
         <div>
           <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
           <p className="text-muted-foreground mt-1">
-            Administra administradores (Super Admin)
+            Administra administradores y managers
           </p>
         </div>
 
@@ -230,22 +275,18 @@ export default function UsuariosPage() {
                   id="correo"
                   type="email"
                   value={formData.correo}
-                  onChange={(e) =>
-                    setFormData({ ...formData, correo: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
                   placeholder="correo@dominio.com"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="nombre">Nombre (opcional)</Label>
+                <Label htmlFor="nombre">Nombre Completo</Label>
                 <Input
                   id="nombre"
                   value={formData.nombre}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nombre: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                   placeholder="Juan Pérez"
                 />
               </div>
@@ -258,9 +299,7 @@ export default function UsuariosPage() {
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder={editingUsuario ? "••••••••" : "Contraseña"}
                   required={!editingUsuario}
                 />
@@ -268,10 +307,35 @@ export default function UsuariosPage() {
 
               <div>
                 <Label>Rol</Label>
-                <div className="text-sm text-muted-foreground">
-                  {editingUsuario ? editingUsuario.rol : "super_admin"}
-                </div>
+                <select
+                  value={formData.rol}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      rol: e.target.value as "super_admin" | "manager",
+                      nombre_marca: "",
+                    })
+                  }
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="super_admin">Super Admin</option>
+                  <option value="manager">Manager</option>
+                </select>
               </div>
+
+              {/* Campo nombre_marca: solo al crear un manager */}
+              {!editingUsuario && formData.rol === "manager" && (
+                <div>
+                  <Label htmlFor="nombre_marca">Nombre de la marca</Label>
+                  <Input
+                    id="nombre_marca"
+                    value={formData.nombre_marca}
+                    onChange={(e) => setFormData({ ...formData, nombre_marca: e.target.value })}
+                    placeholder="Mi Empresa"
+                    required
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <Button

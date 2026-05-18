@@ -1261,3 +1261,352 @@ Precio a consultar
 
 Escribe /start si deseas hacer otra consulta.
 
+[2026-04-19 01:17:00] bot=1 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:17:01] bot=1 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo C — Consultar
+  2. Producto Demo A — $10.000
+  3. Producto Demo B — $25.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 01:17:16] bot=1 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> 1
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo A*
+💰 Precio: *$10.000*
+
+Descripción demo del producto A
+
+¿Te gustaría adquirir *Producto Demo A*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:17:28] bot=1 user=1578862237 estado=PRODUCT_DETAIL
+  >>> Quiero mas info
+  <<< ¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊
+
+Escribe /start si deseas hacer otra consulta.
+
+[2026-04-19 01:17:31] bot=1 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:17:32] bot=1 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo B — $25.000
+  2. Producto Demo C — Consultar
+  3. Producto Demo A — $10.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 01:17:35] bot=1 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> 1
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo A*
+💰 Precio: *$10.000*
+
+Descripción demo del producto A
+
+¿Te gustaría adquirir *Producto Demo A*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:18:02] bot=1 user=1578862237 estado=PRODUCT_DETAIL
+  >>> Si
+  <<< ¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊
+
+Escribe /start si deseas hacer otra consulta.
+
+[2026-04-19 01:33:55] bot=1 user=5306758063 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:33:56] bot=1 user=5306758063 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo C — Consultar
+  2. Producto Demo B — $25.000
+  3. Producto Demo A — $10.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 01:34:13] bot=1 user=5306758063 estado=DETALLE_PRODUCTO
+  >>> C
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo A*
+💰 Precio: *$10.000*
+
+Descripción demo del producto A
+
+¿Te gustaría adquirir *Producto Demo A*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:34:26] bot=1 user=5306758063 estado=PRODUCT_DETAIL
+  >>> A
+  <<< Sin problema, aquí tienes otras opciones:
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+Escribe el número o nombre del que te interese.
+
+[2026-04-19 01:35:14] bot=1 user=5306758063 estado=DETALLE_PRODUCTO
+  >>> 2
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo B*
+💰 Precio: *$25.000*
+
+Descripción demo del producto B
+
+¿Te gustaría adquirir *Producto Demo B*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:35:18] bot=1 user=5306758063 estado=PRODUCT_DETAIL
+  >>> Si
+  <<< ¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?
+
+[2026-04-19 01:35:24] bot=1 user=5306758063 estado=GET_NOMBRE
+  >>> Lorena
+  <<< Gracias, *Lorena*! ¿Cuál es tu *correo electrónico*?
+
+[2026-04-19 01:35:39] bot=1 user=5306758063 estado=GET_EMAIL
+  >>> Lore@gmail.com
+  <<< Gracias. Ahora comparte tu *número de teléfono* (10 dígitos).
+
+[2026-04-19 01:35:57] bot=1 user=5306758063 estado=GET_PHONE
+  >>> 3181234567
+  <<< ¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊
+
+📋 *Resumen de tu registro:*
+• Nombre: Lorena
+• Interés: C
+• Correo: Lore@gmail.com
+• Teléfono: 3181234567
+
+Escribe /start si deseas hacer otra consulta.
+
+[2026-04-19 01:46:24] bot=1 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:46:25] bot=1 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo B — $25.000
+  2. Producto Demo C — Consultar
+  3. Producto Demo A — $10.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 01:46:29] bot=1 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> 2
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo B*
+💰 Precio: *$25.000*
+
+Descripción demo del producto B
+
+¿Te gustaría adquirir *Producto Demo B*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:46:34] bot=1 user=1578862237 estado=PRODUCT_DETAIL
+  >>> 4
+  <<< Sin problema, aquí tienes otras opciones:
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+Escribe el número o nombre del que te interese.
+
+[2026-04-19 01:46:37] bot=1 user=1578862237 estado=WAIT_SELECTION
+  >>> ;
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+[2026-04-19 01:46:39] bot=1 user=1578862237 estado=WAIT_SELECTION
+  >>> G
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+[2026-04-19 01:46:40] bot=1 user=1578862237 estado=WAIT_SELECTION
+  >>> H
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+[2026-04-19 01:46:41] bot=1 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> D
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo A*
+💰 Precio: *$10.000*
+
+Descripción demo del producto A
+
+¿Te gustaría adquirir *Producto Demo A*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:46:44] bot=1 user=1578862237 estado=PRODUCT_DETAIL
+  >>> A
+  <<< Sin problema, aquí tienes otras opciones:
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+Escribe el número o nombre del que te interese.
+
+[2026-04-19 01:46:54] bot=1 user=1578862237 estado=WAIT_SELECTION
+  >>> Borrar mi sesión
+  <<< No reconocí esa opción. Responde con el *número* o el *nombre* exacto del producto.
+
+🔹 *OTROS*
+  1. Producto Demo A — $10.000
+  2. Producto Demo B — $25.000
+  3. Producto Demo C — Consultar
+
+[2026-04-19 01:51:36] bot=1 user=8265945621 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:51:37] bot=1 user=8265945621 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo B — $25.000
+  2. Producto Demo A — $10.000
+  3. Producto Demo C — Consultar
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 01:53:57] bot=1 user=8265945621 estado=DETALLE_PRODUCTO
+  >>> 1
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo A*
+💰 Precio: *$10.000*
+
+Descripción demo del producto A
+
+¿Te gustaría adquirir *Producto Demo A*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 01:54:12] bot=1 user=8265945621 estado=PRODUCT_DETAIL
+  >>> Si
+  <<< ¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?
+
+[2026-04-19 01:54:20] bot=1 user=8265945621 estado=GET_NOMBRE
+  >>> Amari
+  <<< Gracias, *Amari*! ¿Cuál es tu *correo electrónico*?
+
+[2026-04-19 01:54:37] bot=1 user=8265945621 estado=GET_EMAIL
+  >>> felly0343@gmail.com
+  <<< Gracias. Ahora comparte tu *número de teléfono* (10 dígitos).
+
+[2026-04-19 01:54:49] bot=1 user=8265945621 estado=GET_PHONE
+  >>> 3023803414
+  <<< ¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊
+
+📋 *Resumen de tu registro:*
+• Nombre: Amari
+• Interés: 1
+• Correo: felly0343@gmail.com
+• Teléfono: 3023803414
+
+Escribe /start si deseas hacer otra consulta.
+
+[2026-04-19 01:59:58] bot=1 user=1578862237 estado=START
+  >>> /start
+  <<< ¡Hola! 👋 Bienvenido a nuestra tienda.
+
+¿En qué producto o servicio estás interesado hoy?
+
+[2026-04-19 01:59:58] bot=1 user=1578862237 estado=START_SUGERENCIA
+  >>> /start
+  <<< ✨ *Algunos de nuestros productos destacados:*
+
+🔹 *OTROS*
+  1. Producto Demo C — Consultar
+  2. Producto Demo B — $25.000
+  3. Producto Demo A — $10.000
+
+Escribe el *número* o *nombre* de uno para saber más, o cuéntame qué estás buscando.
+También puedes escribir *"ver todos"* para ver el catálogo completo. 😊
+
+[2026-04-19 02:00:49] bot=1 user=1578862237 estado=DETALLE_PRODUCTO
+  >>> Producto Demo C
+  <<< ¿Qué características te interesan?
+
+🏷️ *Producto Demo C*
+💰 Precio: *Consultar*
+
+Precio a consultar
+
+¿Te gustaría adquirir *Producto Demo C*? Responde *sí* para continuar o *no* para ver otras opciones. 😊
+
+[2026-04-19 02:00:58] bot=1 user=1578862237 estado=PRODUCT_DETAIL
+  >>> Si
+  <<< ¡Genial! Para enviarte atención personalizada, ¿cuál es tu nombre?
+
+[2026-04-19 02:01:05] bot=1 user=1578862237 estado=GET_NOMBRE
+  >>> Ana María
+  <<< Gracias, *Ana María*! ¿Cuál es tu *correo electrónico*?
+
+[2026-04-19 02:01:14] bot=1 user=1578862237 estado=GET_EMAIL
+  >>> Anamar@gmail.com
+  <<< Gracias. Ahora comparte tu *número de teléfono* (10 dígitos).
+
+[2026-04-19 02:01:23] bot=1 user=1578862237 estado=GET_PHONE
+  >>> 3181234567
+  <<< ¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊
+
+📋 *Resumen de tu registro:*
+• Nombre: Ana María
+• Interés: Producto Demo C
+• Correo: Anamar@gmail.com
+• Teléfono: 3181234567
+
+Escribe /start si deseas hacer otra consulta.
+

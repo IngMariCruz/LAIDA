@@ -8,7 +8,6 @@ let db: DatabaseType | null = null
 function getDb(): DatabaseType {
   if (db) return db
 
-  // Mantener consistencia con docker-compose (volumen ./bd) cuando no hay DB_PATH.
   const dbPath = process.env.DB_PATH ?? path.join(process.cwd(), "bd", "laida.db")
   const dbDir = path.dirname(dbPath)
 
@@ -26,7 +25,6 @@ function getDb(): DatabaseType {
 function initTables(database: DatabaseType): void {
   // ==================== SISTEMA DE USUARIOS Y ROLES ====================
 
-  // Tabla de usuarios (super_admin y managers)
   database.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +37,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de bots
   database.exec(`
     CREATE TABLE IF NOT EXISTS bots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,14 +53,12 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Migración suave: agregar marca_id si la tabla bots ya existía
   try {
     database.exec("ALTER TABLE bots ADD COLUMN marca_id INTEGER")
   } catch {
     // ya existe
   }
 
-  // Tabla de relación usuarios-bots
   database.exec(`
     CREATE TABLE IF NOT EXISTS usuario_bots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,8 +71,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de leads capturados por bots
-  // Nota: para poder visualizar clasificación desde el primer mensaje, email/telefono/interes pueden ser NULL.
   database.exec(`
     CREATE TABLE IF NOT EXISTS leads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,8 +95,7 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Migración: si la tabla leads fue creada con NOT NULL en email/telefono/interes, recrearla.
-  // Se conserva el último registro (mayor id) por (bot_id, telegram_user_id) para mantener unicidad.
+  // Migración: si leads tiene campos NOT NULL que deben ser nullable, o le falta actualizado_en
   try {
     const leadsInfo = database.prepare("PRAGMA table_info(leads)").all() as Array<{ name: string; notnull: number }>
     const emailInfo = leadsInfo.find((c) => c.name === "email")
@@ -135,8 +127,6 @@ function initTables(database: DatabaseType): void {
           UNIQUE(bot_id, telegram_user_id)
         )
       `)
-
-      // Copiar: último por (bot_id, telegram_user_id). Si telegram_user_id es NULL, se conserva por id.
       database.exec(`
         INSERT INTO leads_new (
           id, nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
@@ -161,20 +151,37 @@ function initTables(database: DatabaseType): void {
         ) t
         ON l.id = t.max_id
       `)
-
       database.exec("DROP TABLE leads")
       database.exec("ALTER TABLE leads_new RENAME TO leads")
       database.exec("PRAGMA foreign_keys = ON")
     }
   } catch {
-    // Si algo falla, no bloquear inicialización. El sistema seguirá con el esquema existente.
     try { database.exec("PRAGMA foreign_keys = ON") } catch {}
   }
 
-  // Migración suave: añadir nombre a leads si no existe
   try { database.exec("ALTER TABLE leads ADD COLUMN nombre TEXT") } catch {}
 
-  // Tabla de notificaciones
+  // Migración: agregar marca_id a leads para persistir la marca aunque se borre el bot
+  try { database.exec("ALTER TABLE leads ADD COLUMN marca_id INTEGER") } catch {}
+
+  // Backfill: inferir marca_id desde el bot activo (bot_id conocido)
+  try {
+    database.exec(`
+      UPDATE leads
+      SET marca_id = (SELECT marca_id FROM bots WHERE id = leads.bot_id)
+      WHERE marca_id IS NULL AND bot_id IS NOT NULL
+    `)
+  } catch {}
+
+  // Backfill: inferir marca_id por slug (bot_id null por borrado del bot)
+  try {
+    database.exec(`
+      UPDATE leads
+      SET marca_id = (SELECT marca_id FROM bots WHERE slug = leads.bot_slug)
+      WHERE marca_id IS NULL AND bot_slug IS NOT NULL
+    `)
+  } catch {}
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS notificaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -205,31 +212,120 @@ function initTables(database: DatabaseType): void {
     console.log('✅ Usuario super admin creado: admin@laida.com / admin123')
   }
 
-  // ==================== TABLAS LEGACY (MANTENER COMPATIBILIDAD) ====================
+  // ==================== MARCAS (schema nuevo: usuario_id + nombre_marca) ====================
 
-  // Tabla de marcas
   database.exec(`
     CREATE TABLE IF NOT EXISTS marcas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id INTEGER NOT NULL UNIQUE,
       nombre_marca TEXT NOT NULL,
-      correo_empresa TEXT NOT NULL UNIQUE,
-      nombre_representante TEXT NOT NULL,
-      numero TEXT NOT NULL,
-      correo_personal TEXT NOT NULL,
-      password TEXT NOT NULL,
-      fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )
   `)
 
-  // Migraciones
+  // Migración: si marcas tiene schema antiguo (correo_empresa), reconstruir
   try {
-    database.exec("ALTER TABLE marcas ADD COLUMN password TEXT DEFAULT 'password123'")
-  } catch {
-    // La columna ya existe
+    const marcasInfo = database.prepare("PRAGMA table_info(marcas)").all() as Array<{ name: string }>
+    const hasCorreoEmpresa = marcasInfo.some(c => c.name === "correo_empresa")
+
+    if (hasCorreoEmpresa) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      const oldMarcas = database.prepare("SELECT * FROM marcas").all() as Array<{
+        id: number
+        nombre_marca: string
+        correo_empresa: string
+        nombre_representante: string
+        numero?: string
+        correo_personal?: string
+        password?: string
+        fecha_registro?: string
+        actualizado_en?: string
+      }>
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS marcas_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          usuario_id INTEGER NOT NULL UNIQUE,
+          nombre_marca TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        )
+      `)
+
+      const insertMarcaNew = database.prepare(`
+        INSERT OR IGNORE INTO marcas_new (id, usuario_id, nombre_marca, created_at, actualizado_en)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+
+      for (const oldMarca of oldMarcas) {
+        let usuario = database.prepare("SELECT id FROM usuarios WHERE correo = ?")
+          .get(oldMarca.correo_empresa) as { id: number } | undefined
+
+        if (!usuario) {
+          const res = database.prepare(
+            "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+          ).run(
+            oldMarca.correo_empresa,
+            oldMarca.password || 'password123',
+            'manager',
+            oldMarca.nombre_representante || oldMarca.nombre_marca
+          )
+          usuario = { id: Number(res.lastInsertRowid) }
+        }
+
+        insertMarcaNew.run(
+          oldMarca.id,
+          usuario.id,
+          oldMarca.nombre_marca,
+          oldMarca.fecha_registro || new Date().toISOString().replace('T', ' ').slice(0, 19),
+          oldMarca.actualizado_en || new Date().toISOString().replace('T', ' ').slice(0, 19)
+        )
+      }
+
+      // Managers sin marca → crear marca
+      const managers = database.prepare(
+        "SELECT id, nombre FROM usuarios WHERE rol = 'manager'"
+      ).all() as Array<{ id: number; nombre: string | null }>
+
+      for (const manager of managers) {
+        const existing = database.prepare("SELECT id FROM marcas_new WHERE usuario_id = ?")
+          .get(manager.id) as { id: number } | undefined
+        if (!existing) {
+          database.prepare("INSERT INTO marcas_new (usuario_id, nombre_marca) VALUES (?, ?)")
+            .run(manager.id, manager.nombre || 'Mi Marca')
+        }
+      }
+
+      database.exec("DROP TABLE marcas")
+      database.exec("ALTER TABLE marcas_new RENAME TO marcas")
+      database.exec("PRAGMA foreign_keys = ON")
+      console.log("✅ Migración de marcas completada (schema nuevo)")
+    } else {
+      // Schema nuevo: asegurar que todos los managers tengan marca
+      const managers = database.prepare(
+        "SELECT id, nombre FROM usuarios WHERE rol = 'manager'"
+      ).all() as Array<{ id: number; nombre: string | null }>
+
+      for (const manager of managers) {
+        const existing = database.prepare("SELECT id FROM marcas WHERE usuario_id = ?")
+          .get(manager.id) as { id: number } | undefined
+        if (!existing) {
+          database.prepare("INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)")
+            .run(manager.id, manager.nombre || 'Mi Marca')
+        }
+      }
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+    console.error("Error migrando tabla marcas:", e)
   }
 
-  // Tabla de clientes
+  // ==================== TABLAS ASOCIADAS A MARCAS ====================
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS clientes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -244,7 +340,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de productos
   database.exec(`
     CREATE TABLE IF NOT EXISTS productos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -255,11 +350,50 @@ function initTables(database: DatabaseType): void {
       imagen_url TEXT,
       activo INTEGER DEFAULT 1,
       fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE SET NULL
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
     )
   `)
 
-  // Tabla de atributos de productos
+  // Migración: si productos FK referencia usuarios (schema viejo), remap valores y reconstruir
+  try {
+    const fks = database.prepare("PRAGMA foreign_key_list(productos)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
+
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      // Remap marca_id: usuario_id → marca.id
+      database.exec(`
+        UPDATE productos
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = productos.marca_id)
+        WHERE marca_id IS NOT NULL
+      `)
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS productos_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          precio REAL NOT NULL,
+          marca_id INTEGER,
+          descripcion TEXT,
+          imagen_url TEXT,
+          activo INTEGER DEFAULT 1,
+          fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
+        )
+      `)
+      database.exec(`
+        INSERT INTO productos_new (id, nombre, precio, marca_id, descripcion, imagen_url, activo, fecha_registro)
+        SELECT id, nombre, precio, marca_id, descripcion, imagen_url, activo, fecha_registro FROM productos
+      `)
+      database.exec("DROP TABLE productos")
+      database.exec("ALTER TABLE productos_new RENAME TO productos")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS producto_atributos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -273,7 +407,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de configuración de flujo del bot
   database.exec(`
     CREATE TABLE IF NOT EXISTS bot_flow_config (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -292,7 +425,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de interacciones del bot (para análisis)
   database.exec(`
     CREATE TABLE IF NOT EXISTS bot_interacciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -307,7 +439,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de campañas automatizadas
   database.exec(`
     CREATE TABLE IF NOT EXISTS campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -322,7 +453,6 @@ function initTables(database: DatabaseType): void {
     )
   `)
 
-  // Tabla de esencia
   database.exec(`
     CREATE TABLE IF NOT EXISTS esencia (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -331,292 +461,259 @@ function initTables(database: DatabaseType): void {
       historia TEXT NOT NULL,
       marca_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
     )
   `)
 
-  // Tabla de config_bot
+  // Migraciones suaves de esencia (antes del FK migration para garantizar columnas)
+  try { database.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''") } catch {}
+  try { database.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP") } catch {}
+
+  // Migración: si esencia FK referencia usuarios, remap y reconstruir
+  try {
+    const fks = database.prepare("PRAGMA foreign_key_list(esencia)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
+
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
+
+      database.exec(`
+        UPDATE esencia
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = esencia.marca_id)
+        WHERE marca_id IS NOT NULL
+      `)
+
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS esencia_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          valores TEXT NOT NULL,
+          diferencia TEXT NOT NULL,
+          historia TEXT NOT NULL,
+          marca_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+        )
+      `)
+      database.exec(`
+        INSERT INTO esencia_new (id, valores, diferencia, historia, marca_id, created_at)
+        SELECT id, valores, diferencia, historia, marca_id, created_at FROM esencia
+      `)
+      database.exec("DROP TABLE esencia")
+      database.exec("ALTER TABLE esencia_new RENAME TO esencia")
+      database.exec("PRAGMA foreign_keys = ON")
+    }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
+
   database.exec(`
     CREATE TABLE IF NOT EXISTS config_bot (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       marca_id INTEGER NOT NULL UNIQUE,
       mensaje_bienvenida TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marca_id) REFERENCES usuarios(id) ON DELETE CASCADE
+      FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
     )
   `)
 
-  // Migraciones adicionales
+  // Migración: si config_bot FK referencia usuarios, remap y reconstruir
   try {
-    database.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''")
-  } catch {
-    // La columna ya existe
-  }
+    const fks = database.prepare("PRAGMA foreign_key_list(config_bot)").all() as Array<{ table: string; from: string }>
+    const oldFK = fks.some(fk => fk.from === 'marca_id' && fk.table === 'usuarios')
 
-  try {
-    database.exec("ALTER TABLE esencia ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
-  } catch {
-    // La columna ya existe
-  }
+    if (oldFK) {
+      database.exec("PRAGMA foreign_keys = OFF")
 
-  seedDemoData(database)
-  ensureDemoLeads(database)
-}
-
-function seedDemoData(database: DatabaseType): void {
-  // Seed mínimo e idempotente para entornos nuevos (evita que la app arranque "vacía")
-  try {
-    const hasAnyBot = database.prepare("SELECT 1 FROM bots LIMIT 1").get()
-    const hasAnyProduct = database.prepare("SELECT 1 FROM productos LIMIT 1").get()
-    const hasAnyEssence = database.prepare("SELECT 1 FROM esencia LIMIT 1").get()
-    const hasAnyConfig = database.prepare("SELECT 1 FROM config_bot LIMIT 1").get()
-
-    if (hasAnyBot || hasAnyProduct || hasAnyEssence || hasAnyConfig) return
-
-    // Crear manager demo si no existe
-    const managerEmail = "demo@laida.com"
-    const existingManager = database
-      .prepare("SELECT id FROM usuarios WHERE correo = ?")
-      .get(managerEmail) as { id: number } | undefined
-
-    let managerId = existingManager?.id
-    if (!managerId) {
-      const result = database.prepare(
-        "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
-      ).run(managerEmail, "demo123", "manager", "Marca Demo")
-      managerId = Number(result.lastInsertRowid)
-    }
-
-    // Crear bot demo (inactivo, token placeholder)
-    const botSlug = "bot-demo"
-    const existingBot = database
-      .prepare("SELECT id FROM bots WHERE slug = ?")
-      .get(botSlug) as { id: number } | undefined
-
-    let botId = existingBot?.id
-    if (!botId) {
-      const result = database.prepare(
-        `INSERT INTO bots (nombre, slug, telegram_token, openai_key, estado, manager_id, marca_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).run(
-        "Bot Demo",
-        botSlug,
-        "000000:demo-token",
-        null,
-        "inactivo",
-        managerId,
-        managerId
-      )
-      botId = Number(result.lastInsertRowid)
-    }
-
-    // Asignación usuario_bots
-    try {
-      database
-        .prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
-        .run(managerId, botId)
-    } catch {
-      // ignore
-    }
-
-    // Config bot y esencia demo para la marca (manager)
-    database
-      .prepare(
-        "INSERT OR IGNORE INTO config_bot (marca_id, mensaje_bienvenida) VALUES (?, ?)"
-      )
-      .run(managerId, "¡Hola! Soy tu asistente. ¿Qué estás buscando hoy?")
-
-    database
-      .prepare(
-        "INSERT OR IGNORE INTO esencia (valores, diferencia, historia, marca_id) VALUES (?, ?, ?, ?)"
-      )
-      .run(
-        "Calidad, confianza, cercanía",
-        "Atención personalizada y respuesta rápida",
-        "Somos una marca enfocada en ayudarte a elegir mejor.",
-        managerId
-      )
-
-    // Productos demo
-    const insertProducto = database.prepare(
-      `INSERT INTO productos (nombre, precio, marca_id, descripcion, activo)
-       VALUES (?, ?, ?, ?, ?)`
-    )
-    insertProducto.run("Producto Demo A", 10000, managerId, "Descripción demo del producto A", 1)
-    insertProducto.run("Producto Demo B", 25000, managerId, "Descripción demo del producto B", 1)
-    insertProducto.run("Producto Demo C", 0, managerId, "Precio a consultar", 1)
-
-    // Flow config demo (opcional)
-    database
-      .prepare(
-        `INSERT OR IGNORE INTO bot_flow_config (
-           bot_id, mensaje_bienvenida, mensaje_sin_interes, mensaje_productos,
-           mensaje_caracteristicas, mensaje_confirmacion, mensaje_agradecimiento,
-           mostrar_productos_inicio, max_productos_mostrar, permitir_recomendaciones
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .run(
-        botId,
-        "¡Hola! 👋 Bienvenido a nuestra tienda.",
-        "Entiendo. Antes de irte, ¿quieres que te muestre algunos productos?",
-        "¿Te gustaría ver nuestros productos disponibles?",
-        "¿Qué características te interesan?",
-        "¿Deseas confirmar tu interés en este producto?",
-        "¡Gracias por tu interés! Un asesor se pondrá en contacto contigo pronto. 😊",
-        1,
-        5,
-        1
-      )
-
-    console.log("✅ Precarga demo aplicada (BD vacía)")
-  } catch {
-    // No bloquear arranque si el seed falla
-  }
-}
-
-function ensureDemoLeads(database: DatabaseType): void {
-  // Seed específico de leads para el usuario demo. Idempotente: solo asegura un mínimo.
-  try {
-    if (process.env.NODE_ENV === "production") return
-
-    const managerEmail = "demo@laida.com"
-    const manager = database
-      .prepare("SELECT id FROM usuarios WHERE correo = ?")
-      .get(managerEmail) as { id: number } | undefined
-    if (!manager) return
-
-    const bot = database
-      .prepare("SELECT id, slug, nombre FROM bots WHERE slug = ?")
-      .get("bot-demo") as { id: number; slug: string; nombre: string } | undefined
-    if (!bot) return
-
-    const row = database
-      .prepare("SELECT COUNT(1) AS cnt FROM leads WHERE bot_id = ?")
-      .get(bot.id) as { cnt: number } | undefined
-
-    const current = Number(row?.cnt ?? 0)
-    const target = 52
-
-    const estados = ["nuevo", "contactado", "cerrado"] as const
-    const categorias = ["cold", "warm", "hot"] as const
-    const intereses = [
-      "Producto Demo A",
-      "Producto Demo B",
-      "Producto Demo C",
-      "Consulta general",
-      "Cotización",
-      "Disponibilidad",
-    ]
-
-    const insert = database.prepare(`
-      INSERT OR IGNORE INTO leads (
-        nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
-        telegram_user_id, estado, categoria, notas, actualizado_en
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `)
-
-    if (current < target) {
-      const tx = database.transaction(() => {
-        for (let i = 1; i <= target; i++) {
-          const telegramUserId = 9100000000 + i
-          const estado = estados[i % estados.length]
-          const categoria = categorias[i % categorias.length]
-          const interes = intereses[i % intereses.length]
-
-          const isPlaceholder = i % 10 === 0
-          const nombre = i % 5 === 0 ? null : `Lead Demo ${i}`
-          const email = isPlaceholder ? "lead@laida.com" : `lead${i}@example.com`
-          const telefono = isPlaceholder ? "00000000" : `300${String(telegramUserId).slice(-7)}`
-
-          insert.run(
-            nombre,
-            bot.id,
-            bot.slug,
-            bot.nombre,
-            interes,
-            email,
-            telefono,
-            telegramUserId,
-            estado,
-            categoria,
-            `Seed demo (${categoria}/${estado})`
-          )
-        }
-      })
-
-      tx()
-    }
-
-    // Ajustar fechas (created_at/actualizado_en) para que analytics (últimos 7 días) se vea bien.
-    // Se actualizan los últimos N leads del bot demo (N = min(total, target)).
-    try {
-      const leadRows = database
-        .prepare("SELECT id FROM leads WHERE bot_id = ? ORDER BY id ASC")
-        .all(bot.id) as Array<{ id: number }>
-
-      const total = leadRows.length
-      const n = Math.min(total, target)
-      if (n > 0) {
-        const ids = leadRows.slice(-n).map((r) => r.id)
-        const update = database.prepare(
-          "UPDATE leads SET created_at = ?, actualizado_en = ? WHERE id = ?"
-        )
-
-        const now = new Date()
-
-        const toSqliteDateTime = (d: Date) =>
-          d.toISOString().replace("T", " ").slice(0, 19)
-
-        const txUpdate = database.transaction(() => {
-          for (let idx = 0; idx < ids.length; idx++) {
-            // Los más nuevos quedan más cerca de "hoy".
-            const dayOffset = (ids.length - 1 - idx) % 7
-            const d = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
-
-            // Variación de hora para que no queden todos iguales
-            const hour = 9 + (idx % 9)
-            const minute = (idx * 13) % 60
-            const second = (idx * 7) % 60
-            d.setUTCHours(hour, minute, second, 0)
-
-            const ts = toSqliteDateTime(d)
-            update.run(ts, ts, ids[idx])
-          }
-        })
-
-        txUpdate()
-      }
-    } catch {
-      // ignore
-    }
-
-    // Backfill: si el lead tiene interes == nombre de producto y producto_id es NULL,
-    // asignar producto_id para que filtros/analytics funcionen.
-    try {
-      const backfillStmt = database.prepare(`
-        UPDATE leads
-        SET producto_id = (
-          SELECT p.id
-          FROM productos p
-          WHERE p.marca_id = ?
-            AND p.nombre = leads.interes
-          LIMIT 1
-        )
-        WHERE bot_id = ?
-          AND producto_id IS NULL
-          AND interes IS NOT NULL
+      database.exec(`
+        UPDATE config_bot
+        SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = config_bot.marca_id)
+        WHERE marca_id IS NOT NULL
       `)
 
-      backfillStmt.run(manager.id, bot.id)
-    } catch {
-      // ignore
+      database.exec(`
+        CREATE TABLE IF NOT EXISTS config_bot_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          marca_id INTEGER NOT NULL UNIQUE,
+          mensaje_bienvenida TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+        )
+      `)
+      database.exec(`
+        INSERT INTO config_bot_new (id, marca_id, mensaje_bienvenida, created_at)
+        SELECT id, marca_id, mensaje_bienvenida, created_at FROM config_bot
+      `)
+      database.exec("DROP TABLE config_bot")
+      database.exec("ALTER TABLE config_bot_new RENAME TO config_bot")
+      database.exec("PRAGMA foreign_keys = ON")
     }
+  } catch (e) {
+    try { database.exec("PRAGMA foreign_keys = ON") } catch {}
+  }
+
+  // Migración: remap bots.marca_id (de usuario_id a marca.id donde no apunte ya a una marca válida)
+  try {
+    database.exec(`
+      UPDATE bots
+      SET marca_id = (SELECT m.id FROM marcas m WHERE m.usuario_id = bots.marca_id)
+      WHERE marca_id IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM marcas WHERE id = bots.marca_id)
+    `)
   } catch {
-    // No bloquear arranque si el seed falla
+    // ignore
+  }
+
+  seedInitialData(database)
+}
+
+function seedInitialData(database: DatabaseType): void {
+  try {
+    const managerCount = database.prepare(
+      "SELECT COUNT(1) AS cnt FROM usuarios WHERE rol = 'manager'"
+    ).get() as { cnt: number }
+
+    if (Number(managerCount.cnt) > 0) return
+
+    const toSqlite = (d: Date) => d.toISOString().replace('T', ' ').slice(0, 19)
+    const now = new Date()
+
+    // ---- Manager PALOMA (sin leads ni productos) ----
+    const palomaResult = database.prepare(
+      "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+    ).run('paloma@laida.com', 'paloma123', 'manager', 'Manager Paloma')
+    const palomaId = Number(palomaResult.lastInsertRowid)
+
+    database.prepare(
+      "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
+    ).run(palomaId, 'PALOMA')
+
+    // ---- Manager PADIA ----
+    const padiaResult = database.prepare(
+      "INSERT INTO usuarios (correo, password, rol, nombre) VALUES (?, ?, ?, ?)"
+    ).run('padia@laida.com', 'padia123', 'manager', 'Manager Padia')
+    const padiaManagerId = Number(padiaResult.lastInsertRowid)
+
+    const padiaMarcaResult = database.prepare(
+      "INSERT INTO marcas (usuario_id, nombre_marca) VALUES (?, ?)"
+    ).run(padiaManagerId, 'PADIA')
+    const padiaMarcaId = Number(padiaMarcaResult.lastInsertRowid)
+
+    // Productos PADIA
+    const insertProducto = database.prepare(
+      "INSERT INTO productos (nombre, precio, marca_id, descripcion, activo) VALUES (?, ?, ?, ?, ?)"
+    )
+    const prod1 = insertProducto.run('Curso IA Básico', 150000, padiaMarcaId, 'Introducción a la inteligencia artificial y sus aplicaciones prácticas.', 1)
+    const prod2 = insertProducto.run('Curso IA Intermedio', 280000, padiaMarcaId, 'Modelos de aprendizaje automático y procesamiento de datos avanzado.', 1)
+    const prod3 = insertProducto.run('Curso IA Avanzado', 450000, padiaMarcaId, 'Deep learning, redes neuronales y proyectos de IA aplicada.', 1)
+    const productoIds = [
+      Number(prod1.lastInsertRowid),
+      Number(prod2.lastInsertRowid),
+      Number(prod3.lastInsertRowid),
+    ]
+    const productoNombres = ['Curso IA Básico', 'Curso IA Intermedio', 'Curso IA Avanzado']
+
+    // Bot demo PADIA (inactivo)
+    const botResult = database.prepare(
+      "INSERT INTO bots (nombre, slug, telegram_token, estado, manager_id, marca_id) VALUES (?, ?, ?, ?, ?, ?)"
+    ).run('Bot PADIA', 'bot-padia', '000000:padia-token', 'inactivo', padiaManagerId, padiaMarcaId)
+    const padiaBotId = Number(botResult.lastInsertRowid)
+
+    database.prepare("INSERT OR IGNORE INTO usuario_bots (usuario_id, bot_id) VALUES (?, ?)")
+      .run(padiaManagerId, padiaBotId)
+
+    // 50 Leads PADIA
+    const estados = ['nuevo', 'contactado', 'cerrado'] as const
+    // Básico (25): 41% hot=10, 34% warm=9, 25% cold=6 | Intermedio (26): 76% warm=20, 24% cold=6 | Avanzado (25): 68% hot=17, 32% warm=8
+    const catPorProducto: string[][] = [
+      [...Array(10).fill('hot'), ...Array(9).fill('warm'), ...Array(6).fill('cold')],
+      [...Array(20).fill('warm'), ...Array(6).fill('cold')],
+      [...Array(17).fill('hot'), ...Array(8).fill('warm')],
+    ]
+    const catContadores: number[] = [0, 0, 0]
+    const nombresSeed = [
+      'Andrés García', 'María Rodríguez', 'Carlos López', 'Laura Martínez', 'Juan Pérez',
+      'Sofía Torres', 'Diego Herrera', 'Valentina Castro', 'Felipe Morales', 'Camila Vargas',
+      'Sebastián Ruiz', 'Isabella Sánchez', 'David Jiménez', 'Lucía Gómez', 'Mateo Díaz',
+    ]
+
+    const insertLead = database.prepare(`
+      INSERT INTO leads (
+        nombre, bot_id, bot_slug, bot_nombre, interes, email, telefono,
+        telegram_user_id, estado, categoria, producto_id, marca_id, notas
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+
+    const leadTx = database.transaction(() => {
+      for (let i = 1; i <= 76; i++) {
+        const estado = estados[i % estados.length]
+        const prodIndex = i % productoIds.length
+        const categoria = catPorProducto[prodIndex][catContadores[prodIndex]++]
+        insertLead.run(
+          nombresSeed[i % nombresSeed.length],
+          padiaBotId,
+          'bot-padia',
+          'Bot PADIA',
+          productoNombres[prodIndex],
+          `lead${i}@padia-seed.com`,
+          `316${String(8200000000 + i).slice(-7)}`,
+          8200000000 + i,
+          estado,
+          categoria,
+          productoIds[prodIndex],
+          padiaMarcaId,
+          `Seed PADIA (${categoria}/${estado})`
+        )
+      }
+    })
+    leadTx()
+
+    // Distribuir fechas de leads en los últimos 30 días
+    const leadRows = database.prepare(
+      "SELECT id FROM leads WHERE marca_id = ? ORDER BY id ASC"
+    ).all(padiaMarcaId) as Array<{ id: number }>
+
+    const updateDate = database.prepare("UPDATE leads SET created_at = ?, actualizado_en = ? WHERE id = ?")
+    const dateTx = database.transaction(() => {
+      leadRows.forEach((row, idx) => {
+        const dayOffset = Math.floor(idx * 30 / leadRows.length)
+        const d = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
+        d.setUTCHours(9 + (idx % 9), (idx * 13) % 60, (idx * 7) % 60, 0)
+        const ts = toSqlite(d)
+        updateDate.run(ts, ts, row.id)
+      })
+    })
+    dateTx()
+
+    // 10 Clientes PADIA
+    const clientes = [
+      { cedula: '1012345678', nombre: 'Daniela',  apellido: 'Ospina',    correo: 'daniela.ospina@email.com',  telefono: '3101234567' },
+      { cedula: '1023456789', nombre: 'Camilo',   apellido: 'Restrepo',  correo: 'camilo.r@email.com',        telefono: '3112345678' },
+      { cedula: '1034567890', nombre: 'Natalia',  apellido: 'Henao',     correo: 'natalia.h@email.com',       telefono: '3123456789' },
+      { cedula: '1045678901', nombre: 'Andrés',   apellido: 'Cárdenas',  correo: 'andres.c@email.com',        telefono: '3134567890' },
+      { cedula: '1056789012', nombre: 'Marcela',  apellido: 'Zuluaga',   correo: 'marcela.z@email.com',       telefono: '3145678901' },
+      { cedula: '1067890123', nombre: 'Ricardo',  apellido: 'Montoya',   correo: 'ricardo.m@email.com',       telefono: '3156789012' },
+      { cedula: '1078901234', nombre: 'Juliana',  apellido: 'Ríos',      correo: 'juliana.r@email.com',       telefono: '3167890123' },
+      { cedula: '1089012345', nombre: 'Santiago', apellido: 'Bedoya',    correo: 'santiago.b@email.com',      telefono: '3178901234' },
+      { cedula: '1090123456', nombre: 'Valeria',  apellido: 'Arango',    correo: 'valeria.a@email.com',       telefono: '3189012345' },
+      { cedula: '1001234567', nombre: 'Felipe',   apellido: 'Salazar',   correo: 'felipe.s@email.com',        telefono: '3190123456' },
+    ]
+
+    const insertCliente = database.prepare(
+      "INSERT INTO clientes (cedula, nombre, apellido, correo, telefono, marca_id) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    const clienteTx = database.transaction(() => {
+      for (const c of clientes) {
+        insertCliente.run(c.cedula, c.nombre, c.apellido, c.correo, c.telefono, padiaMarcaId)
+      }
+    })
+    clienteTx()
+
+    console.log('✅ Seed inicial aplicado: PALOMA y PADIA creadas')
+  } catch (e) {
+    console.error('Error en seedInitialData:', e)
   }
 }
 
-// Export a proxy that lazily initializes the database
 const dbProxy = new Proxy({} as DatabaseType, {
   get(_, prop: keyof DatabaseType) {
     const database = getDb()

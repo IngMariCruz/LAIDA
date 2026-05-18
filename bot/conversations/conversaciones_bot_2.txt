@@ -1,0 +1,123 @@
+====================================
+Fecha: 2026-05-17 12:05:48
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? ¿Estás buscando algún tipo de mug en particular?
+
+====================================
+Fecha: 2026-05-17 12:06:06
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Qué tipos de mug existen?
+respuesta_bot: Contamos con varios tipos de mugs: 
+
+1. Mug Blanco – $22,000
+2. Mug Color – $20,000
+3. Mug Mágico (mate) – $27,000
+4. Mug con Cuchara (marca Liceria) – $27,000
+5. Mug con Tapa de Caucho (marca Liceria) – $31,000
+
+¿Hay algún tipo que te interese más o alguna característica específica que estés buscando?
+
+====================================
+Fecha: 2026-05-17 12:06:59
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Qué diferencia el mug color del mágico
+respuesta_bot: La principal diferencia es que el Mug Color es simplemente un mug de color, mientras que el Mug Mágico tiene un acabado mate y cambia de apariencia al calentarse. ¿Te gustaría saber más sobre alguno de ellos o necesitas ayuda para elegir?
+
+====================================
+Fecha: 2026-05-17 12:08:00
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: test@laida.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 12:08:13
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3184724473
+respuesta_bot: Estimado/a [Nombre del Cliente],
+
+¡Gracias por dejarnos tus datos! Estamos emocionados de que estés interesado/a en nuestro Mug Mágico. Este producto no solo es una taza, ¡es una experiencia mágica que transforma tu bebida caliente en una obra de arte!
+
+Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos. Estamos aquí para ayudarte a que tu experiencia sea inolvidable.
+
+Esperamos que disfrutes de tu Mug Mágico tanto como nosotros disfrutamos creándolo para ti.
+
+¡Un cordial saludo!
+
+[Tu Nombre]  
+[Tu Cargo]  
+[Nombre de la Empresa]  
+[Datos de Contacto]
+
+📦 Producto: Mug Mágico
+📧 Email: test@laida.com
+📞 Teléfono: 3184724473
+
+====================================
+Fecha: 2026-05-17 12:18:31
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando un mug o necesitas alguna otra cosa, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-17 12:18:48
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Si busco un mug
+respuesta_bot: ¡Genial! ¿Tienes alguna preferencia en cuanto al color, diseño o características del mug? También puedo ayudarte a encontrar uno que se adapte a tus necesidades.
+
+====================================
+Fecha: 2026-05-17 12:19:07
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: Quiero uno rosado
+respuesta_bot: Lamentablemente, no tenemos mugs rosados en este momento, pero tenemos un mug de color general que podría interesarte. Además, contamos con un mug mágico que tiene un acabado especial. ¿Te gustaría saber más sobre alguno de estos?
+
+====================================
+Fecha: 2026-05-17 12:20:06
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: Test@laida.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-17 12:20:20
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3184624472
+respuesta_bot: Estimado/a [Nombre del Cliente],
+
+¡Gracias por compartir tus datos con nosotros! Estamos encantados de que estés interesado/a en nuestro exclusivo Mug con Cuchara. Sabemos que cada taza de café o té puede convertirse en un momento especial, y queremos asegurarnos de que disfrutes de cada sorbo.
+
+Si tienes alguna pregunta o necesitas más información sobre nuestro producto, no dudes en contactarnos. Estamos aquí para ayudarte y asegurarnos de que tu experiencia con nosotros sea excepcional.
+
+Apreciamos tu interés y estamos ansiosos por acompañarte en esta deliciosa aventura.
+
+¡Saludos cordiales!
+
+[Tu Nombre]  
+[Tu Cargo]  
+[Nombre de la Empresa]  
+[Datos de Contacto]  
+[Redes Sociales]
+
+📦 Producto: Mug con Cuchara
+📧 Email: Test@laida.com
+📞 Teléfono: 3184624472
+

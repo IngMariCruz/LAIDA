@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, Mail, Phone, Zap } from "lucide-react"
 
@@ -37,6 +38,11 @@ interface Producto {
   nombre: string
 }
 
+interface Marca {
+  id: number
+  nombre_marca: string
+}
+
 export default function LeadsPage() {
   const router = useRouter()
   const [leads, setLeads] = useState<Lead[]>([])
@@ -53,13 +59,48 @@ export default function LeadsPage() {
     contactado: 0,
     cerrado: 0,
   })
+  const [marcas, setMarcas] = useState<Marca[]>([])
+  const [marcaId, setMarcaId] = useState<number | null>(null)
+  const [marcasLoading, setMarcasLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const marcaIdRef = useRef<number | null>(null)
+
+  // Mantiene el ref sincronizado para que el interval no tenga closure stale
+  useEffect(() => { marcaIdRef.current = marcaId }, [marcaId])
 
   useEffect(() => {
-    verificarAuth()
-    cargarLeads()
-    cargarProductos()
+    const usuario = localStorage.getItem("usuario")
+    if (!usuario) { router.push("/login"); return }
+
+    const token = localStorage.getItem("token")
+    let rol: string | null = null
+    try { rol = (JSON.parse(usuario) as { rol?: string }).rol ?? null } catch { /* ignore */ }
+    setUserRole(rol)
+
+    fetch('/api/marcas', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Marca[]) => {
+        setMarcas(data)
+        setMarcasLoading(false)
+        if (rol !== 'super_admin' && data.length > 0) {
+          // Manager: auto-selecciona su única marca
+          marcaIdRef.current = data[0].id
+          setMarcaId(data[0].id)
+          cargarLeads({ marcaIdParam: data[0].id })
+          cargarProductos(data[0].id)
+        } else {
+          // Super admin: "Todas las marcas" por defecto
+          cargarLeads({ marcaIdParam: null })
+          cargarProductos(null)
+        }
+      })
+      .catch(() => {
+        setMarcasLoading(false)
+        cargarLeads({ marcaIdParam: null })
+      })
+
     const interval = setInterval(() => {
-      cargarLeads({ silent: true })
+      cargarLeads({ silent: true, marcaIdParam: marcaIdRef.current })
     }, 5000)
 
     return () => clearInterval(interval)
@@ -69,68 +110,44 @@ export default function LeadsPage() {
     setPage(1)
   }, [searchTerm, selectedEstado, selectedProducto, pageSize])
 
-  const verificarAuth = () => {
-    const usuario = localStorage.getItem("usuario")
-    if (!usuario) {
-      router.push("/login")
-    }
-  }
-
-  const cargarProductos = async () => {
+  const cargarProductos = async (id: number | null) => {
+    if (!id) { setProductos([]); return }
     try {
-      const rawUser = localStorage.getItem("usuario")
-      if (!rawUser) return
-
-      const parsed = JSON.parse(rawUser) as { id?: number }
-      const marcaId = parsed?.id
-      if (!marcaId) return
-
       const token = localStorage.getItem("token")
-      const res = await fetch(`/api/productos?marcaId=${marcaId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch(`/api/productos?marcaId=${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-
       if (res.ok) {
         const data = await res.json()
         setProductos(Array.isArray(data) ? data : [])
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }
 
-  const cargarLeads = async (opts?: { silent?: boolean }) => {
+  const cargarLeads = async (opts: { silent?: boolean; marcaIdParam: number | null }) => {
     try {
-      if (!opts?.silent) setLoading(true)
+      if (!opts.silent) setLoading(true)
       const token = localStorage.getItem("token")
+      const params = opts.marcaIdParam ? `?marcaId=${opts.marcaIdParam}` : ""
 
-      const res = await fetch("/api/leads", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch(`/api/leads${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {
         const data = await res.json()
         setLeads(data || [])
-
-        // Calcular estadísticas
-        const estadisticas = {
+        setStats({
           total: data.length,
           nuevo: data.filter((l: Lead) => l.estado === "nuevo").length,
           contactado: data.filter((l: Lead) => l.estado === "contactado").length,
           cerrado: data.filter((l: Lead) => l.estado === "cerrado").length,
-        }
-        setStats(estadisticas)
-      } else {
-        console.error("Error cargando leads")
+        })
       }
     } catch (error) {
       console.error("Error:", error)
     } finally {
-      if (!opts?.silent) setLoading(false)
+      if (!opts.silent) setLoading(false)
     }
   }
 
@@ -304,6 +321,39 @@ export default function LeadsPage() {
             Gestiona todos los leads capturados por tus bots
           </p>
         </div>
+
+        {/* Selector de marca para super_admin */}
+        {userRole === 'super_admin' && (
+          <div className="max-w-xs">
+            <Label htmlFor="marca-leads-select" className="mb-2 block">Marca:</Label>
+            {marcasLoading ? (
+              <p className="text-sm text-muted-foreground">Cargando marcas...</p>
+            ) : (
+              <Select
+                value={marcaId?.toString() ?? "todas"}
+                onValueChange={(value) => {
+                  const id = value === "todas" ? null : Number.parseInt(value, 10)
+                  marcaIdRef.current = id
+                  setMarcaId(id)
+                  cargarLeads({ marcaIdParam: id })
+                  cargarProductos(id)
+                }}
+              >
+                <SelectTrigger id="marca-leads-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas las marcas</SelectItem>
+                  {marcas.map((marca) => (
+                    <SelectItem key={marca.id} value={marca.id.toString()}>
+                      {marca.nombre_marca}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
 
         {/* Estadísticas */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -491,7 +541,7 @@ export default function LeadsPage() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {formatDate((lead.actualizado_en || lead.created_at) as string)}
+                          {formatDate(lead.actualizado_en || lead.created_at)}
                         </p>
                       </div>
                       <Select

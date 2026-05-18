@@ -1,20 +1,24 @@
-# LAIDA 🤖💬
+# LAIDA
 
-LAIDA es una plataforma **multi-tenant** que combina bots de Telegram con una aplicación web para la captura y gestión de leads de PYMEs, utilizando IA y analítica de datos.
+LAIDA es una plataforma **multi-tenant** que combina bots de Telegram con una aplicación web para la captura y gestión de leads de micro y pequeñas empresas, utilizando IA (GPT) y analítica de datos.
 
-## ✨ Características Principales
+## Características Principales
 
-- 🏢 **Multi-tenant**: Múltiples bots independientes en una sola plataforma
-- 👥 **Sistema de roles**: Super Admin y Managers con permisos específicos
-- 🤖 **Bots de Telegram**: Captura automática de leads conversacionales
-- 📊 **Dashboard completo**: Gestión de bots, usuarios y accesos
-- 🔐 **Autenticación segura**: Sistema de roles y permisos
-- 📈 **Analytics**: Seguimiento de conversaciones y leads
-- 🎨 **UI moderna**: Interfaz intuitiva con Tailwind CSS y shadcn/ui
+- **Multi-tenant**: Múltiples bots independientes en una sola plataforma
+- **Sistema de roles**: Super Admin y Managers con permisos específicos
+- **Bots de Telegram**: Captura automática de leads con flujo conversacional
+- **Dashboard completo**: Gestión de bots, usuarios, leads, clientes, productos, campañas, analytics y accesos
+- **IA opcional**: Integración con OpenAI GPT por bot (configurable desde el dashboard)
+- **Analytics**: Dashboard de métricas con leads por categoría, por bot y por día
+- **Notificaciones**: Alertas en tiempo real al capturar nuevos leads (polling cada 30 s)
+- **Campañas**: Envío masivo de mensajes a leads por Telegram
+- **Esencia de marca**: Configuración de valores, diferenciador e historia para contextualizar el bot GPT
+- **Gestión de clientes**: Registro de clientes con cédula e importación masiva
+- **Swagger UI**: Documentación interactiva de la API en [http://localhost:8080](http://localhost:8080)
 
 ---
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 ```bash
 # 1. Clonar proyecto
@@ -29,91 +33,112 @@ docker-compose up --build
 # Login: admin@laida.com / admin123
 ```
 
-📖 Ver [QUICKSTART.md](./QUICKSTART.md) para guía paso a paso
+Ver [docs/QUICKSTART.md](./docs/QUICKSTART.md) para guía paso a paso.
 
 ---
 
-## 🧠 Arquitectura
+## Arquitectura
 
 ### Stack Tecnológico
 
-- **Frontend**: Next.js 16 + React 19 + TypeScript
-- **Backend**: Next.js API Routes
-- **Bot**: Python 3.12 + python-telegram-bot
-- **Base de datos**: SQLite (migrable a PostgreSQL)
-- **UI**: Tailwind CSS + shadcn/ui + Radix UI
-- **Deployment**: Docker + Docker Compose
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | Next.js 16.1.6 + React 19 + TypeScript |
+| Backend | Next.js API Routes (integrado en el frontend) |
+| Bot | Python 3.12 + python-telegram-bot |
+| Base de datos | SQLite (via better-sqlite3) |
+| UI | Tailwind CSS + shadcn/ui |
+| Deployment | Docker + Docker Compose |
 
-### Estructura de Roles
+### Estructura del Proyecto
 
 ```
-┌─────────────────┐
-│  Super Admin    │  ← Gestiona todo el sistema
-│   Dashboard     │
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    │         │
-┌───▼──┐  ┌──▼───┐
-│ Bots │  │Users │  ← Crea bots y usuarios
-└───┬──┘  └──┬───┘
-    │        │
-    └───┬────┘
-        │
-┌───────▼────────┐
-│   Managers     │  ← Gestionan sus bots asignados
-│   Dashboard    │
-└───────┬────────┘
-        │
-┌───────▼────────┐
-│ Telegram Bots  │  ← Capturan leads
-│  (Multi-tenant)│
-└────────────────┘
+LAIDA/
+├── frontend/
+│   ├── app/
+│   │   ├── api/                    # 20+ endpoints REST
+│   │   │   ├── login/
+│   │   │   ├── registro/
+│   │   │   ├── usuarios/
+│   │   │   ├── bots/
+│   │   │   ├── accesos/
+│   │   │   ├── leads/
+│   │   │   ├── clientes/
+│   │   │   ├── marcas/
+│   │   │   ├── esencia/
+│   │   │   ├── productos/
+│   │   │   ├── campaigns/
+│   │   │   ├── notificaciones/
+│   │   │   ├── config-bot/
+│   │   │   └── analytics/
+│   │   ├── dashboard/
+│   │   │   ├── admin/              # Panel Super Admin (bots, usuarios, accesos)
+│   │   │   ├── manager/            # Panel Manager (por slug de bot)
+│   │   │   ├── leads/
+│   │   │   ├── clientes/
+│   │   │   ├── productos/
+│   │   │   ├── campaigns/
+│   │   │   ├── analytics/
+│   │   │   ├── config-bot/
+│   │   │   ├── marca/
+│   │   │   └── editar-perfil/
+│   │   ├── login/
+│   │   └── registro/
+│   ├── components/
+│   │   ├── ui/                     # Componentes shadcn/ui
+│   │   └── dashboard/              # Componentes del panel
+│   ├── db/
+│   │   ├── init.ts                 # Schema e inicialización SQLite
+│   │   └── utils.ts                # Funciones de base de datos
+│   └── lib/
+│       ├── auth.ts                 # Autenticación y roles
+│       └── utils.ts
+├── bot/
+│   ├── bot_manager.py              # Ejecuta todos los bots activos
+│   ├── bot_launcher.py             # Selecciona bot GPT o básico según config
+│   ├── laidaBot_gpt.py             # Bot con inteligencia GPT
+│   ├── laidaBot_conversacional.py  # Bot básico con flujo por botones
+│   ├── scripts/
+│   │   ├── migrate_leads.py
+│   │   └── run_campaigns.py
+│   └── requirements.txt
+├── bd/                             # Base de datos SQLite
+├── docs/                           # Documentación completa
+├── openapi.yaml                    # Especificación OpenAPI (Swagger)
+└── docker-compose.yml
+```
+
+### Roles del Sistema
+
+```
+Super Admin
+  ├── Crea y gestiona bots
+  ├── Registra managers y asigna bots
+  ├── Ve todos los leads y estadísticas
+  └── Ejecuta campañas
+
+Manager
+  ├── Ve leads de sus bots asignados
+  ├── Gestiona productos, clientes y esencia de marca
+  └── Configura flujo del bot
 ```
 
 ---
 
-## 📦 Características del Sistema
-
-### Super Admin
-
-- ✅ Crear y gestionar múltiples bots
-- ✅ Asignar bots a managers (registrados)
-- ✅ Ver estadísticas globales
-- ✅ Configurar tokens y API keys
-
-### Manager
-
-- ✅ Ver bots asignados
-- ✅ Gestionar clientes capturados
-- ✅ Administrar productos
-- ✅ Configurar esencia de marca
-- ✅ Exportar datos
-
-### Bots de Telegram
-
-- ✅ Flujo conversacional personalizable
-- ✅ Captura progresiva de datos (interés/email/teléfono pueden ser parciales)
-- ✅ Validación de datos
-- ✅ Multi-lenguaje
-- ✅ Logs de conversaciones
-- ✅ Integración con OpenAI (opcional)
-
----
-
-## 🛠️ Desarrollo
+## Desarrollo Local
 
 ### Requisitos
 
 - Node.js 18+
 - Python 3.11+
 - Docker (recomendado)
-- pnpm (o npm/yarn)
+- pnpm
 
-### Instalación Local
+### Instalación sin Docker
 
 ```bash
 # Frontend
+cd frontend
 pnpm install
 pnpm dev
 
@@ -125,170 +150,71 @@ python bot_manager.py
 
 ### Variables de Entorno
 
-```env
-# .env.local (frontend)
-DB_PATH=./bd/laida.db
-
-# .env (bot)
-BOT_DB_PATH=../bd/laida.db
-BOT_CONVERSATIONS_DIR=./conversations
-```
-
----
-
-## 📂 Estructura del Proyecto
-
-```
-LAIDA/
-├── app/
-│   ├── api/                 # API Routes
-│   │   ├── login/          # Autenticación
-│   │   ├── usuarios/       # CRUD usuarios
-│   │   ├── bots/           # CRUD bots
-│   │   └── accesos/        # Gestión de permisos
-│   ├── dashboard/
-│   │   ├── admin/          # Dashboard Super Admin
-│   │   └── manager/        # Dashboard Manager
-│   └── login/              # Página de login
-├── bot/
-│   ├── laidaBot_multitenant.py  # Bot individual
-│   ├── bot_manager.py           # Gestor de bots
-│   └── requirements.txt
-├── components/
-│   ├── ui/                 # Componentes shadcn/ui
-│   ├── dashboard/          # Componentes dashboard
-│   └── landing/            # Componentes landing
-├── db/
-│   ├── init.ts             # Schema e inicialización
-│   └── utils.ts            # Funciones de base de datos
-├── lib/
-│   ├── auth.ts             # Autenticación y autorización
-│   └── utils.ts            # Utilidades generales
-├── docker-compose.yml       # Orquestación de servicios
-├── SETUP.md                 # Documentación completa
-└── QUICKSTART.md            # Guía rápida de inicio
-```
-
----
-
-## 🔐 Seguridad
-
-### Implementado
-
-- ✅ Autenticación basada en roles
-- ✅ Middleware de autorización
-- ✅ Separación de datos por tenant
-- ✅ Foreign keys en BD
-- ✅ Validación de entrada
-
-### Por Implementar
-
-- ⏳ bcrypt para hash de contraseñas
-- ⏳ JWT para tokens seguros
-- ⏳ Rate limiting en APIs
-- ⏳ HTTPS en producción
-- ⏳ Sanitización avanzada
-
----
-
-## 📊 Base de Datos
-
-### Tablas Principales
-
-```sql
--- Usuarios del sistema
-usuarios (id, correo, password, rol, nombre)
-
--- Bots de Telegram
-bots (id, nombre, slug, telegram_token, openai_key, estado)
-
--- Relación usuarios-bots
-usuario_bots (usuario_id, bot_id)
-
--- Leads capturados (se actualizan con cada mensaje)
-leads (id, bot_id, telegram_user_id, interes, email, telefono, estado, categoria, actualizado_en, created_at)
-
--- Productos/Servicios
-productos (id, nombre, precio, marca_id)
-
--- Configuración de marca
-config_bot (id, marca_id, mensaje_bienvenida)
-esencia (id, valores, diferencia, historia, marca_id)
-```
-
----
-
-## 🧪 Testing
-
 ```bash
-# Tests unitarios (por implementar)
-pnpm test
-
-# Tests E2E (por implementar)
-pnpm test:e2e
-
-# Linting
-pnpm lint
+cp .env.example .env
+# Editar DB_PATH y BOT_DB_PATH si es necesario
+# Los tokens de Telegram y las API Keys de OpenAI se configuran POR BOT
+# desde el Dashboard (Gestión de Bots) — no van en .env
 ```
 
 ---
 
-## 📚 Documentación
+## Base de Datos
 
-- 📖 [QUICKSTART.md](./QUICKSTART.md) - Inicio rápido
-- 📘 [SETUP.md](./SETUP.md) - Documentación completa
-- 🔧 [API.md](./API.md) - API reference
+Tablas principales:
 
----
-
-## 🗺️ Roadmap
-
-### v1.0 (Actual)
-- ✅ Sistema multi-tenant
-- ✅ Dashboard Super Admin
-- ✅ Dashboard Manager
-- ✅ Bot multi-tenant
-
-### v1.1
-- [ ] bcrypt + JWT
-- [ ] Exportar leads a Excel/CSV
-- [ ] Panel de estadísticas
-- [ ] Personalización de mensajes desde UI
-
-### v1.2
-- [ ] Integración OpenAI
-- [ ] Templates de conversación
-- [ ] Webhooks
-- [ ] Notificaciones en tiempo real
-
-### v2.0
-- [ ] Analytics avanzado
-- [ ] CRM integrado
-- [ ] API pública
-- [ ] Mobile app
+```
+usuarios           — Cuentas del sistema (super_admin, manager)
+bots               — Bots de Telegram (token, openai_key, estado, marca_id)
+usuario_bots       — Asignación manager ↔ bot (many-to-many)
+marcas             — Marcas/tenants registrados
+leads              — Leads capturados por los bots (nombre, email, teléfono, categoría)
+clientes           — Clientes registrados con cédula por marca
+productos          — Catálogo de productos por marca
+producto_atributos — Atributos configurables por producto (text/number/select/color)
+config_bot         — Configuración de mensaje de bienvenida por marca
+bot_flow_config    — Flujo conversacional personalizado por bot
+esencia            — Valores, diferenciador e historia de cada marca
+bot_interacciones  — Log de interacciones del bot (analytics)
+notificaciones     — Alertas del sistema
+campaigns          — Campañas de mensajería masiva
+```
 
 ---
 
-## 🤝 Contribución
+## Seguridad
 
-Este es un proyecto privado. Para reportar bugs o sugerir mejoras, contacta al equipo de desarrollo.
+**Implementado:**
+- Autenticación basada en roles
+- Middleware de autorización en todos los endpoints
+- Separación de datos por tenant
+- Foreign keys en BD
+- Validación de entrada
 
----
-
-## 📞 Soporte
-
-- 📧 Email: [tu-email]
-- 💬 Slack: [tu-slack]
-- 📖 Docs: [tu-docs-url]
-
----
-
-## 📄 Licencia
-
-Proyecto privado - Todos los derechos reservados
+**Pendiente (para producción):**
+- bcrypt para hash de contraseñas
+- JWT para tokens seguros
+- Rate limiting en APIs
+- HTTPS
 
 ---
 
-**LAIDA** - Captura leads inteligente con IA 🚀
+## Documentación
 
-Desarrollado con ❤️ para PYMEs
+| Archivo | Descripción |
+|---------|-------------|
+| [docs/QUICKSTART.md](./docs/QUICKSTART.md) | Guía de inicio en 3 minutos |
+| [docs/SETUP.md](./docs/SETUP.md) | Configuración detallada |
+| [docs/API.md](./docs/API.md) | Referencia completa de endpoints |
+| [docs/BOT_GPT.md](./docs/BOT_GPT.md) | Bot con inteligencia artificial GPT |
+| [docs/BOT_CONVERSACIONAL.md](./docs/BOT_CONVERSACIONAL.md) | Bot básico con flujo guiado |
+| [docs/BOT_MULTITENANT.md](./docs/BOT_MULTITENANT.md) | Arquitectura multi-tenant |
+| [docs/LEADS.md](./docs/LEADS.md) | Sistema de captura de leads |
+| [docs/NOTIFICACIONES.md](./docs/NOTIFICACIONES.md) | Sistema de notificaciones |
+| [openapi.yaml](./openapi.yaml) | Especificación OpenAPI (ver en [Swagger UI](http://localhost:8080)) |
+
+---
+
+## Licencia
+
+Proyecto privado — Todos los derechos reservados.

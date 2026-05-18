@@ -7,6 +7,7 @@ import {
   getUsuarioById,
   getBotById,
   updateBot,
+  getMarcaByUsuarioId,
 } from "@/db/utils"
 import { getAuthUser, requireManager } from "@/lib/auth"
 
@@ -94,7 +95,8 @@ export async function POST(request: NextRequest) {
 
     // Mantener consistencia: el bot hereda la marca del manager asignado
     try {
-      updateBot(Number(botId), { manager_id: Number(usuarioId), marca_id: Number(usuarioId) })
+      const marca = getMarcaByUsuarioId(Number(usuarioId))
+      updateBot(Number(botId), { manager_id: Number(usuarioId), marca_id: marca?.id ?? null })
     } catch {
       // no bloquear asignación si falla el update
     }

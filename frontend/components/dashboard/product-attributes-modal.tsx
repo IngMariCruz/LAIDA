@@ -52,12 +52,19 @@ export function ProductAttributesModal({
   })
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
 
+  const getAuthHeader = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   // Cargar atributos cuando se abre el modal
   const cargarAtributos = async () => {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/productos/atributos?productoId=${productoId}`)
+      const res = await fetch(`/api/productos/atributos?productoId=${productoId}`, {
+        headers: getAuthHeader(),
+      })
       if (!res.ok) throw new Error('Error al cargar atributos')
       const data = await res.json()
       setAtributos(data)
@@ -85,7 +92,7 @@ export function ProductAttributesModal({
     try {
       const res = await fetch('/api/productos/atributos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({
           producto_id: productoId,
           nombre: newAtributo.nombre,
@@ -125,6 +132,7 @@ export function ProductAttributesModal({
     try {
       const res = await fetch(`/api/productos/atributos?id=${atributoId}`, {
         method: 'DELETE',
+        headers: getAuthHeader(),
       })
 
       if (!res.ok) {

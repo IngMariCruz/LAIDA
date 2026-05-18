@@ -22,7 +22,7 @@ export function CTA() {
           <span className="text-secondary">buscándote</span>
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-background/70">
-          No dejes escapar oportunidades. Únete a miles de PyMEs que ya transformaron
+          No dejes escapar oportunidades. Únete a miles de micro y pequeñas empresas que ya transformaron
           su gestión de leads con LAIDA.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">

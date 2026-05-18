@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server"
 import db from "@/db/init"
-import pdf from "pdf-parse"
 import * as XLSX from "xlsx"
 import mammoth from "mammoth"
 import OpenAI from "openai"
 
-// ── Obtener bot vinculado al manager ─────────────────────────────────────────
+// ── Obtener bot vinculado a una marca ────────────────────────────────────────
 function getBotByMarcaId(marcaId: number): { id: number; openai_key: string | null } | null {
-  // marcaId puede ser bot.id directamente o manager_id (usuario.id)
-  const byBotId = db
-    .prepare("SELECT id, openai_key FROM bots WHERE id = ? AND estado = 'activo' LIMIT 1")
+  // 1. Bot directo por marca_id (caso principal)
+  const byMarca = db
+    .prepare("SELECT id, openai_key FROM bots WHERE marca_id = ? AND estado = 'activo' LIMIT 1")
     .get(marcaId) as { id: number; openai_key: string | null } | undefined
-  if (byBotId) return byBotId
+  if (byMarca) return byMarca
 
+  // 2. Fallback: buscar bot cuyo manager es el usuario dueño de esta marca
   const byManager = db
-    .prepare("SELECT id, openai_key FROM bots WHERE manager_id = ? AND estado = 'activo' LIMIT 1")
+    .prepare(
+      "SELECT b.id, b.openai_key FROM bots b " +
+      "INNER JOIN marcas m ON m.usuario_id = b.manager_id " +
+      "WHERE m.id = ? AND b.estado = 'activo' LIMIT 1"
+    )
     .get(marcaId) as { id: number; openai_key: string | null } | undefined
   return byManager ?? null
 }
@@ -22,7 +26,9 @@ function getBotByMarcaId(marcaId: number): { id: number; openai_key: string | nu
 // ── Extraer texto plano según tipo de archivo ───────────────────────────────
 async function extractText(buffer: Buffer, filename: string): Promise<string> {
   if (/\.pdf$/i.test(filename)) {
-    const parsed = await pdf(buffer)
+    // import dinámico evita el bug de pdf-parse al inicializarse en Next.js
+    const pdfParse = (await import("pdf-parse")).default
+    const parsed = await pdfParse(buffer)
     return parsed.text
   }
   if (/\.xlsx?$/i.test(filename)) {
@@ -161,7 +167,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se encontró un bot activo para este usuario." }, { status: 404 })
     }
 
-    const effectiveMarcaId = bot.id  // siempre guardar con bot.id
+    const effectiveMarcaId = Number(marcaId)  // guardar con marcas.id
     const openaiKey = bot.openai_key
 
     if (!openaiKey) {
@@ -223,9 +229,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, inserted, skipped, errors })
   } catch (error: any) {
     console.error("Error importando productos:", error)
-    const msg = error?.message?.includes("API key")
-      ? "Clave de OpenAI inválida o sin créditos."
-      : "Error al procesar el archivo."
+    const message: string = error?.message ?? String(error)
+    let msg = "Error al procesar el archivo."
+    if (message.includes("API key") || message.includes("api_key")) {
+      msg = "Clave de OpenAI inválida o sin créditos."
+    } else if (message.includes("quota") || message.includes("billing")) {
+      msg = "Cuota de OpenAI agotada o problema de facturación."
+    } else if (process.env.NODE_ENV !== "production") {
+      msg = `Error: ${message}`
+    }
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

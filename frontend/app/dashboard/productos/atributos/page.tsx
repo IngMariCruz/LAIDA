@@ -39,6 +39,9 @@ function ProductAttributesContent() {
       return
     }
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+
     const fetchProductos = async () => {
       setLoading(true)
       setError('')
@@ -46,12 +49,14 @@ function ProductAttributesContent() {
         const res = await fetch(`/api/productos?marcaId=${marcaId}`)
         if (!res.ok) throw new Error('Error al cargar productos')
         const data = await res.json()
-        
+
         // Cargar count de atributos para cada producto
         const productosConAtributos = await Promise.all(
           data.map(async (prod: Producto) => {
             try {
-              const attrRes = await fetch(`/api/productos/atributos?productoId=${prod.id}`)
+              const attrRes = await fetch(`/api/productos/atributos?productoId=${prod.id}`, {
+                headers: authHeader,
+              })
               const atributos = attrRes.ok ? await attrRes.json() : []
               return { ...prod, atributosCount: atributos.length }
             } catch {
