@@ -447,6 +447,7 @@ function initTables(database: DatabaseType): void {
       categoria_filter TEXT,
       bot_id INTEGER,
       programada_para DATETIME,
+      imagen_url TEXT,
       ejecutada INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
@@ -464,6 +465,9 @@ function initTables(database: DatabaseType): void {
       FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
     )
   `)
+
+  // Migración suave de campaigns
+  try { database.exec("ALTER TABLE campaigns ADD COLUMN imagen_url TEXT") } catch {}
 
   // Migraciones suaves de esencia (antes del FK migration para garantizar columnas)
   try { database.exec("ALTER TABLE esencia ADD COLUMN diferencia TEXT NOT NULL DEFAULT ''") } catch {}

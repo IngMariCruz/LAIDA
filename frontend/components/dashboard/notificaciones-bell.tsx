@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Bell, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,6 +24,7 @@ interface Notificacion {
 }
 
 export default function NotificacionesBell() {
+  const router = useRouter()
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
@@ -197,7 +199,13 @@ export default function NotificacionesBell() {
                 <div
                   key={notif.id}
                   className="p-4 hover:bg-accent/50 transition-colors cursor-pointer relative group"
-                  onClick={() => marcarComoLeida(notif.id)}
+                  onClick={() => {
+                    marcarComoLeida(notif.id)
+                    if (notif.tipo === 'sistema' && notif.titulo.toLowerCase().includes('campaña')) {
+                      setOpen(false)
+                      router.push('/dashboard/campaigns')
+                    }
+                  }}
                 >
                   <button
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"

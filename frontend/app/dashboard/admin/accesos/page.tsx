@@ -50,6 +50,7 @@ interface Bot {
   nombre: string
   slug: string
   estado: "activo" | "inactivo"
+  manager_id?: number | null
 }
 
 interface Asignacion {
@@ -193,6 +194,17 @@ export default function AccesosPage() {
     }
   }
 
+  // Mapa de botId → nombre del manager que lo tiene asignado
+  const botsAsignados = new Map<number, { managerId: number; managerNombre: string }>()
+  asignaciones.forEach(({ usuario, bots: botsDelManager }) => {
+    botsDelManager.forEach((bot) => {
+      botsAsignados.set(bot.id, {
+        managerId: usuario.id,
+        managerNombre: usuario.nombre || usuario.correo,
+      })
+    })
+  })
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -271,11 +283,23 @@ export default function AccesosPage() {
                         No hay bots disponibles
                       </SelectItem>
                     ) : (
-                      bots.map((bot) => (
-                        <SelectItem key={bot.id} value={bot.id.toString()}>
-                          {bot.nombre} ({bot.slug})
-                        </SelectItem>
-                      ))
+                      bots.map((bot) => {
+                        const asignado = botsAsignados.get(bot.id)
+                        const asignadoAOtro =
+                          asignado && asignado.managerId !== Number(formData.usuarioId)
+                        return (
+                          <SelectItem
+                            key={bot.id}
+                            value={bot.id.toString()}
+                            disabled={!!asignadoAOtro}
+                          >
+                            {bot.nombre} ({bot.slug})
+                            {asignadoAOtro
+                              ? ` — asignado a ${asignado?.managerNombre}`
+                              : ""}
+                          </SelectItem>
+                        )
+                      })
                     )}
                   </SelectContent>
                 </Select>

@@ -7,19 +7,18 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get('id')
   const marcaId = searchParams.get('marcaId')
 
-  if (!marcaId) {
-    return NextResponse.json({ error: 'marcaId requerido' }, { status: 400 })
-  }
-
   if (id) {
     const producto = getProductoById(Number(id))
-    if (!producto || producto.marca_id !== Number(marcaId)) {
+    if (!producto) {
+      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
+    }
+    if (marcaId && producto.marca_id !== Number(marcaId)) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
     }
     return NextResponse.json(producto)
   }
 
-  const productos = getAllProductos(Number(marcaId))
+  const productos = getAllProductos(marcaId ? Number(marcaId) : undefined)
   return NextResponse.json(productos)
 }
 

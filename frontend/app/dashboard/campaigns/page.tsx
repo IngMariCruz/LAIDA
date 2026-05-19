@@ -1,6 +1,8 @@
 "use client"
 
-import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react"
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import Image from "next/image"
+import { useToast } from "@/hooks/use-toast"
 import { Check, Pencil, Trash2, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,6 +17,7 @@ interface Campaign {
   categoria_filter?: string | null
   bot_id?: number | null
   programada_para?: string | null
+  imagen_url?: string | null
   ejecutada: number
   created_at: string
 }
@@ -31,9 +34,11 @@ type CampaignUpsert = {
   categoria_filter: string
   bot_id: number | null
   programada_para: string
+  imagen_url: string | null
 }
 
 export default function CampaignsPage() {
+  const { toast } = useToast()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,6 +50,8 @@ export default function CampaignsPage() {
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<CampaignUpsert | null>(null)
+  const [editImageFile, setEditImageFile] = useState<File | null>(null)
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null)
 
   const [form, setForm] = useState<CampaignUpsert>({
     nombre: '',
@@ -52,7 +59,12 @@ export default function CampaignsPage() {
     categoria_filter: '',
     bot_id: null,
     programada_para: '',
+    imagen_url: null,
   })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     try {
@@ -69,6 +81,50 @@ export default function CampaignsPage() {
     fetchBots()
   }, [])
 
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, mode: 'create' | 'edit') => {
+    const file = e.target.files?.[0] ?? null
+    if (!file) return
+    const preview = URL.createObjectURL(file)
+    if (mode === 'create') {
+      setImageFile(file)
+      setImagePreview(preview)
+    } else {
+      setEditImageFile(file)
+      setEditImagePreview(preview)
+    }
+  }
+
+  const removeImage = (mode: 'create' | 'edit') => {
+    if (mode === 'create') {
+      setImageFile(null)
+      setImagePreview(null)
+      setForm(prev => ({ ...prev, imagen_url: null }))
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } else {
+      setEditImageFile(null)
+      setEditImagePreview(null)
+      if (editForm) setEditForm({ ...editForm, imagen_url: null })
+      if (editFileInputRef.current) editFileInputRef.current.value = ''
+    }
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const token = localStorage.getItem('token')
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/upload/campaign-image', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.error || 'Error subiendo imagen')
+    }
+    const data = await res.json()
+    return data.url as string
+  }
+
   const runPendingCampaigns = async () => {
     setError('')
     try {
@@ -81,7 +137,12 @@ export default function CampaignsPage() {
       if (!res.ok) {
         setError(data.error || 'Error ejecutando campañas')
       } else {
-        alert(`Procesadas ${data.count} campañas`)
+        toast({
+          title: data.count === 0 ? 'Sin campañas pendientes' : 'Campañas ejecutadas',
+          description: data.count === 0
+            ? 'No hay campañas pendientes por ejecutar.'
+            : `${data.count} campaña(s) procesada(s) — ${data.sent} mensaje(s) enviado(s) por Telegram.`,
+        })
         fetchCampaigns()
       }
     } catch (e: any) {
@@ -108,7 +169,10 @@ export default function CampaignsPage() {
       if (!res.ok) {
         setError(data.error || 'No se pudo enviar la solicitud')
       } else {
-        alert('Solicitud enviada al super admin')
+        toast({
+          title: 'Solicitud enviada',
+          description: 'El super admin recibirá una notificación para ejecutar las campañas.',
+        })
       }
     } catch (e: any) {
       setError(e.message || 'Error')
@@ -163,6 +227,15 @@ export default function CampaignsPage() {
     return b ? b.nombre : String(botId)
   }
 
+  const CATEGORIA_LABELS: Record<string, string> = { cold: 'Frío', warm: 'Tibio', hot: 'Caliente' }
+  const getCategoriaLabel = (val: string | null | undefined) =>
+    val ? (CATEGORIA_LABELS[val] ?? val) : '-'
+
+  const formatFecha = (val: string | null | undefined) => {
+    if (!val) return '-'
+    return val.slice(0, 10)
+  }
+
   const startEdit = (c: Campaign) => {
     setEditingId(c.id)
     setEditForm({
@@ -170,13 +243,18 @@ export default function CampaignsPage() {
       mensaje: c.mensaje,
       categoria_filter: c.categoria_filter || '',
       bot_id: c.bot_id ?? null,
-      programada_para: c.programada_para || '',
+      programada_para: c.programada_para ? c.programada_para.slice(0, 10) : '',
+      imagen_url: c.imagen_url ?? null,
     })
+    setEditImageFile(null)
+    setEditImagePreview(null)
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setEditForm(null)
+    setEditImageFile(null)
+    setEditImagePreview(null)
   }
 
   const saveEdit = async (campaignId: number) => {
@@ -190,6 +268,12 @@ export default function CampaignsPage() {
 
     try {
       const token = localStorage.getItem('token')
+
+      let imagenUrl = editForm.imagen_url
+      if (editImageFile) {
+        imagenUrl = await uploadImage(editImageFile)
+      }
+
       const res = await fetch(`/api/campaigns/${campaignId}`, {
         method: 'PUT',
         headers: {
@@ -202,6 +286,7 @@ export default function CampaignsPage() {
           categoria_filter: editForm.categoria_filter || null,
           bot_id: editForm.bot_id || null,
           programada_para: editForm.programada_para || null,
+          imagen_url: imagenUrl || null,
         }),
       })
       const data = await res.json()
@@ -252,6 +337,12 @@ export default function CampaignsPage() {
 
     try {
       const token = localStorage.getItem('token')
+
+      let imagenUrl: string | null = null
+      if (imageFile) {
+        imagenUrl = await uploadImage(imageFile)
+      }
+
       const body: any = {
         nombre: form.nombre,
         mensaje: form.mensaje,
@@ -259,6 +350,8 @@ export default function CampaignsPage() {
       if (form.categoria_filter) body.categoria_filter = form.categoria_filter
       if (form.bot_id) body.bot_id = form.bot_id
       if (form.programada_para) body.programada_para = form.programada_para
+      if (imagenUrl) body.imagen_url = imagenUrl
+
       const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -268,7 +361,10 @@ export default function CampaignsPage() {
       if (!res.ok) {
         setError(data.error || 'Error creando campaña')
       } else {
-        setForm({ nombre: '', mensaje: '', categoria_filter: '', bot_id: null, programada_para: '' })
+        setForm({ nombre: '', mensaje: '', categoria_filter: '', bot_id: null, programada_para: '', imagen_url: null })
+        setImageFile(null)
+        setImagePreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
         fetchCampaigns()
       }
     } catch (err: any) {
@@ -375,12 +471,30 @@ export default function CampaignsPage() {
                 <Label htmlFor="programada_para">Programada para</Label>
                 <Input
                   id="programada_para"
-                  type="datetime-local"
+                  type="date"
                   value={form.programada_para}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setForm({ ...form, programada_para: e.target.value })
                   }
                 />
+              </div>
+              <div>
+                <Label htmlFor="imagen">Imagen (opcional)</Label>
+                <Input
+                  id="imagen"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  ref={fileInputRef}
+                  onChange={(e) => handleImageChange(e, 'create')}
+                />
+                {imagePreview && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <Image src={imagePreview} alt="Vista previa" width={80} height={80} className="rounded object-cover" unoptimized />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeImage('create')}>
+                      Quitar imagen
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end">
                 <Button type="submit">Crear</Button>
@@ -417,6 +531,7 @@ export default function CampaignsPage() {
                     <th className="px-2 py-1 text-left">ID</th>
                     <th className="px-2 py-1 text-left">Nombre</th>
                     <th className="px-2 py-1 text-left">Mensaje</th>
+                    <th className="px-2 py-1 text-left">Imagen</th>
                     <th className="px-2 py-1 text-left">Bot</th>
                     <th className="px-2 py-1 text-left">Filtrar</th>
                     <th className="px-2 py-1 text-left">Programada</th>
@@ -445,6 +560,30 @@ export default function CampaignsPage() {
                                 setEditForm({ ...editForm, mensaje: e.target.value })
                               }
                             />
+                          </td>
+                          <td className="px-2 py-1">
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/gif,image/webp"
+                              ref={editFileInputRef}
+                              onChange={(e) => handleImageChange(e, 'edit')}
+                              className="w-40"
+                            />
+                            {(editImagePreview || editForm.imagen_url) && (
+                              <div className="mt-1 flex items-center gap-2">
+                                <Image
+                                  src={editImagePreview ?? editForm.imagen_url!}
+                                  alt="Vista previa"
+                                  width={48}
+                                  height={48}
+                                  className="rounded object-cover"
+                                  unoptimized
+                                />
+                                <button type="button" className="text-xs text-muted-foreground hover:text-destructive" onClick={() => removeImage('edit')}>
+                                  Quitar
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="px-2 py-1">
                             <Select
@@ -487,7 +626,7 @@ export default function CampaignsPage() {
                           </td>
                           <td className="px-2 py-1">
                             <Input
-                              type="datetime-local"
+                              type="date"
                               value={editForm.programada_para}
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 setEditForm({ ...editForm, programada_para: e.target.value })
@@ -510,9 +649,15 @@ export default function CampaignsPage() {
                         <>
                           <td className="px-2 py-1">{c.nombre}</td>
                           <td className="px-2 py-1">{c.mensaje}</td>
+                          <td className="px-2 py-1">
+                            {c.imagen_url
+                              ? <Image src={c.imagen_url} alt="imagen" width={40} height={40} className="rounded object-cover" unoptimized />
+                              : <span className="text-muted-foreground text-xs">—</span>
+                            }
+                          </td>
                           <td className="px-2 py-1">{getBotLabel(c.bot_id)}</td>
-                          <td className="px-2 py-1">{c.categoria_filter || '-'}</td>
-                          <td className="px-2 py-1">{c.programada_para || '-'}</td>
+                          <td className="px-2 py-1">{getCategoriaLabel(c.categoria_filter)}</td>
+                          <td className="px-2 py-1">{formatFecha(c.programada_para)}</td>
                           <td className="px-2 py-1">{c.ejecutada ? 'Sí' : 'No'}</td>
                           <td className="px-2 py-1 text-right">
                             <div className="flex justify-end gap-2">

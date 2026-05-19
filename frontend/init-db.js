@@ -198,6 +198,22 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    mensaje TEXT NOT NULL,
+    categoria_filter TEXT,
+    bot_id INTEGER,
+    programada_para DATETIME,
+    imagen_url TEXT,
+    ejecutada INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL
+  )
+`);
+console.log("✅ Tabla campaigns creada/verificada");
+
 // -------------------- Seed inicial PALOMA + PADIA (idempotente) --------------------
 try {
   const managerCount = db.prepare("SELECT COUNT(1) AS cnt FROM usuarios WHERE rol = 'manager'").get();
