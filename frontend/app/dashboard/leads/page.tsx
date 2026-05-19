@@ -14,7 +14,15 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, Mail, Phone, Zap } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { CheckCircle, Clock, Mail, Pencil, Phone, Trash2, Zap } from "lucide-react"
 
 interface Lead {
   id: number
@@ -64,6 +72,8 @@ export default function LeadsPage() {
   const [marcasLoading, setMarcasLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
   const marcaIdRef = useRef<number | null>(null)
+  const [leadEditando, setLeadEditando] = useState<Lead | null>(null)
+  const [formEdit, setFormEdit] = useState({ nombre: "", email: "", telefono: "", interes: "", estado: "nuevo", categoria: "cold" })
 
   // Mantiene el ref sincronizado para que el interval no tenga closure stale
   useEffect(() => { marcaIdRef.current = marcaId }, [marcaId])
@@ -111,12 +121,10 @@ export default function LeadsPage() {
   }, [searchTerm, selectedEstado, selectedProducto, pageSize])
 
   const cargarProductos = async (id: number | null) => {
-    if (!id) { setProductos([]); return }
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch(`/api/productos?marcaId=${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const url = id ? `/api/productos?marcaId=${id}` : `/api/productos`
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       if (res.ok) {
         const data = await res.json()
         setProductos(Array.isArray(data) ? data : [])
@@ -148,6 +156,53 @@ export default function LeadsPage() {
       console.error("Error:", error)
     } finally {
       if (!opts.silent) setLoading(false)
+    }
+  }
+
+  const abrirEdicion = (lead: Lead) => {
+    setLeadEditando(lead)
+    setFormEdit({
+      nombre: lead.nombre || "",
+      email: lead.email || "",
+      telefono: lead.telefono || "",
+      interes: lead.interes || "",
+      estado: lead.estado,
+      categoria: lead.categoria || "cold",
+    })
+  }
+
+  const guardarEdicion = async () => {
+    if (!leadEditando) return
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`/api/leads/${leadEditando.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(formEdit),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setLeads((prev: Lead[]) => prev.map((l: Lead) => l.id === updated.id ? updated : l))
+        setLeadEditando(null)
+      }
+    } catch (error) {
+      console.error("Error editando lead:", error)
+    }
+  }
+
+  const eliminarLead = async (leadId: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este lead? Esta acción no se puede deshacer.")) return
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        setLeads((prev: Lead[]) => prev.filter((l: Lead) => l.id !== leadId))
+      }
+    } catch (error) {
+      console.error("Error eliminando lead:", error)
     }
   }
 
@@ -544,19 +599,38 @@ export default function LeadsPage() {
                           {formatDate(lead.actualizado_en || lead.created_at)}
                         </p>
                       </div>
-                      <Select
-                        value={lead.estado}
-                        onValueChange={(value) => cambiarEstado(lead.id, value)}
-                      >
-                        <SelectTrigger className="w-[150px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="nuevo">Nuevo</SelectItem>
-                          <SelectItem value="contactado">Contactado</SelectItem>
-                          <SelectItem value="cerrado">Cerrado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={lead.estado}
+                          onValueChange={(value) => cambiarEstado(lead.id, value)}
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nuevo">Nuevo</SelectItem>
+                            <SelectItem value="contactado">Contactado</SelectItem>
+                            <SelectItem value="cerrado">Cerrado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => abrirEdicion(lead)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => eliminarLead(lead.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm">
@@ -596,6 +670,61 @@ export default function LeadsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de edición */}
+      <Dialog open={!!leadEditando} onOpenChange={(open) => { if (!open) setLeadEditando(null) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar lead</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="edit-nombre">Nombre</Label>
+              <Input id="edit-nombre" value={formEdit.nombre} onChange={(e) => setFormEdit(f => ({ ...f, nombre: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input id="edit-email" type="email" value={formEdit.email} onChange={(e) => setFormEdit(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="edit-telefono">Teléfono</Label>
+              <Input id="edit-telefono" value={formEdit.telefono} onChange={(e) => setFormEdit(f => ({ ...f, telefono: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="edit-interes">Interés</Label>
+              <Textarea id="edit-interes" value={formEdit.interes} onChange={(e) => setFormEdit(f => ({ ...f, interes: e.target.value }))} rows={2} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Estado</Label>
+                <Select value={formEdit.estado} onValueChange={(v) => setFormEdit(f => ({ ...f, estado: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nuevo">Nuevo</SelectItem>
+                    <SelectItem value="contactado">Contactado</SelectItem>
+                    <SelectItem value="cerrado">Cerrado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Categoría</Label>
+                <Select value={formEdit.categoria} onValueChange={(v) => setFormEdit(f => ({ ...f, categoria: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hot">Caliente</SelectItem>
+                    <SelectItem value="warm">Tibio</SelectItem>
+                    <SelectItem value="cold">Frío</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeadEditando(null)}>Cancelar</Button>
+            <Button onClick={guardarEdicion}>Guardar cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -570,3 +570,87 @@ respuesta_bot: ¡Hola, Luz! Gracias por tu interés en el Mug Cuchara, un asesor
 📧 luz@gmail.com
 📞 3184623351
 
+====================================
+Fecha: 2026-05-19 05:43:10
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo puedo ayudarte hoy? Si estás buscando algo en particular o necesitas recomendaciones, estaré encantado de asistirte.
+
+====================================
+Fecha: 2026-05-19 05:43:28
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: que productos tienes disponibles?
+respuesta_bot: Ofrecemos una amplia variedad de productos, pero me gustaría saber un poco más sobre lo que estás buscando. ¿Te interesan artículos de tecnología, moda, hogar, belleza, o quizás algo más específico? Así podré darte recomendaciones más acertadas.
+
+====================================
+Fecha: 2026-05-19 05:43:49
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: belleza
+respuesta_bot: ¡Genial! La categoría de belleza tiene muchas opciones. ¿Te gustaría explorar productos como maquillaje, cuidado de la piel, cuidado del cabello o fragancias? También puedo ayudarte si tienes alguna necesidad específica, como productos para piel sensible o maquillaje para una ocasión especial. ¡Cuéntame un poco más!
+
+====================================
+Fecha: 2026-05-19 05:44:27
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: pero si tienes productos de belleza?
+respuesta_bot: No tengo un inventario específico de productos, ya que no vendo directamente, pero puedo ofrecerte recomendaciones de tipos de productos populares en la categoría de belleza. Por ejemplo:
+
+- **Cuidado de la piel**: cremas hidratantes, sueros, limpiadores faciales.
+- **Maquillaje**: bases, labiales, sombras de ojos.
+- **Cuidado del cabello**: champús, acondicionadores, tratamientos capilares.
+- **Fragancias**: perfumes y colonias.
+
+Si me dices qué tipo de producto te interesa más o si tienes alguna marca en mente, puedo ayudarte a encontrar opciones que se adapten a tus necesidades.
+
+====================================
+Fecha: 2026-05-19 05:44:45
+bot_id: 2
+user_id: 1578862237
+estado: WELCOME
+mensaje_usuario: /start 2
+respuesta_bot: ¡Hola! ¿Cómo estás? ¿En qué puedo ayudarte hoy?
+
+====================================
+Fecha: 2026-05-19 05:44:56
+bot_id: 2
+user_id: 1578862237
+estado: FREE_CONVERSATION
+mensaje_usuario: bien gracias
+respuesta_bot: ¡Me alegra saberlo! ¿Estás buscando algo en particular, como un mug o algún otro producto? Estoy aquí para ayudarte.
+
+====================================
+Fecha: 2026-05-19 05:45:21
+bot_id: 2
+user_id: 1578862237
+estado: GET_NAME
+mensaje_usuario: Mariana
+respuesta_bot: Mucho gusto, Mariana! 😊 ¿Cuál es tu correo electrónico?
+
+====================================
+Fecha: 2026-05-19 05:45:31
+bot_id: 2
+user_id: 1578862237
+estado: GET_EMAIL
+mensaje_usuario: mariana@gmail.com
+respuesta_bot: Perfecto. Ahora, ¿podrías compartirme tu número de teléfono? (10 dígitos)
+
+====================================
+Fecha: 2026-05-19 05:45:40
+bot_id: 2
+user_id: 1578862237
+estado: GET_PHONE
+mensaje_usuario: 3184724473
+respuesta_bot: ¡Hola Mariana! Gracias por tu interés en el Mug Corazón, un asesor se pondrá en contacto contigo muy pronto. 😊
+
+✅ *Tus datos:*
+📦 Mug Corazón
+📧 mariana@gmail.com
+📞 3184724473
+

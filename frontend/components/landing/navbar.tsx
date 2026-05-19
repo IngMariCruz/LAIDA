@@ -41,12 +41,12 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Link href="/login">
-            <Button variant="ghost" className="text-sm font-medium text-foreground hover:text-primary">
+            <Button variant="ghost" className="text-sm font-medium text-foreground hover:text-white">
               Iniciar Sesión
             </Button>
           </Link>
           <Link href="/registro">
-            <Button variant="outline" className="text-sm font-medium text-foreground hover:bg-secondary/10">
+            <Button variant="outline" className="text-sm font-medium text-black hover:bg-secondary/10 hover:text-black">
               Registrar
             </Button>
           </Link>
@@ -77,12 +77,12 @@ export function Navbar() {
             ))}
             <div className="mt-4 flex flex-col gap-3">
               <Link href="/login" className="w-full">
-                <Button variant="ghost" className="w-full justify-center text-foreground">
+                <Button variant="ghost" className="w-full justify-center text-foreground hover:text-white">
                   Iniciar Sesión
                 </Button>
               </Link>
               <Link href="/registro" className="w-full">
-                <Button variant="outline" className="w-full justify-center text-foreground">
+                <Button variant="outline" className="w-full justify-center text-black hover:text-black">
                   Registrar
                 </Button>
               </Link>

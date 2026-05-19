@@ -3,6 +3,7 @@ import {
   getAllBots,
   getBotById,
   getBotBySlug,
+  getBotByTelegramToken,
   getBotsByManagerId,
   createBot,
   updateBot,
@@ -125,6 +126,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verificar que el token de Telegram no esté en uso
+    const botConToken = getBotByTelegramToken(telegram_token)
+    if (botConToken) {
+      return NextResponse.json(
+        { error: "Ya existe un bot con ese token de Telegram" },
+        { status: 400 }
+      )
+    }
+
     const nuevoBot = createBot({
       nombre,
       slug,
@@ -202,6 +212,17 @@ export async function PUT(request: NextRequest) {
       if (botExistente) {
         return NextResponse.json(
           { error: "Ya existe un bot con ese slug" },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Si se está actualizando el token de Telegram, verificar que no esté en uso
+    if (data.telegram_token && data.telegram_token !== bot.telegram_token) {
+      const botConToken = getBotByTelegramToken(data.telegram_token)
+      if (botConToken) {
+        return NextResponse.json(
+          { error: "Ya existe un bot con ese token de Telegram" },
           { status: 400 }
         )
       }

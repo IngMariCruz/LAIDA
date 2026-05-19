@@ -94,6 +94,7 @@ export async function PUT(
     const nextCategoria = body.categoria_filter
     const nextBotId = body.bot_id
     const nextProgramada = body.programada_para
+    const nextImagenUrl = body.imagen_url
 
     if (!nextNombre || !nextMensaje) {
       return NextResponse.json(
@@ -124,6 +125,7 @@ export async function PUT(
       categoria_filter: nextCategoria ? String(nextCategoria) : null,
       bot_id: nextBotId ? Number(nextBotId) : null,
       programada_para: nextProgramada ? String(nextProgramada) : null,
+      imagen_url: nextImagenUrl ? String(nextImagenUrl) : null,
     })
 
     return NextResponse.json(updated)

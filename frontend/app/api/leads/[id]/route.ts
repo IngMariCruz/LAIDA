@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getLeadById, updateLead } from "@/db/utils"
+import { deleteLead, getLeadById, updateLead } from "@/db/utils"
 import { getAuthUser, requireManager } from "@/lib/auth"
 
 // PATCH - Actualizar un lead
@@ -36,22 +36,23 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { estado, interes, email, telefono } = body
+    const { estado, interes, email, telefono, nombre, categoria } = body
 
-    // Validar que el estado sea válido si se proporciona
     if (estado && !["nuevo", "contactado", "cerrado"].includes(estado)) {
-      return NextResponse.json(
-        { error: "Estado no válido" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Estado no válido" }, { status: 400 })
     }
 
-    // Actualizar el lead
+    if (categoria && !["hot", "warm", "cold"].includes(categoria)) {
+      return NextResponse.json({ error: "Categoría no válida" }, { status: 400 })
+    }
+
     const updatedLead = updateLead(leadId, {
-      estado: estado || lead.estado,
-      interes: interes || lead.interes,
-      email: email || lead.email,
-      telefono: telefono || lead.telefono,
+      estado: estado ?? lead.estado,
+      interes: interes ?? lead.interes,
+      email: email ?? lead.email,
+      telefono: telefono ?? lead.telefono,
+      nombre: nombre ?? lead.nombre,
+      categoria: categoria ?? lead.categoria,
       bot_id: lead.bot_id,
       bot_slug: lead.bot_slug,
       bot_nombre: lead.bot_nombre,
@@ -76,9 +77,9 @@ export async function DELETE(
   try {
     const user = getAuthUser(request)
 
-    if (user?.rol !== "super_admin") {
+    if (!requireManager(user)) {
       return NextResponse.json(
-        { error: "Solo super admin puede eliminar leads" },
+        { error: "No autorizado" },
         { status: 403 }
       )
     }
@@ -93,11 +94,23 @@ export async function DELETE(
       )
     }
 
-    // En la próxima versión implementar deleteLeads en utils
-    // Por ahora solo retornamos mensaje
-    return NextResponse.json({
-      message: "Lead eliminado (próximamente implementado)",
-    })
+    const lead = getLeadById(leadId)
+    if (!lead) {
+      return NextResponse.json(
+        { error: "Lead no encontrado" },
+        { status: 404 }
+      )
+    }
+
+    const deleted = deleteLead(leadId)
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "No se pudo eliminar el lead" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ message: "Lead eliminado correctamente" })
   } catch (error) {
     console.error("Error deleting lead:", error)
     return NextResponse.json(

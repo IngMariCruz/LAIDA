@@ -248,6 +248,12 @@ export function updateLead(id: number, data: Partial<Omit<Lead, 'id' | 'created_
   return getLeadById(id) as Lead
 }
 
+export function deleteLead(id: number): boolean {
+  const stmt = db.prepare("DELETE FROM leads WHERE id = ?")
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
 // -------------------- Productos --------------------
 export interface Producto {
   id: number
@@ -333,6 +339,7 @@ export interface Campaign {
   categoria_filter?: string | null
   bot_id?: number | null
   programada_para?: string | null
+  imagen_url?: string | null
   ejecutada: number
   created_at: string
 }
@@ -354,8 +361,8 @@ export function getCampaignById(id: number): Campaign | undefined {
 
 export function createCampaign(data: Omit<Campaign, 'id' | 'ejecutada' | 'created_at'>): Campaign {
   const stmt = db.prepare(`
-    INSERT INTO campaigns (nombre, mensaje, categoria_filter, bot_id, programada_para, ejecutada)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO campaigns (nombre, mensaje, categoria_filter, bot_id, programada_para, imagen_url, ejecutada)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
   const result = stmt.run(
     data.nombre,
@@ -363,6 +370,7 @@ export function createCampaign(data: Omit<Campaign, 'id' | 'ejecutada' | 'create
     data.categoria_filter || null,
     data.bot_id || null,
     data.programada_para || null,
+    data.imagen_url || null,
     0
   )
   return getCampaignById(Number(result.lastInsertRowid)) as Campaign
@@ -376,7 +384,7 @@ export function markCampaignExecuted(id: number): boolean {
 
 export function updateCampaign(
   id: number,
-  data: Partial<Pick<Campaign, 'nombre' | 'mensaje' | 'categoria_filter' | 'bot_id' | 'programada_para'>>
+  data: Partial<Pick<Campaign, 'nombre' | 'mensaje' | 'categoria_filter' | 'bot_id' | 'programada_para' | 'imagen_url'>>
 ): Campaign {
   const updates: string[] = []
   const values: any[] = []
@@ -603,6 +611,11 @@ export function getBotById(id: number): Bot | undefined {
 export function getBotBySlug(slug: string): Bot | undefined {
   const stmt = db.prepare("SELECT * FROM bots WHERE slug = ?")
   return stmt.get(slug) as Bot | undefined
+}
+
+export function getBotByTelegramToken(token: string): Bot | undefined {
+  const stmt = db.prepare("SELECT * FROM bots WHERE telegram_token = ?")
+  return stmt.get(token) as Bot | undefined
 }
 
 export function getBotsByManagerId(managerId: number): Bot[] {

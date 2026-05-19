@@ -91,6 +91,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verificar que el bot no esté asignado a otro manager
+    if (bot.manager_id && bot.manager_id !== Number(usuarioId)) {
+      const managerActual = getUsuarioById(bot.manager_id)
+      const nombre = managerActual?.nombre || managerActual?.correo || `ID ${bot.manager_id}`
+      return NextResponse.json(
+        { error: `El bot "${bot.nombre}" ya está asignado a ${nombre}. Remueve el acceso primero.` },
+        { status: 400 }
+      )
+    }
+
     asignarBotAUsuario(Number(usuarioId), Number(botId))
 
     // Mantener consistencia: el bot hereda la marca del manager asignado
